@@ -1,0 +1,16 @@
+**/node_modules/
+**/dist/
+.env
+.env.*
+**/.env
+**/.env.*
+**/.config
+**/.config.*
+**/opencode.json
+**/opencode.jsonc
+**/private-config
+**/private-config.*
+**/backups/
+*.bak
+*.backup
+*~

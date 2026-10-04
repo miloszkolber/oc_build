@@ -1,0 +1,23 @@
+diff --git a/server/lib/opencode/openchamber-routes.js b/server/lib/opencode/openchamber-routes.js
+--- a/server/lib/opencode/openchamber-routes.js
++++ b/server/lib/opencode/openchamber-routes.js
+@@ -93,6 +93,9 @@
+ 
+   app.get('/api/openchamber/update-check', async (req, res) => {
+     try {
++      // Image-managed deployment: updates ship through image rebuilds.
++      // Never report an available update from the in-app checker.
++      return res.json({ available: false });
+       const parseString = (value) => (typeof value === 'string' && value.trim().length > 0 ? value.trim() : undefined);
+       const parseReportUsage = (value) => {
+         if (typeof value !== 'string') return true;
+@@ -162,6 +165,9 @@
+ 
+   app.post('/api/openchamber/update-install', async (_req, res) => {
+     try {
++      // Image-managed deployment: the npm-based self-updater is disabled.
++      // Update by bumping OPENCHAMBER_VERSION and rebuilding the image.
++      return res.status(503).json({ error: 'In-app updates are disabled; update through an image rebuild.' });
+       if (process.env.OPENCHAMBER_RUNTIME === 'desktop') {
+         if (typeof desktopUpdater?.install !== 'function' || typeof desktopUpdater?.restart !== 'function') {
+           return res.status(503).json({

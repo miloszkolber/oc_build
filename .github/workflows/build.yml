@@ -1,0 +1,145 @@
+name: Build
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'plugins/**'
+      - '.github/workflows/build.yml'
+  schedule:
+    - cron: '17 * * * *'
+  workflow_dispatch:
+    inputs:
+      bootstrap:
+        description: 'Authorize only the initial 2.0.1 seed if an empty package cannot grant GHCR pull scope'
+        type: boolean
+        default: false
+      release_id:
+        description: 'Optional upstream release ID; empty catches up all eligible releases'
+        type: string
+        default: ''
+
+permissions:
+  contents: read
+
+jobs:
+  plugin:
+    if: github.event_name == 'push'
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: oven-sh/setup-bun@0c5077e51419868618aeaa5fe8019c62421857d6 # v2.2.0
+        with:
+          bun-version: '1.4.2'
+      - name: Test release discovery contract
+        run: node --test scripts/upstream-releases.test.mjs
+      - name: Test and bundle the source-loaded plugin
+        working-directory: plugins/signet-opencode-v2
+        run: |
+          test -s bun.lock && bun install --frozen-lockfile && bun run test && bun run build
+          bun -e 'const {default:p}=await import("./dist/signet-opencode-v2.mjs"); if(p.id!=="signet.lifecycle" || typeof p.setup!=="function") throw new Error("Invalid bundled plugin export")'
+          cp LICENSE NOTICE yaml-LICENSE dist/
+          (cd dist && sha256sum signet-opencode-v2.mjs > SHA256SUMS)
+          bun -e 'await Bun.write("dist/build.json", JSON.stringify({repository:process.env.GITHUB_REPOSITORY,source_commit:process.env.GITHUB_SHA,bun:Bun.version,opencode_api:"2.0.16",entrypoint:"./index.ts",external_runtime:"@opencode/plugin@2.0.16",bundle_sha256:(await Bun.file("dist/SHA256SUMS").text()).split(" ")[0]},null,2)+"\n")'
+      - name: Retain private plugin bundle and provenance
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: signet-opencode-v2-${{ github.sha }}
+          path: plugins/signet-opencode-v2/dist/
+          if-no-files-found: error
+          retention-days: 30
+
+  discover:
+    if: github.event_name == 'schedule' || github.event_name == 'workflow_dispatch'
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    permissions:
+      contents: read
+      packages: read
+    outputs:
+      matrix: ${{ steps.releases.outputs.matrix }}
+      count: ${{ steps.releases.outputs.count }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - name: Test release discovery contract
+        run: node --test scripts/upstream-releases.test.mjs
+      - name: Discover every unbuilt eligible upstream release
+        id: releases
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+          BOOTSTRAP: ${{ inputs.bootstrap || false }}
+          RELEASE_ID: ${{ inputs.release_id || '' }}
+        run: node scripts/upstream-releases.mjs discover
+
+  image:
+    needs: discover
+    if: needs.discover.outputs.count != '0'
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    permissions:
+      contents: read
+      packages: write
+    strategy:
+      fail-fast: false
+      max-parallel: 2
+      matrix: ${{ fromJSON(needs.discover.outputs.matrix) }}
+    concurrency:
+      group: openchamber-image-${{ matrix.release_id }}
+      cancel-in-progress: false
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - name: Recheck release and canonical completion tag
+        id: prepare
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+          RELEASE_VERSION: ${{ matrix.version }}
+          RELEASE_ID: ${{ matrix.release_id }}
+          ASSET_SHA256: ${{ matrix.asset_sha256 }}
+          BOOTSTRAP: ${{ matrix.bootstrap }}
+        run: node scripts/upstream-releases.mjs prepare
+      - name: Build and check before publication
+        if: steps.prepare.outputs.skip != 'true'
+        env:
+          IMAGE: ${{ steps.prepare.outputs.image }}
+          VERSION: ${{ steps.prepare.outputs.version }}
+          RELEASE_ID: ${{ steps.prepare.outputs.release_id }}
+          ASSET_SHA256: ${{ steps.prepare.outputs.asset_sha256 }}
+        run: |
+          docker build --file assets/Dockerfile --tag "$IMAGE" \
+            --build-arg "OPENCHAMBER_VERSION=$VERSION" \
+            --build-arg "OPENCHAMBER_ASSET_SHA256=$ASSET_SHA256" \
+            --label "org.opencontainers.image.source=https://github.com/$GITHUB_REPOSITORY" \
+            --label "org.opencontainers.image.revision=$GITHUB_SHA" \
+            --label "io.openchamber.upstream.release-id=$RELEASE_ID" \
+            --label "org.opencontainers.image.url=https://github.com/openchamber/openchamber/releases/tag/v$VERSION" .
+          timeout 180 docker run --rm --interactive --network none --read-only --cap-drop ALL \
+            --security-opt no-new-privileges --tmpfs /tmp \
+            --env "EXPECTED_VERSION=$VERSION" --entrypoint node "$IMAGE" \
+            --input-type=module < scripts/check-image.mjs
+      - name: Publish one canonical tag
+        id: publish
+        if: steps.prepare.outputs.skip != 'true'
+        shell: bash
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+          IMAGE: ${{ steps.prepare.outputs.image }}
+        run: |
+          printf '%s' "$GITHUB_TOKEN" | docker login ghcr.io --username "$GITHUB_ACTOR" --password-stdin
+          docker push "$IMAGE" | tee "$RUNNER_TEMP/openchamber-push.log"
+          digest=$(sed -nE 's/^[^[:space:]]+: digest: (sha256:[a-f0-9]{64}) size: [0-9]+$/\1/p' "$RUNNER_TEMP/openchamber-push.log")
+          [[ "$digest" =~ ^sha256:[a-f0-9]{64}$ ]]
+          printf 'digest=%s\n' "$digest" >> "$GITHUB_OUTPUT"
+      - name: Verify published manifest, privacy, and repository association
+        if: steps.prepare.outputs.skip != 'true'
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+          IMAGE: ${{ steps.prepare.outputs.image }}
+          MANIFEST_DIGEST: ${{ steps.publish.outputs.digest }}
+        run: node scripts/upstream-releases.mjs verify-image

@@ -1,0 +1,10 @@
+Signet AI
+Copyright 2025 Signet AI
+
+This product includes software developed by Signet AI.
+
+Local modifications: this port adapts the Signet lifecycle connector to OpenCode
+V2.0.16 native lifecycle and model-request hooks, authenticated bounded transcript
+pagination, turn checkpoints and deletion, request-context privacy instructions,
+event deduplication, and concurrent-turn/report guards. See README.md for the
+source revisions, behavior, verification, and unsupported final-output scrub.
