@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 // Dependency-free GitHub/GHCR boundary. No high-water mark or repository writes.
-import { appendFile } from 'node:fs/promises';
+import { appendFile, readFile } from 'node:fs/promises';
 import { resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
@@ -166,14 +166,25 @@ export class ReleaseClient {
   }
 
   async privatePackage({ allowMissing = false } = {}) {
+    const repositoryResponse = await this.github(`/repos/${REPOSITORY}`);
+    requireValue(repositoryResponse.ok, `Build repository metadata unavailable (HTTP ${repositoryResponse.status})`);
+    const repository = await json(repositoryResponse, 1024 * 1024);
+    requireValue(repository.full_name === REPOSITORY && repository.private === true,
+      'Build repository must be private');
     const response = await this.github('/users/miloszkolber/packages/container/openchamber');
     if (response.status === 404 && allowMissing) return false;
     requireValue(response.ok, `Package metadata unavailable (HTTP ${response.status}); check Actions package access`);
     const metadata = await json(response, 1024 * 1024);
     requireValue(metadata.package_type === 'container' && metadata.name === 'openchamber' && metadata.visibility === 'private',
       'GHCR package must be a private container package');
-    requireValue(metadata.repository?.full_name === REPOSITORY && metadata.repository.private === true,
-      'GHCR package must be associated with the private build repository');
+    // GHCR's observed REST payload omits repository entirely, even with the correct
+    // OCI source label and working repository-token access. Missing linkage is not
+    // evidence of a wrong link; reject contradictory metadata if it is supplied.
+    if (metadata.repository !== undefined && metadata.repository !== null) {
+      requireValue(metadata.repository.full_name === REPOSITORY &&
+        (metadata.repository.private === undefined || metadata.repository.private === true),
+      'GHCR metadata identifies a different or public repository');
+    }
     return true;
   }
 
@@ -226,6 +237,19 @@ export async function verifyImage(client, { image, digest }) {
   requireValue(remoteDigest !== null, 'Published canonical image tag is absent');
   requireValue(remoteDigest === digest, 'Remote manifest digest does not match the checked image publication');
   return { image, digest: remoteDigest };
+}
+
+export function verifyOrigin(labels, { version, releaseId, sourceCommit }) {
+  validateVersion(version);
+  validateId(releaseId);
+  requireValue(typeof sourceCommit === 'string' && /^[a-f0-9]{40}$/.test(sourceCommit), 'Expected build source commit');
+  requireValue(labels && typeof labels === 'object' && !Array.isArray(labels), 'Expected image labels');
+  requireValue(labels['org.opencontainers.image.source'] === `https://github.com/${REPOSITORY}`,
+    'Published image has the wrong build source');
+  requireValue(labels['org.opencontainers.image.revision'] === sourceCommit, 'Published image has the wrong source commit');
+  requireValue(labels['org.opencontainers.image.version'] === version, 'Published image has the wrong version');
+  requireValue(labels['io.openchamber.upstream.release-id'] === releaseId, 'Published image has the wrong upstream release ID');
+  return { source: `https://github.com/${REPOSITORY}`, revision: sourceCommit, version, release_id: releaseId };
 }
 
 function seedAllowed(bootstrap, packageExists, release) {
@@ -304,6 +328,15 @@ async function outputs(values) {
 
 async function main() {
   requireValue(!process.env.GITHUB_REPOSITORY || process.env.GITHUB_REPOSITORY === REPOSITORY, 'Unexpected build repository');
+  if (process.argv[2] === 'verify-origin') {
+    const bytes = await readFile(process.env.IMAGE_LABELS_FILE || '');
+    requireValue(bytes.length <= 64 * 1024, 'Image labels exceeded their size limit');
+    let labels;
+    try { labels = JSON.parse(bytes.toString('utf8')); } catch { throw new Error('Invalid image label JSON'); }
+    await outputs(verifyOrigin(labels, { version: process.env.RELEASE_VERSION, releaseId: process.env.RELEASE_ID,
+      sourceCommit: process.env.SOURCE_COMMIT }));
+    return;
+  }
   const client = new ReleaseClient({ token: process.env.GITHUB_TOKEN, actor: process.env.GITHUB_ACTOR });
   switch (process.argv[2]) {
     case 'discover': {
@@ -321,13 +354,13 @@ async function main() {
       break;
     case 'verify-package':
       await client.privatePackage();
-      console.log('Verified private GHCR package and private build-repository association');
+      console.log('Verified private GHCR package and private build repository');
       break;
     case 'verify-image':
       await outputs(await verifyImage(client, { image: process.env.IMAGE, digest: process.env.MANIFEST_DIGEST }));
       break;
     default:
-      throw new Error('Usage: upstream-releases.mjs discover|prepare|verify-package|verify-image (see README for environment)');
+      throw new Error('Usage: upstream-releases.mjs discover|prepare|verify-package|verify-image|verify-origin (see README for environment)');
   }
 }
 

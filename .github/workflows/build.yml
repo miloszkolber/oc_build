@@ -136,10 +136,23 @@ jobs:
           digest=$(sed -nE 's/^[^[:space:]]+: digest: (sha256:[a-f0-9]{64}) size: [0-9]+$/\1/p' "$RUNNER_TEMP/openchamber-push.log")
           [[ "$digest" =~ ^sha256:[a-f0-9]{64}$ ]]
           printf 'digest=%s\n' "$digest" >> "$GITHUB_OUTPUT"
-      - name: Verify published manifest, privacy, and repository association
+      - name: Verify published manifest and package and repository privacy
         if: steps.prepare.outputs.skip != 'true'
         env:
           GITHUB_TOKEN: ${{ github.token }}
           IMAGE: ${{ steps.prepare.outputs.image }}
           MANIFEST_DIGEST: ${{ steps.publish.outputs.digest }}
         run: node scripts/upstream-releases.mjs verify-image
+      - name: Verify the published image's build origin
+        if: steps.prepare.outputs.skip != 'true'
+        env:
+          IMAGE: ${{ steps.prepare.outputs.image }}
+          MANIFEST_DIGEST: ${{ steps.publish.outputs.digest }}
+          RELEASE_VERSION: ${{ steps.prepare.outputs.version }}
+          RELEASE_ID: ${{ steps.prepare.outputs.release_id }}
+          SOURCE_COMMIT: ${{ github.sha }}
+        run: |
+          reference="$IMAGE@$MANIFEST_DIGEST"
+          docker pull "$reference"
+          docker image inspect "$reference" --format '{{json .Config.Labels}}' > "$RUNNER_TEMP/image-labels.json"
+          IMAGE_LABELS_FILE="$RUNNER_TEMP/image-labels.json" node scripts/upstream-releases.mjs verify-origin

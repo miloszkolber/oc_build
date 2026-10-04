@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { ReleaseClient, RegistryAuthError, candidate, discover, prepare, verifyImage } from './upstream-releases.mjs';
+import { ReleaseClient, RegistryAuthError, candidate, discover, prepare, verifyImage, verifyOrigin } from './upstream-releases.mjs';
 
 // GitHub REST release/asset and OCI registry fixtures. Expected tags below come
 // from the publication/identity contract, never from the implementation's output.
@@ -27,6 +27,10 @@ function fixture(pages, options = {}) {
     assert(init.signal instanceof AbortSignal);
     if (url.origin === 'https://api.github.com') {
       assert.equal(init.headers.Authorization, 'Bearer fixture-github');
+      if (url.pathname === '/repos/miloszkolber/openchamber') {
+        return response(options.repository ?? { full_name: 'miloszkolber/openchamber', private: true },
+          options.repositoryStatus ?? 200);
+      }
       if (url.pathname === '/users/miloszkolber/packages/container/openchamber') {
         return response(options.metadata ?? metadata, options.metadataStatus ?? 200);
       }
@@ -166,18 +170,49 @@ test('versions, digests, timestamps, assets, and pagination are validated at the
   });
 });
 
-test('private package visibility and association are required, not inferred from a successful registry lookup', async () => {
+test('package and build repository privacy are independent checks; missing linkage is not a contradictory link', async () => {
   const pages = [[release('2.0.1', 395994070)]];
   for (const bad of [
     { ...metadata, visibility: 'public' },
     { ...metadata, repository: { full_name: 'openchamber/openchamber', private: true } },
     { ...metadata, repository: { full_name: 'miloszkolber/openchamber', private: false } },
-    { ...metadata, repository: null },
   ]) {
-    await assert.rejects(discover(fixture(pages, { metadata: bad }).client), /private|associated/);
+    await assert.rejects(discover(fixture(pages, { metadata: bad }).client), /private|different or public/);
   }
+  // Exact shape observed from GHCR with the workflow token on 2026-10-04:
+  // package privacy is present; repository is absent, not a public/wrong link.
+  const { repository: _unused, ...withoutLinkage } = metadata;
+  assert.equal((await discover(fixture(pages, { metadata: withoutLinkage }).client)).include.length, 1);
+  for (const repository of [
+    { full_name: 'miloszkolber/openchamber', private: false },
+    { full_name: 'other/openchamber', private: true },
+  ]) await assert.rejects(discover(fixture(pages, { repository }).client), /repository must be private/);
+  await assert.rejects(discover(fixture(pages, { repositoryStatus: 403 }).client), /repository metadata unavailable/);
+  await assert.rejects(discover(fixture(pages, { metadataStatus: 404, repository: {
+    full_name: 'miloszkolber/openchamber', private: false,
+  } }).client, { bootstrap: true }), /repository must be private/);
   await assert.rejects(discover(fixture(pages, { metadataStatus: 404, manifestStatus: 200 }).client), /no verified private/);
   await assert.rejects(fixture(pages, { metadataStatus: 404 }).client.privatePackage(), /metadata unavailable/);
+});
+
+test('published image provenance must identify the private build source, checked commit, version, and release', () => {
+  const input = { version: '2.0.1', releaseId: '395994070', sourceCommit: 'e'.repeat(40) };
+  const labels = {
+    'org.opencontainers.image.source': 'https://github.com/miloszkolber/openchamber',
+    'org.opencontainers.image.revision': 'e'.repeat(40),
+    'org.opencontainers.image.version': '2.0.1',
+    'io.openchamber.upstream.release-id': '395994070',
+  };
+  assert.deepEqual(verifyOrigin(labels, input), {
+    source: 'https://github.com/miloszkolber/openchamber', revision: 'e'.repeat(40), version: '2.0.1', release_id: '395994070',
+  });
+  for (const [key, wrong] of [
+    ['org.opencontainers.image.source', 'https://github.com/openchamber/openchamber'],
+    ['org.opencontainers.image.revision', 'f'.repeat(40)],
+    ['org.opencontainers.image.version', '2.0.2'],
+    ['io.openchamber.upstream.release-id', '410000001'],
+  ]) assert.throws(() => verifyOrigin({ ...labels, [key]: wrong }, input), /Published image/);
+  assert.throws(() => verifyOrigin(labels, { ...input, sourceCommit: 'e'.repeat(40) + '\n' }), /Expected build source commit/);
 });
 
 test('publication verification requires the exact remote tag and push manifest digest, not only private metadata', async () => {

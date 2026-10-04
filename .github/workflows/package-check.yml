@@ -51,6 +51,13 @@ jobs:
           GITHUB_TOKEN: ${{ github.token }}
         run: |
           printf '%s' "$GITHUB_TOKEN" | docker login ghcr.io --username "$GITHUB_ACTOR" --password-stdin
-          image=ghcr.io/miloszkolber/openchamber@sha256:c236251752ae03e61b0f06a4acf5d9433b5d66eae247452018db53b28d257365
-          docker pull "$image"
-          docker image inspect "$image" --format 'source={{index .Config.Labels "org.opencontainers.image.source"}} revision={{index .Config.Labels "org.opencontainers.image.revision"}} version={{index .Config.Labels "org.opencontainers.image.version"}}'
+          for record in \
+            '2.0.1 395994070 sha256:c236251752ae03e61b0f06a4acf5d9433b5d66eae247452018db53b28d257365' \
+            '2.0.2 397002711 sha256:89e3d685d3e13fca1ce2220a431cbdaad0fe8b680678aad6258202690e3aff9b'; do
+            read -r version release_id digest <<< "$record"
+            image="ghcr.io/miloszkolber/openchamber@$digest"
+            docker pull "$image"
+            docker image inspect "$image" --format '{{json .Config.Labels}}' > "$RUNNER_TEMP/image-labels.json"
+            IMAGE_LABELS_FILE="$RUNNER_TEMP/image-labels.json" RELEASE_VERSION="$version" RELEASE_ID="$release_id" \
+              SOURCE_COMMIT=0fffea0421156368d0b1aa11af6b2c5113efb04e node scripts/upstream-releases.mjs verify-origin
+          done
