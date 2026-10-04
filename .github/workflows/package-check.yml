@@ -27,6 +27,7 @@ jobs:
           assert(packageResponse.ok, `Package metadata HTTP ${packageResponse.status}`);
           const pkg = await packageResponse.json();
           console.log(JSON.stringify({ name: pkg.name, type: pkg.package_type, visibility: pkg.visibility,
+            metadataKeys: Object.keys(pkg), repositoryFieldPresent: Object.hasOwn(pkg, 'repository'),
             repositoryKeys: Object.keys(pkg.repository || {}), repositoryFullName: pkg.repository?.full_name,
             repositoryPrivate: pkg.repository?.private }, null, 2));
           const repoResponse = await client.github('/repos/miloszkolber/openchamber');
@@ -45,3 +46,11 @@ jobs:
             console.log(JSON.stringify({ version, release_id, digest }));
           }
           NODE
+      - name: Inspect the exact published image labels without starting it
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+        run: |
+          printf '%s' "$GITHUB_TOKEN" | docker login ghcr.io --username "$GITHUB_ACTOR" --password-stdin
+          image=ghcr.io/miloszkolber/openchamber@sha256:c236251752ae03e61b0f06a4acf5d9433b5d66eae247452018db53b28d257365
+          docker pull "$image"
+          docker image inspect "$image" --format 'source={{index .Config.Labels "org.opencontainers.image.source"}} revision={{index .Config.Labels "org.opencontainers.image.revision"}} version={{index .Config.Labels "org.opencontainers.image.version"}}'
