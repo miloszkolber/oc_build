@@ -18,6 +18,14 @@ on:
         description: 'Optional upstream release ID; empty catches up all eligible releases'
         type: string
         default: ''
+      verify_digest:
+        description: 'Read-only recovery: recorded push manifest digest; requires release_id and original source_commit'
+        type: string
+        default: ''
+      source_commit:
+        description: 'Original publishing commit for read-only verification recovery; never inferred from current main'
+        type: string
+        default: ''
 
 permissions:
   contents: read
@@ -53,7 +61,7 @@ jobs:
           retention-days: 30
 
   discover:
-    if: github.event_name == 'schedule' || github.event_name == 'workflow_dispatch'
+    if: (github.event_name == 'schedule' || github.event_name == 'workflow_dispatch') && !inputs.verify_digest
     runs-on: ubuntu-latest
     timeout-minutes: 10
     permissions:
@@ -119,6 +127,9 @@ jobs:
             --label "org.opencontainers.image.revision=$GITHUB_SHA" \
             --label "io.openchamber.upstream.release-id=$RELEASE_ID" \
             --label "org.opencontainers.image.url=https://github.com/openchamber/openchamber/releases/tag/v$VERSION" .
+          docker image inspect "$IMAGE" --format '{{json .Config.Labels}}' > "$RUNNER_TEMP/image-labels.json"
+          IMAGE_LABELS_FILE="$RUNNER_TEMP/image-labels.json" RELEASE_VERSION="$VERSION" SOURCE_COMMIT="$GITHUB_SHA" \
+            node scripts/upstream-releases.mjs verify-origin
           timeout 180 docker run --rm --interactive --network none --read-only --cap-drop ALL \
             --security-opt no-new-privileges --tmpfs /tmp \
             --env "EXPECTED_VERSION=$VERSION" --entrypoint node "$IMAGE" \
@@ -152,6 +163,40 @@ jobs:
           RELEASE_ID: ${{ steps.prepare.outputs.release_id }}
           SOURCE_COMMIT: ${{ github.sha }}
         run: |
+          reference="$IMAGE@$MANIFEST_DIGEST"
+          docker pull "$reference"
+          docker image inspect "$reference" --format '{{json .Config.Labels}}' > "$RUNNER_TEMP/image-labels.json"
+          IMAGE_LABELS_FILE="$RUNNER_TEMP/image-labels.json" node scripts/upstream-releases.mjs verify-origin
+
+  verification:
+    if: github.event_name == 'workflow_dispatch' && inputs.verify_digest != ''
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    permissions:
+      contents: read
+      packages: read
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - name: Reconcile a published tag without building or overwriting it
+        id: published
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+          RELEASE_ID: ${{ inputs.release_id }}
+          MANIFEST_DIGEST: ${{ inputs.verify_digest }}
+          SOURCE_COMMIT: ${{ inputs.source_commit }}
+        run: node scripts/upstream-releases.mjs verify-release
+      - name: Verify the exact published config without starting it
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+          IMAGE: ${{ steps.published.outputs.image }}
+          MANIFEST_DIGEST: ${{ steps.published.outputs.digest }}
+          RELEASE_VERSION: ${{ steps.published.outputs.version }}
+          RELEASE_ID: ${{ steps.published.outputs.release_id }}
+          SOURCE_COMMIT: ${{ steps.published.outputs.source_commit }}
+        run: |
+          printf '%s' "$GITHUB_TOKEN" | docker login ghcr.io --username "$GITHUB_ACTOR" --password-stdin
           reference="$IMAGE@$MANIFEST_DIGEST"
           docker pull "$reference"
           docker image inspect "$reference" --format '{{json .Config.Labels}}' > "$RUNNER_TEMP/image-labels.json"

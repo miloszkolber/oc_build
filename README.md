@@ -47,6 +47,17 @@ The `release_id` argument is optional; bootstrap always selects `395994070`. The
 
 The first CI run must establish that `GITHUB_TOKEN` can read the package metadata and push a private package with the expected published image origin. Repository creation and a local OAuth login do not prove those package permissions; the local login may lack `read:packages`. If verification fails, stop and repair the demonstrated visibility, access, digest, or image-origin mismatch before rerunning; this repository does not change package settings or deploy a partially verified image.
 
+### Verification recovery
+
+A successful push followed by a verification error is a published image with incomplete verification, not a missing image. Ordinary discovery reconciles existing tags without overwriting them. To repeat the full read-only privacy, digest, and origin checks, copy the digest from that successful push and the original publishing commit from its run, then dispatch:
+
+```sh
+gh workflow run build.yml -f release_id=395994070 \
+  -f verify_digest=sha256:RECORDED_PUSH_DIGEST -f source_commit=ORIGINAL_PUBLISHING_COMMIT
+```
+
+Replace the placeholders with the full 64-character digest and 40-character commit. This mode uses only package-read permission, skips discovery/build/publication, resolves the retained upstream release identity, pulls the exact digest on a disposable runner without starting it, and checks its origin against the original commit. It does not substitute current `main`'s commit, require a PAT, or suppress verification because the tag already exists.
+
 ## Checks and artifacts
 
 ```sh
@@ -58,7 +69,7 @@ test -s bun.lock && bun install --frozen-lockfile && bun run test && bun run bui
 bun -e 'const {default:p}=await import("./dist/signet-opencode-v2.mjs"); if(p.id!=="signet.lifecycle" || typeof p.setup!=="function") throw new Error("Invalid plugin")'
 ```
 
-The dependency-free discovery fixtures check GitHub pagination, late assets, prereleases, completed identities, strict digest/field validation, GHCR failures, bootstrap bounds, independent package/repository privacy, optional linkage metadata, post-publication digest and origin identity, and the matrix limit. They do not prove real registry permissions. Registry commands `discover`, `prepare`, `verify-package`, and `verify-image` use credentials only in `GITHUB_TOKEN`/`GITHUB_ACTOR`; dispatch inputs and discovery outputs are revalidated and passed through quoted environment variables, not interpolated into shell programs. `verify-image` requires `IMAGE` and the pushed registry `MANIFEST_DIGEST`, and rejects missing tags or mismatched digests even when package privacy is correct. The credential-free `verify-origin` command checks the JSON file named by `IMAGE_LABELS_FILE` against `RELEASE_VERSION`, `RELEASE_ID`, and `SOURCE_COMMIT`.
+The dependency-free discovery fixtures check GitHub pagination, late assets, prereleases, completed identities, strict digest/field validation, GHCR failures, bootstrap bounds, independent package/repository privacy, optional linkage metadata, post-publication digest and origin identity, read-only recovery, and the matrix limit. They do not prove real registry permissions. Registry commands `discover`, `prepare`, `verify-package`, `verify-image`, and `verify-release` use credentials only in `GITHUB_TOKEN`/`GITHUB_ACTOR`; dispatch inputs and discovery outputs are revalidated and passed through quoted environment variables, not interpolated into shell programs. `verify-image` requires `IMAGE` and the pushed registry `MANIFEST_DIGEST`, and rejects missing tags or mismatched digests even when package privacy is correct. The credential-free `verify-origin` command checks the JSON file named by `IMAGE_LABELS_FILE` against `RELEASE_VERSION`, `RELEASE_ID`, and `SOURCE_COMMIT`.
 
 Download the plugin artifact from the private repository's Actions run. From its extracted directory, `sha256sum -c SHA256SUMS` verifies the bundle against its recorded checksum. The artifact is not a standalone OpenCode runtime: it retains an external `@opencode/plugin@2.0.16` import. CI imports the bundle with installed locked dependencies; it does not repeat the separate native OpenCode acceptance smoke, establish compatibility with newer OpenCode versions, or prove a final assistant-output sanitization guarantee. See the [plugin README](plugins/signet-opencode-v2/README.md) and [third-party attribution](THIRD_PARTY_NOTICES.md).
 

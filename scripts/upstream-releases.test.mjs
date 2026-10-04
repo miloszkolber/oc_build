@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { ReleaseClient, RegistryAuthError, candidate, discover, prepare, verifyImage, verifyOrigin } from './upstream-releases.mjs';
+import { ReleaseClient, RegistryAuthError, candidate, discover, prepare, verifyImage, verifyOrigin, verifyRelease } from './upstream-releases.mjs';
 
 // GitHub REST release/asset and OCI registry fixtures. Expected tags below come
 // from the publication/identity contract, never from the implementation's output.
@@ -176,13 +176,16 @@ test('package and build repository privacy are independent checks; missing linka
     { ...metadata, visibility: 'public' },
     { ...metadata, repository: { full_name: 'openchamber/openchamber', private: true } },
     { ...metadata, repository: { full_name: 'miloszkolber/openchamber', private: false } },
+    { ...metadata, repository: {} },
   ]) {
     await assert.rejects(discover(fixture(pages, { metadata: bad }).client), /private|different or public/);
   }
   // Exact shape observed from GHCR with the workflow token on 2026-10-04:
   // package privacy is present; repository is absent, not a public/wrong link.
   const { repository: _unused, ...withoutLinkage } = metadata;
-  assert.equal((await discover(fixture(pages, { metadata: withoutLinkage }).client)).include.length, 1);
+  for (const compatible of [withoutLinkage, { ...metadata, repository: null }]) {
+    assert.equal((await discover(fixture(pages, { metadata: compatible }).client)).include.length, 1);
+  }
   for (const repository of [
     { full_name: 'miloszkolber/openchamber', private: false },
     { full_name: 'other/openchamber', private: true },
@@ -231,6 +234,20 @@ test('publication verification requires the exact remote tag and push manifest d
     { ...input, image: 'ghcr.io/miloszkolber/openchamber:latest' },
     { ...input, digest: `sha256:${'b'.repeat(64)}\nINJECT=1` },
   ]) await assert.rejects(verifyImage(fixture([[]]).client, bad), /Expected/);
+});
+
+test('read-only verification recovery uses the original publishing commit and does not suppress existing tags', async () => {
+  const input = { releaseId: '395994070', digest: `sha256:${'b'.repeat(64)}`, sourceCommit: 'e'.repeat(40) };
+  const good = fixture([[release('2.0.1', 395994070)]], { manifestStatus: 200 });
+  assert.deepEqual(await verifyRelease(good.client, input), {
+    image: 'ghcr.io/miloszkolber/openchamber:2.0.1-r395994070', digest: `sha256:${'b'.repeat(64)}`,
+    version: '2.0.1', release_id: '395994070', source_commit: 'e'.repeat(40),
+  });
+  assert(good.requests.some(item => item.init.method === 'HEAD'));
+  await assert.rejects(verifyRelease(fixture([[release('2.0.1', 395994070)]]).client, input), /tag is absent/);
+  const invalid = fixture([[release('2.0.1', 395994070)]]);
+  await assert.rejects(verifyRelease(invalid.client, { ...input, sourceCommit: '' }), /original publishing commit/);
+  assert.equal(invalid.requests.length, 0);
 });
 
 test('matrix limit fails explicitly at 257 absent releases; never silently drops backlog', async () => {

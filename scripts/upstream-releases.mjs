@@ -239,6 +239,18 @@ export async function verifyImage(client, { image, digest }) {
   return { image, digest: remoteDigest };
 }
 
+export async function verifyRelease(client, { releaseId, digest, sourceCommit }) {
+  validateId(releaseId);
+  requireValue(typeof digest === 'string' && /^sha256:[a-f0-9]{64}$/.test(digest), 'Expected pushed registry manifest digest');
+  requireValue(typeof sourceCommit === 'string' && /^[a-f0-9]{40}$/.test(sourceCommit), 'Expected original publishing commit');
+  const release = await client.release(releaseId);
+  requireValue(release.draft === false && typeof release.tag_name === 'string' && release.tag_name.startsWith('v'),
+    'Expected retained published upstream release');
+  const version = validateVersion(release.tag_name.slice(1));
+  const result = await verifyImage(client, { image: `${IMAGE}:${version}-r${releaseId}`, digest });
+  return { ...result, version, release_id: releaseId, source_commit: sourceCommit };
+}
+
 export function verifyOrigin(labels, { version, releaseId, sourceCommit }) {
   validateVersion(version);
   validateId(releaseId);
@@ -359,8 +371,12 @@ async function main() {
     case 'verify-image':
       await outputs(await verifyImage(client, { image: process.env.IMAGE, digest: process.env.MANIFEST_DIGEST }));
       break;
+    case 'verify-release':
+      await outputs(await verifyRelease(client, { releaseId: process.env.RELEASE_ID, digest: process.env.MANIFEST_DIGEST,
+        sourceCommit: process.env.SOURCE_COMMIT }));
+      break;
     default:
-      throw new Error('Usage: upstream-releases.mjs discover|prepare|verify-package|verify-image|verify-origin (see README for environment)');
+      throw new Error('Usage: upstream-releases.mjs discover|prepare|verify-package|verify-image|verify-release|verify-origin (see README for environment)');
   }
 }
 
