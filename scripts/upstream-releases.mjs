@@ -12,7 +12,7 @@ export const IMAGE = `ghcr.io/${REPOSITORY}`;
 export const CUTOFF = '2026-09-24T19:14:25Z';
 export const SEED_ID = '395994070';
 const API = 'https://api.github.com';
-const MANIFEST_TYPES = [
+export const MANIFEST_TYPES = [
   'application/vnd.oci.image.manifest.v1+json',
   'application/vnd.oci.image.index.v1+json',
   'application/vnd.docker.distribution.manifest.v2+json',
@@ -81,27 +81,34 @@ export function candidate(release) {
   return { version, release_id, asset_sha256 };
 }
 
-async function json(response, maxBytes = 8 * 1024 * 1024) {
+export async function responseBytes(response, maxBytes) {
   requireValue(response.body, 'Missing API response body');
   const reader = response.body.getReader();
   const chunks = [];
   let length = 0;
   try {
     while (true) {
-      const { value, done } = await reader.read();
+      let part;
+      try { part = await reader.read(); } catch { throw new Error('API response transport failure'); }
+      const { value, done } = part;
       if (done) break;
       length += value.byteLength;
       requireValue(length <= maxBytes, 'API response exceeded size limit');
       chunks.push(value);
     }
-    try {
-      return JSON.parse(Buffer.concat(chunks).toString('utf8'));
-    } catch {
-      // JSON parser messages can quote response data, including bearer tokens.
-      throw new Error('Invalid API JSON response');
-    }
+    return Buffer.concat(chunks);
   } finally {
-    await reader.cancel();
+    await reader.cancel().catch(() => {});
+  }
+}
+
+async function json(response, maxBytes = 8 * 1024 * 1024) {
+  const bytes = await responseBytes(response, maxBytes);
+  try {
+    return JSON.parse(bytes.toString('utf8'));
+  } catch {
+    // JSON parser messages can quote response data, including bearer tokens.
+    throw new Error('Invalid API JSON response');
   }
 }
 
@@ -118,7 +125,12 @@ export class ReleaseClient {
   }
 
   async request(url, options = {}) {
-    return this.fetch(url, { ...options, redirect: 'error', signal: AbortSignal.timeout(20_000) });
+    try {
+      return await this.fetch(url, { ...options, redirect: 'error', signal: AbortSignal.timeout(20_000) });
+    } catch {
+      // Transport errors can include URLs, headers, or private response data.
+      throw new Error('Remote transport failure; no response was verified');
+    }
   }
 
   async github(path) {
@@ -188,15 +200,16 @@ export class ReleaseClient {
     return true;
   }
 
-  async registryToken() {
+  async registryToken(scope = 'pull') {
+    requireValue(['pull', 'pull,push'].includes(scope), 'Unsupported GHCR token scope');
     const url = new URL('https://ghcr.io/token');
     url.searchParams.set('service', 'ghcr.io');
-    url.searchParams.set('scope', `repository:${REPOSITORY}:pull`);
+    url.searchParams.set('scope', `repository:${REPOSITORY}:${scope}`);
     const response = await this.request(url.href, { headers: {
       Authorization: `Basic ${Buffer.from(`${this.actor}:${this.token}`).toString('base64')}`,
     } });
     if (response.status === 401 || response.status === 403) {
-      throw new RegistryAuthError(`GHCR pull-scope authentication failed (HTTP ${response.status}); not evidence of an absent image`);
+      throw new RegistryAuthError(`GHCR ${scope}-scope authentication failed (HTTP ${response.status}); not evidence of an absent image`);
     }
     requireValue(response.ok, `GHCR token request failed (HTTP ${response.status})`);
     const body = await json(response, 64 * 1024);

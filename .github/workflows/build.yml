@@ -5,6 +5,8 @@ on:
     branches: [main]
     paths:
       - 'plugins/**'
+      - 'scripts/upstream-releases*'
+      - 'scripts/latest-release*'
       - '.github/workflows/build.yml'
   schedule:
     - cron: '17 * * * *'
@@ -42,8 +44,8 @@ jobs:
       - uses: oven-sh/setup-bun@0c5077e51419868618aeaa5fe8019c62421857d6 # v2.2.0
         with:
           bun-version: '1.4.2'
-      - name: Test release discovery contract
-        run: node --test scripts/upstream-releases.test.mjs
+      - name: Test release discovery and latest promotion contracts
+        run: node --test scripts/upstream-releases.test.mjs scripts/latest-release.test.mjs
       - name: Test and bundle the source-loaded plugin
         working-directory: plugins/signet-opencode-v2
         run: |
@@ -74,8 +76,8 @@ jobs:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           persist-credentials: false
-      - name: Test release discovery contract
-        run: node --test scripts/upstream-releases.test.mjs
+      - name: Test release discovery and latest promotion contracts
+        run: node --test scripts/upstream-releases.test.mjs scripts/latest-release.test.mjs
       - name: Discover every unbuilt eligible upstream release
         id: releases
         env:
@@ -167,6 +169,69 @@ jobs:
           docker pull "$reference"
           docker image inspect "$reference" --format '{{json .Config.Labels}}' > "$RUNNER_TEMP/image-labels.json"
           IMAGE_LABELS_FILE="$RUNNER_TEMP/image-labels.json" node scripts/upstream-releases.mjs verify-origin
+
+  latest:
+    needs: [discover, image]
+    if: >-
+      ${{ !cancelled() && github.ref == 'refs/heads/main' &&
+          (github.event_name == 'schedule' || github.event_name == 'workflow_dispatch') &&
+          !inputs.bootstrap && !inputs.verify_digest && needs.discover.result == 'success' &&
+          (needs.image.result == 'success' ||
+           (needs.discover.outputs.count == '0' && needs.image.result == 'skipped')) }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    permissions:
+      contents: read
+      packages: write
+    concurrency:
+      group: openchamber-latest
+      cancel-in-progress: false
+    outputs:
+      outcome: ${{ steps.promote.outcome == 'failure' && (steps.promote.outputs.outcome || 'failed') || steps.promote.outputs.outcome || steps.candidate.outputs.outcome }}
+      selected_release: ${{ steps.candidate.outputs.selected_release }}
+      digest: ${{ steps.promote.outputs.digest || steps.candidate.outputs.digest }}
+      previous_digest: ${{ steps.candidate.outputs.previous_digest }}
+      publisher: ${{ steps.promote.outputs.publisher }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - name: Select the highest eligible stable release after acquiring the latest group
+        id: candidate
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+        run: node scripts/latest-release.mjs candidate
+      - name: Verify retained provenance and promote the exact registry bytes
+        id: promote
+        if: steps.candidate.outputs.outcome == 'ready'
+        shell: bash
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+          LATEST_OUTCOME: ${{ steps.candidate.outputs.outcome }}
+          LATEST_VERSION: ${{ steps.candidate.outputs.version }}
+          LATEST_RELEASE_ID: ${{ steps.candidate.outputs.release_id }}
+          LATEST_ASSET_SHA256: ${{ steps.candidate.outputs.asset_sha256 }}
+          LATEST_PUBLISHED_AT: ${{ steps.candidate.outputs.published_at }}
+          LATEST_DIGEST: ${{ steps.candidate.outputs.digest }}
+          LATEST_PREVIOUS_DIGEST: ${{ steps.candidate.outputs.previous_digest }}
+          LATEST_ALIAS_STATUS: ${{ steps.candidate.outputs.alias_status }}
+        run: |
+          auth_dir=''
+          promotion_started=false
+          finish() {
+            status=$?
+            if [ "$status" -ne 0 ] && [ "$promotion_started" = false ]; then
+              node scripts/latest-release.mjs setup-failed || printf '%s\n' 'Failed to record promotion setup failure' >&2
+            fi
+            if [ -n "$auth_dir" ]; then rm -rf -- "$auth_dir"; fi
+            exit "$status"
+          }
+          trap finish EXIT
+          auth_dir=$(mktemp -d "$RUNNER_TEMP/openchamber-latest-auth.XXXXXX")
+          export DOCKER_CONFIG="$auth_dir"
+          printf '%s' "$GITHUB_TOKEN" | timeout --kill-after 5 30 docker login ghcr.io --username "$GITHUB_ACTOR" --password-stdin
+          promotion_started=true
+          node scripts/latest-release.mjs promote
 
   verification:
     if: github.event_name == 'workflow_dispatch' && inputs.verify_digest != ''
