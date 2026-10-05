@@ -26,13 +26,18 @@ run('git', ['--version']);
 run('/bin/sh', ['-n', '/usr/local/bin/openchamber-entrypoint']);
 run('/bin/sh', ['-c', 'test "$(id -u)" -ne 0']);
 assert.equal(run('node', [join(root, 'bin/cli.js'), '--version']), pkg.version, 'CLI must import and report the baked version');
+// Check runtime modules only. Upstream ships test sources that need a test-runner
+// transform, so a duplicate binding in an unused test file is not image corruption.
+let checkedModules = 0;
 for (const directory of ['bin', 'server']) {
   for (const entry of readdirSync(join(root, directory), { recursive: true, withFileTypes: true })) {
-    if (entry.isFile() && /\.(?:js|mjs|cjs)$/.test(entry.name)) {
-      run('node', ['--check', join(entry.parentPath, entry.name)]);
-    }
+    if (!entry.isFile() || !/\.(?:js|mjs|cjs)$/.test(entry.name)) continue;
+    if (/\.(?:test|spec)\.(?:js|mjs|cjs)$/.test(entry.name)) continue;
+    run('node', ['--check', join(entry.parentPath, entry.name)]);
+    checkedModules += 1;
   }
 }
+assert(checkedModules > 100, `Expected many runtime modules, checked ${checkedModules}`);
 
 // Exercise the actual patched route handlers, not a marker-text assertion.
 const { registerOpenChamberRoutes } = await import(pathToFileURL(join(root, 'server/lib/opencode/openchamber-routes.js')));
@@ -65,4 +70,4 @@ for (const runtime of [undefined, 'web', 'desktop']) {
     assert.deepEqual(response.body, body, `${method} body (${runtime || 'default'} runtime)`);
   }
 }
-console.log(`Image checks passed for OpenChamber ${pkg.version}: non-root, Node/Git/shell, CLI/layout/syntax, update guards`);
+console.log(`Image checks passed for OpenChamber ${pkg.version}: non-root, Node/Git/shell, CLI/layout, ${checkedModules} module syntax, update guards`);
