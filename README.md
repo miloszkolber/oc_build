@@ -25,6 +25,14 @@ Images are built from the upstream `openchamber-web-<version>.tgz` release asset
 
 The workflow runs hourly and on manual dispatch. It fully paginates upstream releases, so a missed poll catches up. A push touching `plugin/**` or the release scripts tests and bundles the plugin instead.
 
+To republish an already-published release with a changed image definition:
+
+```sh
+gh workflow run build.yml -f release_id=403254044 -f rebuild=true
+```
+
+Rebuild replaces that release's canonical tag after the image passes the same checks.
+
 The runtime image is distroless: no package manager, shell utilities or npm. Git and bash are copied in with their library closure because OpenChamber's source-control features run git and the web terminal spawns a shell. The OpenCode binary is not included; the host mounts it and sets `OPENCODE_BINARY`.
 
 ## Local builds

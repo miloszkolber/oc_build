@@ -280,9 +280,10 @@ function seedAllowed(bootstrap, packageExists, release) {
     'Bootstrap bypass is restricted to the initial 2.0.1 seed with unavailable package metadata');
 }
 
-export async function discover(client, { bootstrap = false, releaseId = '' } = {}) {
+export async function discover(client, { bootstrap = false, releaseId = '', rebuild = false } = {}) {
   if (releaseId) validateId(releaseId);
   requireValue(!bootstrap || !releaseId || releaseId === SEED_ID, 'Bootstrap can only select release 395994070 (2.0.1)');
+  requireValue(!rebuild || releaseId, 'Rebuild requires an explicit release_id');
   const selectedId = bootstrap ? SEED_ID : releaseId;
   const packageExists = await client.privatePackage({ allowMissing: true });
   let token;
@@ -304,7 +305,7 @@ export async function discover(client, { bootstrap = false, releaseId = '' } = {
     if (!item) continue;
     if (item.pending) { pending += 1; continue; }
     if (uncheckedSeed) seedAllowed(bootstrap, packageExists, item);
-    if (token && await client.completed(item, token)) {
+    if (!rebuild && token && await client.completed(item, token)) {
       requireValue(packageExists, 'Existing image has no verified private package association');
       completed += 1;
       continue;
@@ -317,7 +318,7 @@ export async function discover(client, { bootstrap = false, releaseId = '' } = {
   return { include, pending, completed };
 }
 
-export async function prepare(client, { version, releaseId, assetSha256, bootstrap = false }) {
+export async function prepare(client, { version, releaseId, assetSha256, bootstrap = false, rebuild = false }) {
   validateVersion(version);
   validateId(releaseId);
   requireValue(typeof assetSha256 === 'string' && /^(?:[a-f0-9]{64})?$/.test(assetSha256), 'Invalid expected asset SHA-256');
@@ -327,8 +328,10 @@ export async function prepare(client, { version, releaseId, assetSha256, bootstr
   const packageExists = await client.privatePackage({ allowMissing: true });
   let skip = false;
   try {
-    skip = await client.completed(item, await client.registryToken());
-    requireValue(!skip || packageExists, 'Existing image has no verified private package association');
+    if (!rebuild) {
+      skip = await client.completed(item, await client.registryToken());
+      requireValue(!skip || packageExists, 'Existing image has no verified private package association');
+    }
   } catch (error) {
     if (!(error instanceof RegistryAuthError)) throw error;
     seedAllowed(bootstrap, packageExists, item);
@@ -363,7 +366,7 @@ async function main() {
   const client = new ReleaseClient({ token: process.env.GITHUB_TOKEN, actor: process.env.GITHUB_ACTOR });
   switch (process.argv[2]) {
     case 'discover': {
-      const result = await discover(client, { bootstrap: boolean(process.env.BOOTSTRAP), releaseId: process.env.RELEASE_ID || '' });
+      const result = await discover(client, { bootstrap: boolean(process.env.BOOTSTRAP), releaseId: process.env.RELEASE_ID || '', rebuild: boolean(process.env.REBUILD) });
       if (result.include.some(item => item.bootstrap)) {
         console.error('Explicit bootstrap: initial seed authorized without proving manifest absence; GHCR pull-scope authentication was refused.');
       }
@@ -373,7 +376,7 @@ async function main() {
     }
     case 'prepare':
       await outputs(await prepare(client, { version: process.env.RELEASE_VERSION, releaseId: process.env.RELEASE_ID,
-        assetSha256: process.env.ASSET_SHA256, bootstrap: boolean(process.env.BOOTSTRAP) }));
+        assetSha256: process.env.ASSET_SHA256, bootstrap: boolean(process.env.BOOTSTRAP), rebuild: boolean(process.env.REBUILD) }));
       break;
     case 'verify-package':
       await client.privatePackage();

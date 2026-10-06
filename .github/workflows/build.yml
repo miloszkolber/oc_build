@@ -28,6 +28,10 @@ on:
         description: 'Original publishing commit for read-only verification recovery; never inferred from current main'
         type: string
         default: ''
+      rebuild:
+        description: 'Rebuild and republish an already-published release with the current Dockerfile; requires release_id'
+        type: boolean
+        default: false
 
 permissions:
   contents: read
@@ -84,6 +88,7 @@ jobs:
           GITHUB_TOKEN: ${{ github.token }}
           BOOTSTRAP: ${{ inputs.bootstrap || false }}
           RELEASE_ID: ${{ inputs.release_id || '' }}
+          REBUILD: ${{ inputs.rebuild || false }}
         run: node releases.mjs discover
 
   image:
@@ -113,6 +118,7 @@ jobs:
           RELEASE_ID: ${{ matrix.release_id }}
           ASSET_SHA256: ${{ matrix.asset_sha256 }}
           BOOTSTRAP: ${{ matrix.bootstrap }}
+          REBUILD: ${{ inputs.rebuild || false }}
         run: node releases.mjs prepare
       - name: Build and check before publication
         if: steps.prepare.outputs.skip != 'true'

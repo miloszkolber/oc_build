@@ -105,6 +105,27 @@ test('a completed canonical tag skips, while reuse of the version with a new rel
   assert.deepEqual(result.include.map(item => [item.version, item.release_id]), [['2.0.1', '410000001']]);
 });
 
+test('an explicit rebuild reselects an already-published release without a release_id', async () => {
+  // Rebuilt images change the Dockerfile, not the upstream release, so the
+  // operator selects the release explicitly.
+  await assert.rejects(
+    discover(fixture([[release('2.0.1', 395994070)]], { manifestStatuses: { '2.0.1-r395994070': 200 } }).client,
+      { rebuild: true }),
+    /Rebuild requires an explicit release_id/);
+
+  const result = await discover(fixture([[release('2.0.1', 395994070)]], {
+    manifestStatuses: { '2.0.1-r395994070': 200 },
+  }).client, { rebuild: true, releaseId: '395994070' });
+  assert.equal(result.completed, 0);
+  assert.deepEqual(result.include.map(item => item.release_id), ['395994070']);
+
+  const skipped = await discover(fixture([[release('2.0.1', 395994070)]], {
+    manifestStatuses: { '2.0.1-r395994070': 200 },
+  }).client, { releaseId: '395994070' });
+  assert.equal(skipped.completed, 1);
+  assert.equal(skipped.include.length, 0);
+});
+
 test('only an authenticated manifest 404 means absent; auth, HTTP, and transport failures fail closed', async () => {
   const pages = [[release('2.0.1', 395994070)]];
   assert.equal((await discover(fixture(pages).client)).include.length, 1);
