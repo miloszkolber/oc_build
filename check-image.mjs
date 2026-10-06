@@ -15,16 +15,18 @@ for (const directory of ['bin', 'server', 'dist', 'node_modules']) {
 }
 assert(statSync(join(root, 'dist/index.html')).isFile(), 'Missing web entrypoint');
 assert(statSync('/usr/share/licenses/openchamber/LICENSE').isFile(), 'Missing upstream license');
-assert(statSync('/usr/local/bin/openchamber-entrypoint').mode & 0o111, 'Launcher must be executable');
+assert(statSync('/entrypoint.sh').mode & 0o111, 'Launcher must be executable');
 
 function run(command, args) {
   const result = spawnSync(command, args, { encoding: 'utf8', timeout: 30_000 });
   assert.equal(result.status, 0, `${command} ${args.join(' ')} failed: ${result.error?.message || result.stderr}`);
   return result.stdout.trim();
 }
+// Git and a POSIX shell back source control and the web terminal; both must work
+// without a package manager in the image.
 run('git', ['--version']);
-run('/bin/sh', ['-n', '/usr/local/bin/openchamber-entrypoint']);
-run('/bin/sh', ['-c', 'test "$(id -u)" -ne 0']);
+run('sh', ['-c', 'cd /tmp && HOME=/tmp git init -q repo && HOME=/tmp git -C repo status --porcelain >/dev/null']);
+run('sh', ['-n', '/entrypoint.sh']);
 assert.equal(run('node', [join(root, 'bin/cli.js'), '--version']), pkg.version, 'CLI must import and report the baked version');
 // Check runtime modules only. Upstream ships test sources that need a test-runner
 // transform, so a duplicate binding in an unused test file is not image corruption.

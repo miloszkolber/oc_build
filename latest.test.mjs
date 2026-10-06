@@ -7,8 +7,8 @@ import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { promisify } from 'node:util';
-import { LatestClient, latestCandidate, promoteLatest, readLabelsFile, selectLatest } from './latest-release.mjs';
-import { RegistryAuthError, discover } from './upstream-releases.mjs';
+import { LatestClient, latestCandidate, promoteLatest, readLabelsFile, selectLatest } from './latest.mjs';
+import { RegistryAuthError, discover } from './releases.mjs';
 
 // Independent GitHub/OCI fixtures: ordering, labels, and exact publication bytes
 // are asserted against this contract, not computed by the promotion implementation.
@@ -510,7 +510,7 @@ test('image label JSON is bounded before parsing and malformed JSON diagnostics 
 });
 
 test('the actual latest workflow gate admits zero-build/skipped-image runs and excludes failures, cancellation, recovery and bootstrap', async () => {
-  const workflow = await readFile(new URL('../.github/workflows/build.yml', import.meta.url), 'utf8');
+  const workflow = await readFile(new URL('./.github/workflows/build.yml', import.meta.url), 'utf8');
   const job = workflow.match(/(?:^|\n)  latest:\n([\s\S]*?)(?=\n  \w+:|$)/)?.[1];
   assert(job);
   assert.match(job, /needs: \[discover, image\]/);
@@ -544,7 +544,7 @@ test('CLI consumption failure exits nonzero and records a redacted machine resul
   const output = join(directory, 'output');
   const summary = join(directory, 'summary');
   try {
-    await assert.rejects(promisify(execFile)(process.execPath, [fileURLToPath(new URL('./latest-release.mjs', import.meta.url)), 'promote'], {
+    await assert.rejects(promisify(execFile)(process.execPath, [fileURLToPath(new URL('./latest.mjs', import.meta.url)), 'promote'], {
       timeout: 5000, maxBuffer: 64 * 1024, env: {
         ...process.env, GITHUB_REPOSITORY: 'miloszkolber/openchamber',
         GITHUB_TOKEN: 'fixture-github-secret', GITHUB_ACTOR: 'fixture-actor',
@@ -569,7 +569,7 @@ test('CLI consumption failure exits nonzero and records a redacted machine resul
 });
 
 test('the actual workflow reports failed or timed-out login before promotion, preserves observations, and cleans its owned auth directory', async () => {
-  const workflow = await readFile(new URL('../.github/workflows/build.yml', import.meta.url), 'utf8');
+  const workflow = await readFile(new URL('./.github/workflows/build.yml', import.meta.url), 'utf8');
   const step = workflow.match(/      - name: Verify retained provenance and promote the exact registry bytes\n([\s\S]*?)(?=\n  verification:)/)?.[1];
   const block = step?.match(/        run: \|\n([\s\S]*)/)?.[1];
   assert(block, 'Use the actual caller, not a copied shell recipe');
@@ -584,7 +584,7 @@ test('the actual workflow reports failed or timed-out login before promotion, pr
       const summary = join(directory, `summary-${code}`);
       const calls = join(directory, `calls-${code}`);
       await assert.rejects(promisify(execFile)('bash', ['-e', '-o', 'pipefail', '-c', script], {
-        cwd: fileURLToPath(new URL('..', import.meta.url)), timeout: 5000, maxBuffer: 64 * 1024,
+        cwd: fileURLToPath(new URL('.', import.meta.url)), timeout: 5000, maxBuffer: 64 * 1024,
         env: { ...process.env, PATH: `${directory}:${process.env.PATH}`, RUNNER_TEMP: directory,
           RUNTIME_EXECUTABLE: process.execPath, LOGIN_EXIT: String(code), NODE_CALLS: calls,
           GITHUB_REPOSITORY: 'miloszkolber/openchamber', GITHUB_TOKEN: 'fixture-login-secret', GITHUB_ACTOR: 'fixture-actor',
@@ -606,7 +606,7 @@ test('the actual workflow reports failed or timed-out login before promotion, pr
         assert(!`${error.stdout}${error.stderr}`.includes('fixture-login-secret'));
         return true;
       });
-      assert.equal(await readFile(calls, 'utf8'), 'scripts/latest-release.mjs setup-failed\n', 'Promotion and PUT must never start');
+      assert.equal(await readFile(calls, 'utf8'), 'latest.mjs setup-failed\n', 'Promotion and PUT must never start');
       assert.match(await readFile(output, 'utf8'), /outcome=failed/);
       assert.match(await readFile(output, 'utf8'), /put_attempted=false/);
       assert.match(await readFile(summary, 'utf8'), /manifest PUT was not attempted/);

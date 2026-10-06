@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { ReleaseClient, RegistryAuthError, candidate, discover, prepare, verifyImage, verifyOrigin, verifyRelease } from './upstream-releases.mjs';
+import { ReleaseClient, RegistryAuthError, candidate, discover, prepare, verifyImage, verifyOrigin, verifyRelease } from './releases.mjs';
 
 // GitHub REST release/asset and OCI registry fixtures. Expected tags below come
 // from the publication/identity contract, never from the implementation's output.

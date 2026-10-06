@@ -1,5 +1,5 @@
 {
-  "name": "signet-opencode-v2",
+  "name": "signet-opencode",
   "private": true,
   "type": "module",
   "main": "./index.ts",
@@ -10,6 +10,6 @@
   },
   "scripts": {
     "test": "bun test ./lifecycle.test.ts ./transcript-reader.test.ts ./static-identity.test.ts ./daemon-client.test.ts",
-    "build": "bun build ./index.ts --target bun --format esm --external @opencode/plugin --outfile dist/signet-opencode-v2.mjs"
+    "build": "bun build ./index.ts --target bun --format esm --external @opencode/plugin --outfile dist/signet-opencode.mjs"
   }
 }

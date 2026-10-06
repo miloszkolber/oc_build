@@ -9,7 +9,7 @@ import { promisify } from 'node:util';
 import {
   CUTOFF, IMAGE, MANIFEST_TYPES, REPOSITORY, ReleaseClient,
   candidate, responseBytes, validateId, validateVersion, verifyOrigin,
-} from './upstream-releases.mjs';
+} from './releases.mjs';
 
 const MANIFEST_LIMIT = 4 * 1024 * 1024;
 const LABEL_LIMIT = 64 * 1024;

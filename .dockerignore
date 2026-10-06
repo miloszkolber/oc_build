@@ -1,8 +1,6 @@
-# Only these inputs can enter the web image build context; never plugin/config data.
+# Only the web image inputs may enter the build context; never plugin or host data.
 **
-!assets/
-!assets/Dockerfile
-!assets/entrypoint.sh
-!assets/disable-self-update.patch
-!assets/licenses/
-!assets/licenses/openchamber-LICENSE
+!Dockerfile
+!entrypoint.sh
+!self-update.patch
+!openchamber-licence.txt

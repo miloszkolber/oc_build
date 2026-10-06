@@ -4,9 +4,9 @@ on:
   push:
     branches: [main]
     paths:
-      - 'plugins/**'
-      - 'scripts/upstream-releases*'
-      - 'scripts/latest-release*'
+      - 'plugin/**'
+      - 'releases*'
+      - 'latest*'
       - '.github/workflows/build.yml'
   schedule:
     - cron: '17 * * * *'
@@ -45,20 +45,20 @@ jobs:
         with:
           bun-version: '1.4.2'
       - name: Test release discovery and latest promotion contracts
-        run: node --test scripts/upstream-releases.test.mjs scripts/latest-release.test.mjs
+        run: node --test releases.test.mjs latest.test.mjs
       - name: Test and bundle the source-loaded plugin
-        working-directory: plugins/signet-opencode-v2
+        working-directory: plugin
         run: |
           test -s bun.lock && bun install --frozen-lockfile && bun run test && bun run build
-          bun -e 'const {default:p}=await import("./dist/signet-opencode-v2.mjs"); if(p.id!=="signet.lifecycle" || typeof p.setup!=="function") throw new Error("Invalid bundled plugin export")'
-          cp LICENSE NOTICE yaml-LICENSE dist/
-          (cd dist && sha256sum signet-opencode-v2.mjs > SHA256SUMS)
+          bun -e 'const {default:p}=await import("./dist/signet-opencode.mjs"); if(p.id!=="signet.lifecycle" || typeof p.setup!=="function") throw new Error("Invalid bundled plugin export")'
+          cp LICENSE NOTICE yaml-licence.txt dist/
+          (cd dist && sha256sum signet-opencode.mjs > SHA256SUMS)
           bun -e 'await Bun.write("dist/build.json", JSON.stringify({repository:process.env.GITHUB_REPOSITORY,source_commit:process.env.GITHUB_SHA,bun:Bun.version,opencode_api:"2.0.16",entrypoint:"./index.ts",external_runtime:"@opencode/plugin@2.0.16",bundle_sha256:(await Bun.file("dist/SHA256SUMS").text()).split(" ")[0]},null,2)+"\n")'
       - name: Retain private plugin bundle and provenance
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
-          name: signet-opencode-v2-${{ github.sha }}
-          path: plugins/signet-opencode-v2/dist/
+          name: signet-opencode-${{ github.sha }}
+          path: plugin/dist/
           if-no-files-found: error
           retention-days: 30
 
@@ -77,14 +77,14 @@ jobs:
         with:
           persist-credentials: false
       - name: Test release discovery and latest promotion contracts
-        run: node --test scripts/upstream-releases.test.mjs scripts/latest-release.test.mjs
+        run: node --test releases.test.mjs latest.test.mjs
       - name: Discover every unbuilt eligible upstream release
         id: releases
         env:
           GITHUB_TOKEN: ${{ github.token }}
           BOOTSTRAP: ${{ inputs.bootstrap || false }}
           RELEASE_ID: ${{ inputs.release_id || '' }}
-        run: node scripts/upstream-releases.mjs discover
+        run: node releases.mjs discover
 
   image:
     needs: discover
@@ -113,7 +113,7 @@ jobs:
           RELEASE_ID: ${{ matrix.release_id }}
           ASSET_SHA256: ${{ matrix.asset_sha256 }}
           BOOTSTRAP: ${{ matrix.bootstrap }}
-        run: node scripts/upstream-releases.mjs prepare
+        run: node releases.mjs prepare
       - name: Build and check before publication
         if: steps.prepare.outputs.skip != 'true'
         env:
@@ -122,7 +122,7 @@ jobs:
           RELEASE_ID: ${{ steps.prepare.outputs.release_id }}
           ASSET_SHA256: ${{ steps.prepare.outputs.asset_sha256 }}
         run: |
-          docker build --file assets/Dockerfile --tag "$IMAGE" \
+          docker build --file Dockerfile --tag "$IMAGE" \
             --build-arg "OPENCHAMBER_VERSION=$VERSION" \
             --build-arg "OPENCHAMBER_ASSET_SHA256=$ASSET_SHA256" \
             --label "org.opencontainers.image.source=https://github.com/$GITHUB_REPOSITORY" \
@@ -131,11 +131,11 @@ jobs:
             --label "org.opencontainers.image.url=https://github.com/openchamber/openchamber/releases/tag/v$VERSION" .
           docker image inspect "$IMAGE" --format '{{json .Config.Labels}}' > "$RUNNER_TEMP/image-labels.json"
           IMAGE_LABELS_FILE="$RUNNER_TEMP/image-labels.json" RELEASE_VERSION="$VERSION" SOURCE_COMMIT="$GITHUB_SHA" \
-            node scripts/upstream-releases.mjs verify-origin
+            node releases.mjs verify-origin
           timeout 180 docker run --rm --interactive --network none --read-only --cap-drop ALL \
             --security-opt no-new-privileges --tmpfs /tmp \
             --env "EXPECTED_VERSION=$VERSION" --entrypoint node "$IMAGE" \
-            --input-type=module < scripts/check-image.mjs
+            --input-type=module < check-image.mjs
       - name: Publish one canonical tag
         id: publish
         if: steps.prepare.outputs.skip != 'true'
@@ -155,7 +155,7 @@ jobs:
           GITHUB_TOKEN: ${{ github.token }}
           IMAGE: ${{ steps.prepare.outputs.image }}
           MANIFEST_DIGEST: ${{ steps.publish.outputs.digest }}
-        run: node scripts/upstream-releases.mjs verify-image
+        run: node releases.mjs verify-image
       - name: Verify the published image's build origin
         if: steps.prepare.outputs.skip != 'true'
         env:
@@ -168,7 +168,7 @@ jobs:
           reference="$IMAGE@$MANIFEST_DIGEST"
           docker pull "$reference"
           docker image inspect "$reference" --format '{{json .Config.Labels}}' > "$RUNNER_TEMP/image-labels.json"
-          IMAGE_LABELS_FILE="$RUNNER_TEMP/image-labels.json" node scripts/upstream-releases.mjs verify-origin
+          IMAGE_LABELS_FILE="$RUNNER_TEMP/image-labels.json" node releases.mjs verify-origin
 
   latest:
     needs: [discover, image]
@@ -200,7 +200,7 @@ jobs:
         id: candidate
         env:
           GITHUB_TOKEN: ${{ github.token }}
-        run: node scripts/latest-release.mjs candidate
+        run: node latest.mjs candidate
       - name: Verify retained provenance and promote the exact registry bytes
         id: promote
         if: steps.candidate.outputs.outcome == 'ready'
@@ -221,7 +221,7 @@ jobs:
           finish() {
             status=$?
             if [ "$status" -ne 0 ] && [ "$promotion_started" = false ]; then
-              node scripts/latest-release.mjs setup-failed || printf '%s\n' 'Failed to record promotion setup failure' >&2
+              node latest.mjs setup-failed || printf '%s\n' 'Failed to record promotion setup failure' >&2
             fi
             if [ -n "$auth_dir" ]; then rm -rf -- "$auth_dir"; fi
             exit "$status"
@@ -231,7 +231,7 @@ jobs:
           export DOCKER_CONFIG="$auth_dir"
           printf '%s' "$GITHUB_TOKEN" | timeout --kill-after 5 30 docker login ghcr.io --username "$GITHUB_ACTOR" --password-stdin
           promotion_started=true
-          node scripts/latest-release.mjs promote
+          node latest.mjs promote
 
   verification:
     if: github.event_name == 'workflow_dispatch' && inputs.verify_digest != ''
@@ -251,7 +251,7 @@ jobs:
           RELEASE_ID: ${{ inputs.release_id }}
           MANIFEST_DIGEST: ${{ inputs.verify_digest }}
           SOURCE_COMMIT: ${{ inputs.source_commit }}
-        run: node scripts/upstream-releases.mjs verify-release
+        run: node releases.mjs verify-release
       - name: Verify the exact published config without starting it
         env:
           GITHUB_TOKEN: ${{ github.token }}
@@ -265,4 +265,4 @@ jobs:
           reference="$IMAGE@$MANIFEST_DIGEST"
           docker pull "$reference"
           docker image inspect "$reference" --format '{{json .Config.Labels}}' > "$RUNNER_TEMP/image-labels.json"
-          IMAGE_LABELS_FILE="$RUNNER_TEMP/image-labels.json" node scripts/upstream-releases.mjs verify-origin
+          IMAGE_LABELS_FILE="$RUNNER_TEMP/image-labels.json" node releases.mjs verify-origin
