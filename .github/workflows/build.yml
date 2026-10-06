@@ -7,6 +7,10 @@ on:
       - 'plugin/**'
       - 'releases*'
       - 'latest*'
+      - 'Dockerfile'
+      - 'entrypoint.sh'
+      - 'self-update.patch'
+      - 'check-image.mjs'
       - '.github/workflows/build.yml'
   schedule:
     - cron: '17 * * * *'
@@ -67,7 +71,7 @@ jobs:
           retention-days: 30
 
   discover:
-    if: (github.event_name == 'schedule' || github.event_name == 'workflow_dispatch') && !inputs.verify_digest
+    if: (github.event_name == 'schedule' || github.event_name == 'workflow_dispatch' || github.event_name == 'push') && !inputs.verify_digest
     runs-on: ubuntu-latest
     timeout-minutes: 10
     permissions:
@@ -89,6 +93,7 @@ jobs:
           BOOTSTRAP: ${{ inputs.bootstrap || false }}
           RELEASE_ID: ${{ inputs.release_id || '' }}
           REBUILD: ${{ inputs.rebuild || false }}
+          REBUILD_NEWEST: ${{ github.event_name == 'push' }}
         run: node releases.mjs discover
 
   image:
@@ -180,7 +185,7 @@ jobs:
     needs: [discover, image]
     if: >-
       ${{ !cancelled() && github.ref == 'refs/heads/main' &&
-          (github.event_name == 'schedule' || github.event_name == 'workflow_dispatch') &&
+          (github.event_name == 'schedule' || github.event_name == 'workflow_dispatch' || github.event_name == 'push') &&
           !inputs.bootstrap && !inputs.verify_digest && needs.discover.result == 'success' &&
           (needs.image.result == 'success' ||
            (needs.discover.outputs.count == '0' && needs.image.result == 'skipped')) }}

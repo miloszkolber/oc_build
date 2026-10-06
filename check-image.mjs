@@ -26,6 +26,12 @@ function run(command, args) {
 // without a package manager in the image.
 run('git', ['--version']);
 run('sh', ['-c', 'cd /tmp && HOME=/tmp git init -q repo && HOME=/tmp git -C repo status --porcelain >/dev/null']);
+// The HTTPS remote helper is a separate binary with its own library closure;
+// a missing libcurl there only shows up as a failed clone.
+const helper = spawnSync('/usr/lib/git-core/git-remote-https', ['https://example.invalid/x.git'],
+  { encoding: 'utf8', timeout: 20_000 });
+assert(!/error while loading shared libraries/.test(helper.stderr || ''),
+  `git-remote-https cannot load its libraries: ${(helper.stderr || '').trim()}`);
 run('sh', ['-n', '/entrypoint.sh']);
 assert.equal(run('node', [join(root, 'bin/cli.js'), '--version']), pkg.version, 'CLI must import and report the baked version');
 // Check runtime modules only. Upstream ships test sources that need a test-runner

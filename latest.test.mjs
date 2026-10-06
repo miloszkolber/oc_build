@@ -547,7 +547,7 @@ test('the actual latest workflow gate admits zero-build/skipped-image runs and e
     [{}, true], [{ event: 'schedule' }, true], [{ image: 'skipped', count: '0' }, true],
     [{ event: 'schedule', image: 'skipped', count: '0' }, true],
     [{ image: 'skipped' }, false], [{ image: 'failure' }, false], [{ image: 'cancelled' }, false],
-    [{ discover: 'failure' }, false], [{ cancelled: true }, false], [{ event: 'push' }, false],
+    [{ discover: 'failure' }, false], [{ cancelled: true }, false], [{ event: 'push' }, true],
     [{ ref: 'refs/heads/other' }, false], [{ inputs: { bootstrap: true } }, false],
     [{ inputs: { verify_digest: `sha256:${'d'.repeat(64)}` } }, false],
     [{ inputs: { release_id: '398707683' } }, true],

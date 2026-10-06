@@ -126,6 +126,20 @@ test('an explicit rebuild reselects an already-published release without a relea
   assert.equal(skipped.include.length, 0);
 });
 
+test('an image-definition push republishes only the newest stable release', async () => {
+  const pages = [[release('2.0.1', 395994070), release('2.1.0', 400565502), release('2.2.0-beta.1', 410000001)]];
+  const manifests = { '2.0.1-r395994070': 200, '2.1.0-r400565502': 200 };
+  const result = await discover(fixture(pages, { manifestStatuses: manifests }).client, { rebuildNewest: true });
+  assert.deepEqual(result.include.map(item => item.version), ['2.1.0']);
+  assert.equal(result.completed, 0, 'the forced release is not counted as already complete');
+
+  // A normal poll still skips both published stable releases; the prerelease keeps
+  // its own immutable tag and remains a build candidate.
+  const normal = await discover(fixture(pages, { manifestStatuses: manifests }).client);
+  assert.deepEqual(normal.include.map(item => item.version), ['2.2.0-beta.1']);
+  assert.equal(normal.completed, 2);
+});
+
 test('only an authenticated manifest 404 means absent; auth, HTTP, and transport failures fail closed', async () => {
   const pages = [[release('2.0.1', 395994070)]];
   assert.equal((await discover(fixture(pages).client)).include.length, 1);

@@ -8,7 +8,7 @@ import { fileURLToPath } from 'node:url';
 import { promisify } from 'node:util';
 import {
   CUTOFF, IMAGE, MANIFEST_TYPES, REPOSITORY, ReleaseClient,
-  candidate, responseBytes, validateId, validateVersion, verifyOrigin,
+  candidate, compareCandidate, responseBytes, stableCandidate, validateId, validateVersion, verifyOrigin,
 } from './releases.mjs';
 
 const MANIFEST_LIMIT = 4 * 1024 * 1024;
@@ -95,28 +95,12 @@ export class LatestClient extends ReleaseClient {
   }
 }
 
-function stableCandidate(release) {
-  const item = candidate(release);
-  if (!item || item.pending || release.prerelease !== false || item.version.includes('-')) return null;
-  return { ...item, published_at: release.published_at };
-}
-
-function compare(a, b) {
-  const left = a.version.split('.').map(BigInt);
-  const right = b.version.split('.').map(BigInt);
-  for (let index = 0; index < 3; index += 1) {
-    if (left[index] !== right[index]) return left[index] > right[index] ? 1 : -1;
-  }
-  if (a.published_at !== b.published_at) return a.published_at > b.published_at ? 1 : -1;
-  return BigInt(a.release_id) === BigInt(b.release_id) ? 0 : BigInt(a.release_id) > BigInt(b.release_id) ? 1 : -1;
-}
-
 export async function selectLatest(client) {
   let selected = null;
   // No manual release_id filter and no assumption about GitHub's page ordering.
   for await (const release of client.releases()) {
     const item = stableCandidate(release);
-    if (item && (!selected || compare(item, selected) > 0)) selected = item;
+    if (item && (!selected || compareCandidate(item, selected) > 0)) selected = item;
   }
   return selected;
 }
@@ -213,7 +197,7 @@ async function promoteSelected(client, selected, inspect, progress) {
       requireValue(await client.manifestDigest(previous, token) === selected.previous_digest,
         'Current latest does not match its retained canonical digest');
     }
-    requireValue(compare(previous, selected) <= 0, 'Refusing to downgrade a newer current latest release');
+    requireValue(compareCandidate(previous, selected) <= 0, 'Refusing to downgrade a newer current latest release');
   }
 
   const unchanged = selected.previous_digest === selected.digest;

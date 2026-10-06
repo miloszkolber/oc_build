@@ -275,12 +275,28 @@ export function verifyOrigin(labels, { version, releaseId, sourceCommit }) {
   return { source: `https://github.com/${REPOSITORY}`, revision: sourceCommit, version, release_id: releaseId };
 }
 
+export function stableCandidate(release) {
+  const item = candidate(release);
+  if (!item || item.pending || release.prerelease !== false || item.version.includes('-')) return null;
+  return { ...item, published_at: release.published_at };
+}
+
+export function compareCandidate(a, b) {
+  const left = a.version.split('.').map(BigInt);
+  const right = b.version.split('.').map(BigInt);
+  for (let index = 0; index < 3; index += 1) {
+    if (left[index] !== right[index]) return left[index] > right[index] ? 1 : -1;
+  }
+  if (a.published_at !== b.published_at) return a.published_at > b.published_at ? 1 : -1;
+  return BigInt(a.release_id) === BigInt(b.release_id) ? 0 : BigInt(a.release_id) > BigInt(b.release_id) ? 1 : -1;
+}
+
 function seedAllowed(bootstrap, packageExists, release) {
   requireValue(bootstrap && !packageExists && release.release_id === SEED_ID && release.version === '2.0.1',
     'Bootstrap bypass is restricted to the initial 2.0.1 seed with unavailable package metadata');
 }
 
-export async function discover(client, { bootstrap = false, releaseId = '', rebuild = false } = {}) {
+export async function discover(client, { bootstrap = false, releaseId = '', rebuild = false, rebuildNewest = false } = {}) {
   if (releaseId) validateId(releaseId);
   requireValue(!bootstrap || !releaseId || releaseId === SEED_ID, 'Bootstrap can only select release 395994070 (2.0.1)');
   requireValue(!rebuild || releaseId, 'Rebuild requires an explicit release_id');
@@ -298,14 +314,27 @@ export async function discover(client, { bootstrap = false, releaseId = '', rebu
   let pending = 0;
   let completed = 0;
   let found = !selectedId;
+  // An image-definition change republishes the newest stable release. Only that
+  // release is rebuilt; unrelated backlog and prereleases wait for a normal poll.
+  let forcedId = null;
+  if (rebuildNewest) {
+    let newest = null;
+    for await (const release of client.releases()) {
+      const item = stableCandidate(release);
+      if (item && (!newest || compareCandidate(item, newest) > 0)) newest = item;
+    }
+    requireValue(newest, 'No eligible stable release is available to rebuild');
+    forcedId = newest.release_id;
+  }
   for await (const release of client.releases()) {
     if (selectedId && apiId(release.id) !== selectedId) continue;
+    if (forcedId && apiId(release.id) !== forcedId) continue;
     found = true;
     const item = candidate(release);
     if (!item) continue;
     if (item.pending) { pending += 1; continue; }
     if (uncheckedSeed) seedAllowed(bootstrap, packageExists, item);
-    if (!rebuild && token && await client.completed(item, token)) {
+    if (!rebuild && !forcedId && token && await client.completed(item, token)) {
       requireValue(packageExists, 'Existing image has no verified private package association');
       completed += 1;
       continue;
@@ -366,7 +395,7 @@ async function main() {
   const client = new ReleaseClient({ token: process.env.GITHUB_TOKEN, actor: process.env.GITHUB_ACTOR });
   switch (process.argv[2]) {
     case 'discover': {
-      const result = await discover(client, { bootstrap: boolean(process.env.BOOTSTRAP), releaseId: process.env.RELEASE_ID || '', rebuild: boolean(process.env.REBUILD) });
+      const result = await discover(client, { bootstrap: boolean(process.env.BOOTSTRAP), releaseId: process.env.RELEASE_ID || '', rebuild: boolean(process.env.REBUILD), rebuildNewest: boolean(process.env.REBUILD_NEWEST) });
       if (result.include.some(item => item.bootstrap)) {
         console.error('Explicit bootstrap: initial seed authorized without proving manifest absence; GHCR pull-scope authentication was refused.');
       }

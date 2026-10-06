@@ -25,7 +25,9 @@ Images are built from the upstream `openchamber-web-<version>.tgz` release asset
 
 The workflow runs hourly and on manual dispatch. It fully paginates upstream releases, so a missed poll catches up. A push touching `plugin/**` or the release scripts tests and bundles the plugin instead.
 
-To republish an already-published release with a changed image definition:
+A push that changes `Dockerfile`, `entrypoint.sh`, `self-update.patch` or `check-image.mjs` rebuilds and republishes the newest stable release automatically, so the published image tracks the image definition.
+
+To republish a different already-published release:
 
 ```sh
 gh workflow run build.yml -f release_id=403254044 -f rebuild=true

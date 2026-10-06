@@ -49,15 +49,20 @@ RUN apt-get update \
 
 RUN set -eu; \
     mkdir -p /rootfs; \
-    for bin in /bin/bash /usr/bin/git; do \
-        cp -a --parents "$bin" /rootfs; \
-        ldd "$bin" | grep -oE '/[^ ]+\.so[^ ]*' | sort -u | while read -r lib; do \
+    copy_with_libs() { \
+        cp -a --parents "$1" /rootfs; \
+        ldd "$1" | grep -oE '/[^ ]+\.so[^ ]*' | sort -u | while read -r lib; do \
             [ -e "$lib" ] || continue; \
             mkdir -p "/rootfs$(dirname "$lib")"; \
             cp -aL "$lib" "/rootfs$lib"; \
         done; \
+    }; \
+    copy_with_libs /bin/bash; \
+    copy_with_libs /usr/bin/git; \
+    for helper in /usr/lib/git-core/*; do \
+        [ -f "$helper" ] && [ -x "$helper" ] || continue; \
+        copy_with_libs "$helper"; \
     done; \
-    cp -a --parents /usr/lib/git-core /rootfs; \
     cp -a --parents /usr/share/git-core/templates /rootfs; \
     ln -s bash /rootfs/bin/sh; \
     rm -rf /rootfs/usr/lib/git-core/*.test
