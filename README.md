@@ -2,7 +2,7 @@
 
 Builds the OpenChamber web image and the Rembric OpenCode plugin. Host Compose, credentials and data live outside this repository.
 
-Tracked in `miloszkolber/openchamber` (public). The GHCR container package stays private. Never commit host configuration or secrets.
+Tracked in `miloszkolber/openchamber` (public). GitHub propagates that visibility to the linked `ghcr.io/miloszkolber/openchamber` package, so the published images are public too; `EXPECTED_PACKAGE_VISIBILITY` in `releases.mjs` records the expectation so an unintended flip either way fails the build. Never commit host configuration or secrets.
 
 ## Layout
 
@@ -61,7 +61,7 @@ cd plugin && test -s bun.lock && bun install --frozen-lockfile && bun run build
 
 The plugin bundle is uploaded as an Actions artifact with a SHA-256 checksum and build metadata. It keeps `@opencode/plugin` external, so the host must provide that runtime. The plugin is a thin V2 adapter over Rembric's vendored session protocol; see its [README](plugin/README.md).
 
-GitHub Actions artifacts in a public repository are readable by anyone, and the workflow's package checks publish to a private GHCR package, so image pulls still need `read:packages`.
+GitHub Actions artifacts and the published container package are public, so image pulls need no registry authentication.
 
 ## Deployment
 

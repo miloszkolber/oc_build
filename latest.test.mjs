@@ -80,7 +80,7 @@ function fixture(pages = [[older, newest]], options = {}) {
     alias: options.alias === undefined ? oldDigest ?? null : options.alias,
     repository: { full_name: 'miloszkolber/openchamber', private: true },
     // Observed GHCR metadata has no repository member; privacy remains independent.
-    metadata: { name: 'openchamber', package_type: 'container', visibility: 'private' },
+    metadata: { name: 'openchamber', package_type: 'container', visibility: 'public' },
   };
   const client = new LatestClient({ token: 'fixture-github-secret', actor: 'fixture-actor', fetchImpl: async (address, init) => {
     const url = new URL(address);
@@ -341,7 +341,7 @@ test('accepted publication with failed canonical/privacy verification is reporte
       if (change === 'canonical' && url.pathname.endsWith('/manifests/2.1.0-r400565502') && init.method === 'HEAD') {
         state.canonical.delete('2.1.0-r400565502');
       }
-      if (change === 'privacy' && url.pathname.endsWith('/packages/container/openchamber')) state.metadata.visibility = 'public';
+      if (change === 'privacy' && url.pathname.endsWith('/packages/container/openchamber')) state.metadata.visibility = 'private';
       if (change === 'readback' && url.pathname.endsWith('/manifests/latest')) throw new Error('fixture-secret readback transport failure');
     } });
     await assert.rejects(promoteLatest(f.client, await latestCandidate(f.client), f.inspect), error => {
@@ -357,7 +357,7 @@ test('accepted publication with failed canonical/privacy verification is reporte
 
 test('package privacy and repository identity fail closed before any PUT, as do both registry scopes', async () => {
   for (const mutation of [
-    state => { state.metadata.visibility = 'public'; },
+    state => { state.metadata.visibility = 'private'; },
     state => { state.metadata.repository = { full_name: 'other/openchamber', private: true }; },
   ]) {
     const f = fixture();
@@ -386,7 +386,7 @@ test('package privacy and repository identity fail closed before any PUT, as do 
 test('privacy is rechecked after inspection and before the final selection/PUT', async () => {
   let metadataReads = 0;
   const f = fixture(undefined, { onRequest(url, _init, state) {
-    if (url.pathname.endsWith('/packages/container/openchamber') && ++metadataReads === 3) state.metadata.visibility = 'public';
+    if (url.pathname.endsWith('/packages/container/openchamber') && ++metadataReads === 3) state.metadata.visibility = 'private';
   } });
   await assert.rejects(promoteLatest(f.client, await latestCandidate(f.client), f.inspect), /private/);
   assert.equal(f.state.puts.length, 0);

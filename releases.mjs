@@ -10,6 +10,8 @@ const UPSTREAM_ID = '1054790989';
 export const REPOSITORY = 'miloszkolber/openchamber';
 export const IMAGE = `ghcr.io/${REPOSITORY}`;
 export const CUTOFF = '2026-09-24T19:14:25Z';
+// Mirrors the build repository's visibility; GitHub copies it to the package.
+export const EXPECTED_PACKAGE_VISIBILITY = 'public';
 export const SEED_ID = '395994070';
 const API = 'https://api.github.com';
 export const MANIFEST_TYPES = [
@@ -186,8 +188,12 @@ export class ReleaseClient {
     if (response.status === 404 && allowMissing) return false;
     requireValue(response.ok, `Package metadata unavailable (HTTP ${response.status}); check Actions package access`);
     const metadata = await json(response, 1024 * 1024);
-    requireValue(metadata.package_type === 'container' && metadata.name === 'openchamber' && metadata.visibility === 'private',
-      'GHCR package must be a private container package');
+    requireValue(metadata.package_type === 'container' && metadata.name === 'openchamber',
+      'GHCR package must be the expected container package');
+    // GitHub propagates the build repository's visibility to its linked package,
+    // so this expectation moves with the repository rather than being fixed.
+    requireValue(metadata.visibility === EXPECTED_PACKAGE_VISIBILITY,
+      `GHCR package visibility is ${metadata.visibility}, expected ${EXPECTED_PACKAGE_VISIBILITY}`);
     // GHCR's observed REST payload omits repository entirely, even with the correct
     // OCI source label and working repository-token access. Missing linkage is not
     // evidence of a wrong link; reject contradictory metadata if it is supplied.

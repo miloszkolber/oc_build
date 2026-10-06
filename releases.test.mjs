@@ -5,7 +5,7 @@ import { ReleaseClient, RegistryAuthError, candidate, discover, prepare, verifyI
 // GitHub REST release/asset and OCI registry fixtures. Expected tags below come
 // from the publication/identity contract, never from the implementation's output.
 const digest = 'a'.repeat(64);
-const metadata = { name: 'openchamber', package_type: 'container', visibility: 'private',
+const metadata = { name: 'openchamber', package_type: 'container', visibility: 'public',
   repository: { full_name: 'miloszkolber/openchamber', private: true } };
 function release(version, id, overrides = {}) {
   return { id, tag_name: `v${version}`, draft: false, prerelease: version.includes('-'),
@@ -208,7 +208,7 @@ test('versions, digests, timestamps, assets, and pagination are validated at the
 test('package privacy is required, repository identity is checked, and missing linkage is not a contradiction', async () => {
   const pages = [[release('2.0.1', 395994070)]];
   for (const bad of [
-    { ...metadata, visibility: 'public' },
+    { ...metadata, visibility: 'private' },
     { ...metadata, repository: { full_name: 'openchamber/openchamber', private: true } },
     { ...metadata, repository: {} },
   ]) {
@@ -267,7 +267,7 @@ test('publication verification requires the exact remote tag and push manifest d
   await assert.rejects(verifyImage(fixture([[]], { manifestStatus: 200,
     manifestHeaders: { 'docker-content-digest': `sha256:${'c'.repeat(64)}` } }).client, input), /does not match/);
   await assert.rejects(verifyImage(fixture([[]], { tokenStatus: 403 }).client, input), RegistryAuthError);
-  await assert.rejects(verifyImage(fixture([[]], { metadata: { ...metadata, visibility: 'public' } }).client, input), /private/);
+  await assert.rejects(verifyImage(fixture([[]], { metadata: { ...metadata, visibility: 'private' } }).client, input), /visibility/);
   for (const bad of [
     { ...input, image: 'ghcr.io/other/openchamber:2.0.1-r395994070' },
     { ...input, image: 'ghcr.io/miloszkolber/openchamber:latest' },
