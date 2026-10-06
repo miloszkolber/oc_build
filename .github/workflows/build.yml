@@ -123,7 +123,7 @@ jobs:
           RELEASE_ID: ${{ matrix.release_id }}
           ASSET_SHA256: ${{ matrix.asset_sha256 }}
           BOOTSTRAP: ${{ matrix.bootstrap }}
-          REBUILD: ${{ inputs.rebuild || false }}
+          REBUILD: ${{ inputs.rebuild || github.event_name == 'push' }}
         run: node releases.mjs prepare
       - name: Build and check before publication
         if: steps.prepare.outputs.skip != 'true'
