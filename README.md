@@ -1,6 +1,6 @@
 # OpenChamber build repository
 
-Builds the OpenChamber web image and the Signet OpenCode plugin. Host Compose, credentials and data live outside this repository.
+Builds the OpenChamber web image and the Rembric OpenCode plugin. Host Compose, credentials and data live outside this repository.
 
 Tracked in `miloszkolber/openchamber` (public). The GHCR container package stays private. Never commit host configuration or secrets.
 
@@ -14,8 +14,7 @@ Tracked in `miloszkolber/openchamber` (public). The GHCR container package stays
 | `check-image.mjs` | Streamed into a network-disabled container to verify an image |
 | `releases.mjs` | Upstream release discovery and GHCR publication helpers |
 | `latest.mjs` | Promotes the newest stable release to the `latest` tag |
-| `plugin/` | Signet OpenCode plugin source, tests and locked dependencies (retiring) |
-| `plugin-rembric/` | Rembric OpenCode **V2** plugin: vendored upstream protocol plus a V2 adapter |
+| `plugin/` | Rembric OpenCode **V2** plugin: vendored upstream protocol plus a V2 adapter |
 | `notices.md` | Third-party attribution |
 
 GitHub requires the workflow to stay at `.github/workflows/build.yml`.
@@ -24,7 +23,7 @@ GitHub requires the workflow to stay at `.github/workflows/build.yml`.
 
 Images are built from the upstream `openchamber-web-<version>.tgz` release asset. Each release is published as the immutable tag `ghcr.io/miloszkolber/openchamber:<version>-r<releaseId>`; the newest stable release is also promoted to `latest`. Prereleases build but never become `latest`.
 
-The workflow runs hourly and on manual dispatch. It fully paginates upstream releases, so a missed poll catches up. A push touching `plugin/**` or the release scripts tests and bundles the plugin instead.
+The workflow runs hourly and on manual dispatch. It fully paginates upstream releases, so a missed poll catches up. A push touching `plugin/**` or the release scripts bundles the plugin instead.
 
 A push that changes `Dockerfile`, `entrypoint.sh`, `self-update.patch` or `check-image.mjs` rebuilds and republishes the newest stable release automatically, so the published image tracks the image definition.
 
@@ -55,12 +54,12 @@ timeout 180 docker run --rm --interactive --network none --read-only --cap-drop 
 
 ```sh
 node --test releases.test.mjs latest.test.mjs
-cd plugin && test -s bun.lock && bun install --frozen-lockfile && bun run test && bun run build
+cd plugin && test -s bun.lock && bun install --frozen-lockfile && bun run build
 ```
 
 `check-image.mjs` verifies the baked version, layout, non-root user, working git and shell, runtime-module syntax, and the disabled update routes. It does not prove bit-reproducibility or compatibility with a running OpenCode version.
 
-The plugin bundle is uploaded as an Actions artifact with a SHA-256 checksum and build metadata. It keeps `@opencode/plugin` external, so the host must provide that runtime.
+The plugin bundle is uploaded as an Actions artifact with a SHA-256 checksum and build metadata. It keeps `@opencode/plugin` external, so the host must provide that runtime. The plugin is a thin V2 adapter over Rembric's vendored session protocol; see its [README](plugin/README.md).
 
 GitHub Actions artifacts in a public repository are readable by anyone, and the workflow's package checks publish to a private GHCR package, so image pulls still need `read:packages`.
 

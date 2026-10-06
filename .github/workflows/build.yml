@@ -54,18 +54,19 @@ jobs:
           bun-version: '1.4.2'
       - name: Test release discovery and latest promotion contracts
         run: node --test releases.test.mjs latest.test.mjs
-      - name: Test and bundle the source-loaded plugin
+      - name: Bundle the Rembric V2 plugin and check its export
         working-directory: plugin
         run: |
-          test -s bun.lock && bun install --frozen-lockfile && bun run test && bun run build
-          bun -e 'const {default:p}=await import("./dist/signet-opencode.mjs"); if(p.id!=="signet.lifecycle" || typeof p.setup!=="function") throw new Error("Invalid bundled plugin export")'
-          cp LICENSE NOTICE yaml-licence.txt dist/
-          (cd dist && sha256sum signet-opencode.mjs > SHA256SUMS)
+          test -s bun.lock && bun install --frozen-lockfile
+          bun build ./index.ts --target bun --format esm --external @opencode/plugin --outfile dist/rembric-opencode.mjs
+          bun -e 'const {default:p}=await import("./dist/rembric-opencode.mjs"); if(p.id!=="rembric.lifecycle" || typeof p.setup!=="function") throw new Error("Invalid bundled plugin export")'
+          cp NOTICE dist/
+          (cd dist && sha256sum rembric-opencode.mjs > SHA256SUMS)
           bun -e 'await Bun.write("dist/build.json", JSON.stringify({repository:process.env.GITHUB_REPOSITORY,source_commit:process.env.GITHUB_SHA,bun:Bun.version,opencode_api:"2.0.16",entrypoint:"./index.ts",external_runtime:"@opencode/plugin@2.0.16",bundle_sha256:(await Bun.file("dist/SHA256SUMS").text()).split(" ")[0]},null,2)+"\n")'
-      - name: Retain private plugin bundle and provenance
+      - name: Retain plugin bundle and provenance
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
-          name: signet-opencode-${{ github.sha }}
+          name: rembric-opencode-${{ github.sha }}
           path: plugin/dist/
           if-no-files-found: error
           retention-days: 30

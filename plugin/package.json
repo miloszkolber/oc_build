@@ -1,15 +1,12 @@
 {
-  "name": "signet-opencode",
+  "name": "rembric-opencode",
   "private": true,
   "type": "module",
   "main": "./index.ts",
   "dependencies": {
-    "@opencode/client": "2.0.16",
-    "@opencode/plugin": "2.0.16",
-    "yaml": "2.6.0"
+    "@opencode/plugin": "2.0.16"
   },
   "scripts": {
-    "test": "bun test ./lifecycle.test.ts ./transcript-reader.test.ts ./static-identity.test.ts ./daemon-client.test.ts",
-    "build": "bun build ./index.ts --target bun --format esm --external @opencode/plugin --outfile dist/signet-opencode.mjs"
+    "build": "bun build ./index.ts --target bun --format esm --external @opencode/plugin --outfile dist/rembric-opencode.mjs"
   }
 }
