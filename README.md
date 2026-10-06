@@ -14,7 +14,8 @@ Tracked in `miloszkolber/openchamber` (public). The GHCR container package stays
 | `check-image.mjs` | Streamed into a network-disabled container to verify an image |
 | `releases.mjs` | Upstream release discovery and GHCR publication helpers |
 | `latest.mjs` | Promotes the newest stable release to the `latest` tag |
-| `plugin/` | Signet OpenCode plugin source, tests and locked dependencies |
+| `plugin/` | Signet OpenCode plugin source, tests and locked dependencies (retiring) |
+| `plugin-rembric/` | Rembric OpenCode **V2** plugin: vendored upstream protocol plus a V2 adapter |
 | `notices.md` | Third-party attribution |
 
 GitHub requires the workflow to stay at `.github/workflows/build.yml`.
