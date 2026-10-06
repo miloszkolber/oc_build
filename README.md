@@ -2,7 +2,7 @@
 
 Builds the OpenChamber web image and the Signet OpenCode plugin. Host Compose, credentials and data live outside this repository.
 
-Tracked in the private repository `miloszkolber/openchamber`. Never commit host configuration or secrets.
+Tracked in `miloszkolber/openchamber` (public). The GHCR container package stays private. Never commit host configuration or secrets.
 
 ## Layout
 
@@ -49,7 +49,9 @@ cd plugin && test -s bun.lock && bun install --frozen-lockfile && bun run test &
 
 `check-image.mjs` verifies the baked version, layout, non-root user, working git and shell, runtime-module syntax, and the disabled update routes. It does not prove bit-reproducibility or compatibility with a running OpenCode version.
 
-The plugin bundle is uploaded as a private Actions artifact with a SHA-256 checksum and build metadata. It keeps `@opencode/plugin` external, so the host must provide that runtime.
+The plugin bundle is uploaded as an Actions artifact with a SHA-256 checksum and build metadata. It keeps `@opencode/plugin` external, so the host must provide that runtime.
+
+GitHub Actions artifacts in a public repository are readable by anyone, and the workflow's package checks publish to a private GHCR package, so image pulls still need `read:packages`.
 
 ## Deployment
 

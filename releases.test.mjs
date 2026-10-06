@@ -170,30 +170,34 @@ test('versions, digests, timestamps, assets, and pagination are validated at the
   });
 });
 
-test('package and build repository privacy are independent checks; missing linkage is not a contradictory link', async () => {
+test('package privacy is required, repository identity is checked, and missing linkage is not a contradiction', async () => {
   const pages = [[release('2.0.1', 395994070)]];
   for (const bad of [
     { ...metadata, visibility: 'public' },
     { ...metadata, repository: { full_name: 'openchamber/openchamber', private: true } },
-    { ...metadata, repository: { full_name: 'miloszkolber/openchamber', private: false } },
     { ...metadata, repository: {} },
   ]) {
-    await assert.rejects(discover(fixture(pages, { metadata: bad }).client), /private|different or public/);
+    await assert.rejects(discover(fixture(pages, { metadata: bad }).client), /private|different repository/);
   }
   // Exact shape observed from GHCR with the workflow token on 2026-10-04:
-  // package privacy is present; repository is absent, not a public/wrong link.
+  // package privacy is present; repository is absent, not a wrong link.
   const { repository: _unused, ...withoutLinkage } = metadata;
   for (const compatible of [withoutLinkage, { ...metadata, repository: null }]) {
     assert.equal((await discover(fixture(pages, { metadata: compatible }).client)).include.length, 1);
   }
+  // The build repository is public by design; its identity still has to match.
   for (const repository of [
     { full_name: 'miloszkolber/openchamber', private: false },
     { full_name: 'other/openchamber', private: true },
-  ]) await assert.rejects(discover(fixture(pages, { repository }).client), /repository must be private/);
+  ]) {
+    const client = fixture(pages, { repository }).client;
+    if (repository.full_name === 'other/openchamber') {
+      await assert.rejects(discover(client), /repository identity changed/);
+    } else {
+      assert.equal((await discover(client)).include.length, 1);
+    }
+  }
   await assert.rejects(discover(fixture(pages, { repositoryStatus: 403 }).client), /repository metadata unavailable/);
-  await assert.rejects(discover(fixture(pages, { metadataStatus: 404, repository: {
-    full_name: 'miloszkolber/openchamber', private: false,
-  } }).client, { bootstrap: true }), /repository must be private/);
   await assert.rejects(discover(fixture(pages, { metadataStatus: 404, manifestStatus: 200 }).client), /no verified private/);
   await assert.rejects(fixture(pages, { metadataStatus: 404 }).client.privatePackage(), /metadata unavailable/);
 });

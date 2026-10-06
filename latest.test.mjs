@@ -355,17 +355,23 @@ test('accepted publication with failed canonical/privacy verification is reporte
   }
 });
 
-test('independent repository/package privacy and both registry scopes fail closed before any PUT', async () => {
+test('package privacy and repository identity fail closed before any PUT, as do both registry scopes', async () => {
   for (const mutation of [
-    state => { state.repository.private = false; },
     state => { state.metadata.visibility = 'public'; },
     state => { state.metadata.repository = { full_name: 'other/openchamber', private: true }; },
   ]) {
     const f = fixture();
     const candidate = await latestCandidate(f.client);
     mutation(f.state);
-    await assert.rejects(promoteLatest(f.client, candidate, f.inspect), /private|different or public/);
+    await assert.rejects(promoteLatest(f.client, candidate, f.inspect), /private|different repository/);
     assert.equal(f.state.puts.length, 0);
+  }
+  // The public build repository is not a failure: privacy is a package property.
+  {
+    const f = fixture();
+    const candidate = await latestCandidate(f.client);
+    f.state.repository.private = false;
+    assert.equal((await promoteLatest(f.client, candidate, f.inspect)).outcome, 'published');
   }
   for (const options of [{ repositoryStatus: 403 }, { packageStatus: 404 }, { tokenStatus: 401 }, { tokenStatus: 403 }]) {
     const f = fixture(undefined, options);

@@ -181,8 +181,7 @@ export class ReleaseClient {
     const repositoryResponse = await this.github(`/repos/${REPOSITORY}`);
     requireValue(repositoryResponse.ok, `Build repository metadata unavailable (HTTP ${repositoryResponse.status})`);
     const repository = await json(repositoryResponse, 1024 * 1024);
-    requireValue(repository.full_name === REPOSITORY && repository.private === true,
-      'Build repository must be private');
+    requireValue(repository.full_name === REPOSITORY, 'Build repository identity changed');
     const response = await this.github('/users/miloszkolber/packages/container/openchamber');
     if (response.status === 404 && allowMissing) return false;
     requireValue(response.ok, `Package metadata unavailable (HTTP ${response.status}); check Actions package access`);
@@ -193,9 +192,8 @@ export class ReleaseClient {
     // OCI source label and working repository-token access. Missing linkage is not
     // evidence of a wrong link; reject contradictory metadata if it is supplied.
     if (metadata.repository !== undefined && metadata.repository !== null) {
-      requireValue(metadata.repository.full_name === REPOSITORY &&
-        (metadata.repository.private === undefined || metadata.repository.private === true),
-      'GHCR metadata identifies a different or public repository');
+      requireValue(metadata.repository.full_name === REPOSITORY,
+      'GHCR metadata identifies a different repository');
     }
     return true;
   }
