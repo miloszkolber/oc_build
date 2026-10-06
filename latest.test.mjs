@@ -410,6 +410,20 @@ test('candidate labels require exact source/version/release ID and a retained co
   assert.equal(f.state.puts.length, 0);
 });
 
+test('a rebuilt release may refresh a stale latest alias without being treated as a downgrade', async () => {
+  // Rebuilding replaces the canonical tag, so the existing alias no longer
+  // matches it. The alias still names the same release, so promotion proceeds.
+  const f = fixture();
+  const candidate = await latestCandidate(f.client);
+  f.state.canonical.set('2.1.0-r400565502', f.newDigest);
+  f.state.imageLabels.set(f.newDigest, labels(f.state.retained.get('400565502')));
+
+  const result = await promoteLatest(f.client, candidate, f.inspect);
+  assert.equal(result.outcome, 'published');
+  assert.equal(f.state.puts.length, 1);
+  assert.equal(f.state.alias, f.newDigest);
+});
+
 test('current latest must have valid origin and map to a retained stable release with the same canonical digest', async () => {
   for (const mutation of [
     f => { f.state.imageLabels.get(f.oldDigest)['org.opencontainers.image.source'] = 'https://github.com/other/openchamber'; },

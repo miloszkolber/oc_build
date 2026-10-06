@@ -198,6 +198,7 @@ async function promoteSelected(client, selected, inspect, progress) {
   const publisher = await origin(client, await inspect(`${IMAGE}@${selected.digest}`), selected);
   progress.publisher = publisher;
   let previous = null;
+  let rebuilt = false;
   if (selected.previous_digest && selected.previous_digest !== selected.digest) {
     const labels = await inspect(`${IMAGE}@${selected.previous_digest}`);
     const version = validateVersion(labels?.['org.opencontainers.image.version']);
@@ -205,8 +206,13 @@ async function promoteSelected(client, selected, inspect, progress) {
     previous = stableCandidate(await client.release(id));
     requireValue(previous && previous.version === version, 'Current latest has no matching retained stable release');
     await origin(client, labels, previous);
-    requireValue(await client.manifestDigest(previous, token) === selected.previous_digest,
-      'Current latest does not match its retained canonical digest');
+    // Rebuilding a release replaces its canonical tag, so the previous alias
+    // legitimately stops matching the retained digest for that same release.
+    rebuilt = id === selected.release_id;
+    if (!rebuilt) {
+      requireValue(await client.manifestDigest(previous, token) === selected.previous_digest,
+        'Current latest does not match its retained canonical digest');
+    }
     requireValue(compare(previous, selected) <= 0, 'Refusing to downgrade a newer current latest release');
   }
 
@@ -220,7 +226,7 @@ async function promoteSelected(client, selected, inspect, progress) {
     'Latest selection changed; rediscover on the next poll instead of replaying this promotion');
   requireValue(sameCandidate(stableCandidate(await client.release(selected.release_id)), selected),
     'Selected release or asset changed; rediscover on the next poll');
-  if (previous) {
+  if (previous && !rebuilt) {
     requireValue(await client.manifestDigest(previous, token) === selected.previous_digest,
       'Current latest canonical digest changed; rediscover on the next poll');
   }
