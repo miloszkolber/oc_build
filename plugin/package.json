@@ -3,10 +3,8 @@
   "private": true,
   "type": "module",
   "main": "./index.ts",
-  "dependencies": {
-    "@opencode/plugin": "2.0.16"
-  },
   "scripts": {
-    "build": "bun build ./index.ts --target bun --format esm --external @opencode/plugin --outfile dist/rembric-opencode.mjs"
+    "build": "bun build ./index.ts --target bun --format esm --outfile dist/rembric.js",
+    "deploy": "sh ./install.sh"
   }
 }

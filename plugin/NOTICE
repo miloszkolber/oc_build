@@ -12,4 +12,5 @@ Rembric is MIT licensed. Copyright its authors. The vendored files carry no
 local modifications; the V2 adapter in index.ts is independently written
 against OpenCode's documented V2 plugin API.
 
-@opencode/plugin is an external runtime dependency and is not redistributed.
+The default export is a plain `{ id, setup }` object, so the built bundle
+inlines both vendored files and has no runtime dependencies.

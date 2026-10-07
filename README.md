@@ -54,12 +54,12 @@ timeout 180 docker run --rm --interactive --network none --read-only --cap-drop 
 
 ```sh
 node --test releases.test.mjs latest.test.mjs
-cd plugin && test -s bun.lock && bun install --frozen-lockfile && bun run build
+cd plugin && bun run build
 ```
 
 `check-image.mjs` verifies the baked version, layout, non-root user, working git and shell, runtime-module syntax, and the disabled update routes. It does not prove bit-reproducibility or compatibility with a running OpenCode version.
 
-The plugin bundle is uploaded as an Actions artifact with a SHA-256 checksum and build metadata. It keeps `@opencode/plugin` external, so the host must provide that runtime. The plugin is a thin V2 adapter over Rembric's vendored session protocol; see its [README](plugin/README.md).
+The plugin bundle is uploaded as an Actions artifact with a SHA-256 checksum and build metadata. It is self-contained (no `@opencode/plugin` import), so it can be dropped into OpenCode's global plugin directory; `plugin/install.sh` builds and copies it there. The plugin is a thin V2 adapter over Rembric's vendored session protocol; see its [README](plugin/README.md).
 
 GitHub Actions artifacts and the published container package are public, so image pulls need no registry authentication.
 
