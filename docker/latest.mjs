@@ -8,17 +8,13 @@ import { fileURLToPath } from 'node:url';
 import { promisify } from 'node:util';
 import {
   CUTOFF, IMAGE, MANIFEST_TYPES, REPOSITORY, ReleaseClient,
-  candidate, compareCandidate, responseBytes, stableCandidate, validateId, validateVersion, verifyOrigin,
+  candidate, compareCandidate, requireValue, responseBytes, stableCandidate, validateId, validateVersion, verifyOrigin,
 } from './releases.mjs';
 
 const MANIFEST_LIMIT = 4 * 1024 * 1024;
 const LABEL_LIMIT = 64 * 1024;
 const run = promisify(execFile);
 const registry = `https://ghcr.io/v2/${REPOSITORY}/manifests/`;
-
-function requireValue(condition, message) {
-  if (!condition) throw new Error(message);
-}
 
 function digest(value) {
   requireValue(typeof value === 'string' && /^sha256:[a-f0-9]{64}$/.test(value), 'Expected registry SHA-256 digest');

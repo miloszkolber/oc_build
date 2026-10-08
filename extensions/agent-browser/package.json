@@ -1,0 +1,52 @@
+{
+  "name": "openchamber-agent-browser",
+  "version": "1.0.0",
+  "private": false,
+  "description": "Agent Browser: shared Chromium browser broker, OpenChamber BrowserProvider and surface",
+  "type": "module",
+  "license": "MIT",
+  "repository": "github:miloszkolber/openchamber",
+  "engines": {
+    "node": ">=22"
+  },
+  "openchamber": {
+    "apiVersion": 1,
+    "engines": {
+      "openchamber": ">=2.1.1"
+    },
+    "contributes": {
+      "panel": {
+        "id": "agent-browser",
+        "name": "Agent Browser",
+        "icon": "computer",
+        "entry": "panel/index.html",
+        "dock": "top",
+        "size": 76
+      },
+      "service": {
+        "entry": "service/main.js",
+        "runtime": "host",
+        "provides": [
+          "browser"
+        ],
+        "surface": true
+      }
+    }
+  },
+  "scripts": {
+    "build": "bun scripts/build.mjs",
+    "test": "bun test test/*.test.js",
+    "start": "node broker/main.js",
+    "check": "bun scripts/check.mjs",
+    "package": "bun scripts/package.mjs"
+  },
+  "dependencies": {
+    "@openchamber/sdk": "2.1.1",
+    "ws": "8.18.3"
+  },
+  "devDependencies": {
+    "esbuild": "0.28.0",
+    "fflate": "0.8.2",
+    "happy-dom": "20.14.5"
+  }
+}

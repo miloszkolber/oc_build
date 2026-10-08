@@ -1,0 +1,8 @@
+# Keep the primary build context limited to image inputs; never include plugins or host data.
+# The guest package is passed separately as the explicit agent-browser named context.
+**
+!Dockerfile
+!entrypoint.sh
+!entrypoint.test.mjs
+!self-update.patch
+!openchamber-licence.txt

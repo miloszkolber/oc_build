@@ -41,11 +41,38 @@ RUN set -eu; \
 # --- stage 2: the few host tools OpenChamber actually uses ---------------------
 # Collected with their shared-library closure so the runtime stage needs no
 # package manager. bash keeps the web terminal usable; git backs source control.
+FROM oven/bun:1.4.2 AS bun-runtime
+
 FROM debian:bookworm-slim AS tools
 
+ARG OPENCHAMBER_SOURCE_REVISION=unknown
+
 RUN apt-get update \
-    && apt-get install --no-install-recommends -y bash git ca-certificates \
+    && apt-get install --no-install-recommends -y \
+        bash git ca-certificates chromium fonts-liberation \
     && rm -rf /var/lib/apt/lists/*
+
+# Build the extension and run its browser-gated suite against the exact
+# Chromium/fonts/certificate packages that will be copied into the final image.
+COPY --from=bun-runtime /usr/local/bin/bun /usr/local/bin/bun
+
+# Exercise the real shell entrypoint with only its Bun-backed node shim on PATH.
+COPY entrypoint.sh entrypoint.test.mjs /tmp/entrypoint-regression/
+RUN --network=none bun /tmp/entrypoint-regression/entrypoint.test.mjs
+
+WORKDIR /src/agent-browser
+COPY --from=agent-browser / ./
+
+RUN bun install --frozen-lockfile
+
+RUN --network=none bun run package \
+    && OPENCHAMBER_BROWSER_TEST_NO_SANDBOX=1 bun test \
+    && bun run check \
+    && printf '{"chromePath":"/usr/lib/chromium/chromium"}\n' > dist/config.json
+
+# cp --parents with absolute /bin, /usr sources only resolves the symlinked
+# Debian /usr layout correctly from the filesystem root.
+WORKDIR /
 
 RUN set -eu; \
     mkdir -p /rootfs; \
@@ -59,10 +86,47 @@ RUN set -eu; \
     }; \
     copy_with_libs /bin/bash; \
     copy_with_libs /usr/bin/git; \
+    copy_with_libs /usr/lib/chromium/chromium; \
+    copy_with_libs /usr/lib/chromium/chrome_crashpad_handler; \
+    for browser_lib in /usr/lib/chromium/*.so; do \
+        [ -f "$browser_lib" ] && copy_with_libs "$browser_lib"; \
+    done; \
     for helper in /usr/lib/git-core/*; do \
         [ -f "$helper" ] && [ -x "$helper" ] || continue; \
         copy_with_libs "$helper"; \
     done; \
+    cp -a /usr/lib/chromium /rootfs/usr/lib/; \
+    for assets in /etc/fonts /usr/share/fonts /usr/share/fontconfig; do \
+        [ -e "$assets" ] && cp -a --parents "$assets" /rootfs; \
+    done; \
+    softokn_module="$(dpkg-query -L libnss3 | grep -m1 '/libsoftokn3\.so$' || true)"; \
+    test -n "$softokn_module"; \
+    dpkg-query -L libnss3 | grep -E '/(libnss|libsoftokn|libfreebl)[^/]*\.(so|chk)$' | while IFS= read -r nss_file; do \
+        case "$nss_file" in \
+            *.so) copy_with_libs "$nss_file" ;; \
+            *.chk) cp -a --parents "$nss_file" /rootfs ;; \
+        esac; \
+    done; \
+    mkdir -p /rootfs/usr/share/licenses/debian; \
+    dpkg-query -W | cut -f1 | while read -r package; do \
+        name=$(printf '%s' "$package" | cut -d: -f1); \
+        copyright="/usr/share/doc/$name/copyright"; \
+        [ -f "$copyright" ] && cp "$copyright" "/rootfs/usr/share/licenses/debian/$name.copyright"; \
+    done; \
+    test -f /rootfs/usr/share/licenses/debian/chromium.copyright; \
+    test -f /rootfs/usr/share/licenses/debian/chromium-common.copyright; \
+    test -x /rootfs/usr/lib/chromium/chromium; \
+    mkdir -p /rootfs/usr/share/openchamber; \
+    chromium_version="$(/usr/lib/chromium/chromium --version | sed 's/[[:space:]]*$//')"; \
+    chromium_package_version="$(dpkg-query -W chromium | cut -f2)"; \
+    chromium_common_version="$(dpkg-query -W chromium-common | cut -f2)"; \
+    fonts_version="$(dpkg-query -W fonts-liberation | cut -f2)"; \
+    certificates_version="$(dpkg-query -W ca-certificates | cut -f2)"; \
+    printf '{"sourceRevision":"%s","chromiumVersion":"%s","nssSoftoknModule":"%s","packages":{"chromium":"%s","chromium-common":"%s","fonts-liberation":"%s","ca-certificates":"%s"}}\n' \
+        "$OPENCHAMBER_SOURCE_REVISION" "$chromium_version" "$softokn_module" "$chromium_package_version" \
+        "$chromium_common_version" "$fonts_version" "$certificates_version" \
+        > /rootfs/usr/share/openchamber/browser-build.json; \
+    ln -s /usr/lib/chromium/chromium /rootfs/usr/bin/chromium; \
     cp -a --parents /usr/share/git-core/templates /rootfs; \
     ln -s bash /rootfs/bin/sh; \
     rm -rf /rootfs/usr/lib/git-core/*.test
@@ -73,7 +137,7 @@ FROM gcr.io/distroless/nodejs22-debian12
 ARG OPENCHAMBER_VERSION
 
 LABEL org.opencontainers.image.title="openchamber" \
-      org.opencontainers.image.description="OpenChamber web interface (baked release, external OpenCode server)" \
+      org.opencontainers.image.description="OpenChamber web interface and shared Chromium browser service (baked release, external OpenCode server)" \
       org.opencontainers.image.source="https://github.com/openchamber/openchamber" \
       org.opencontainers.image.version="${OPENCHAMBER_VERSION}"
 
@@ -90,6 +154,8 @@ COPY --from=bundle /opt/openchamber/node_modules/ ./node_modules/
 COPY --from=bundle /opt/openchamber/bin/ ./bin/
 COPY --from=bundle /opt/openchamber/server/ ./server/
 COPY --from=bundle /opt/openchamber/dist/ ./dist/
+COPY --from=tools /src/agent-browser/dist/ ./extensions/agent-browser/
+COPY --from=tools /src/agent-browser/dist/LICENSE /src/agent-browser/dist/NOTICE /src/agent-browser/dist/THIRD_PARTY_LICENSES /usr/share/licenses/openchamber-agent-browser/
 COPY --chmod=0755 entrypoint.sh /entrypoint.sh
 COPY openchamber-licence.txt /usr/share/licenses/openchamber/LICENSE
 

@@ -1,0 +1,10 @@
+node_modules/
+**/node_modules/
+artifacts/
+**/artifacts/
+dist/*.zip
+config.json
+.env
+.env.*
+*.log
+.DS_Store

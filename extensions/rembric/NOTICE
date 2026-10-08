@@ -1,0 +1,26 @@
+Rembric OpenCode V2 plugin (`extensions/rembric/`)
+===================================================
+
+This is the local `extensions/rembric/` package: an OpenCode V2 plugin loaded
+by OpenCode from its plugin directory. It is not an OpenChamber guest
+extension, does not appear in OpenChamber's extension list, and OpenChamber's
+service approval does not apply to it.
+
+core/rembric-plugin-core.mjs and core/rembric-dotenv.mjs are vendored
+unmodified from the Rembric project:
+
+  https://github.com/susomejias/rembric
+  apps/plugin/bin/rembric-plugin-core.mjs
+  apps/plugin/mcp-bridge/rembric-dotenv.mjs
+
+Rembric is MIT licensed. Copyright its authors. Copyright (c) 2026 Rembric
+contributors. The vendored files carry no local modifications; the V2 adapter
+in index.ts is independently written against OpenCode's documented V2 plugin
+API.
+
+The default export is a plain `{ id, setup }` object, so the built bundle
+inlines both vendored files and has no runtime dependencies.
+
+The full MIT permission notice for the vendored Rembric code is reproduced in
+[`THIRD_PARTY_LICENSES`](THIRD_PARTY_LICENSES), because the bundle strips
+comments and therefore cannot carry the notice in a header.

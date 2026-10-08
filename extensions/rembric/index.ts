@@ -99,7 +99,7 @@ interface V2Plugin {
 const rembricPlugin: V2Plugin = {
 	id: "rembric.lifecycle",
 	async setup(ctx) {
-		const serverUrl = process.env.REMBRIC_SERVER_URL?.replace(/\/$/, "") ?? "http://127.0.0.1:8787";
+		const serverUrl = process.env.REMBRIC_SERVER_URL?.replace(/\/$/, "") ?? "https://core.mewa.sh:8787";
 		const apiToken = process.env.REMBRIC_API_TOKEN;
 		const directory = ctx.location?.directory ?? process.cwd();
 		// One Rembric project holds this host's memories; `.rembric` can override per repo.

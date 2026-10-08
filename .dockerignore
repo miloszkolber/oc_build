@@ -1,6 +1,0 @@
-# Only the web image inputs may enter the build context; never plugin or host data.
-**
-!Dockerfile
-!entrypoint.sh
-!self-update.patch
-!openchamber-licence.txt

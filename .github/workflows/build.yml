@@ -4,16 +4,21 @@ on:
   push:
     branches: [main]
     paths:
-      - 'plugin/**'
-      - 'releases*'
-      - 'latest*'
-      - 'Dockerfile'
-      - 'entrypoint.sh'
-      - 'self-update.patch'
-      - 'check-image.mjs'
+      - 'extensions/rembric/**'
+      - 'docker/Dockerfile'
+      - 'docker/.dockerignore'
+      - 'docker/entrypoint.sh'
+      - 'docker/entrypoint.test.mjs'
+      - 'docker/self-update.patch'
+      - 'docker/openchamber-licence.txt'
+      - 'docker/check-image.mjs'
+      - 'docker/releases*'
+      - 'docker/latest*'
+      - 'extensions/agent-browser/**'
       - '.github/workflows/build.yml'
   schedule:
     - cron: '17 * * * *'
+    - cron: '37 4 * * 1'
   workflow_dispatch:
     inputs:
       bootstrap:
@@ -53,20 +58,21 @@ jobs:
         with:
           bun-version: '1.4.2'
       - name: Test release discovery and latest promotion contracts
-        run: node --test releases.test.mjs latest.test.mjs
+        run: node --test docker/releases.test.mjs docker/latest.test.mjs
       - name: Bundle the Rembric V2 plugin and check its export
-        working-directory: plugin
+        working-directory: extensions/rembric
         run: |
           bun build ./index.ts --target bun --format esm --outfile dist/rembric.js
           bun -e 'const {default:p}=await import("./dist/rembric.js"); if(p.id!=="rembric.lifecycle" || typeof p.setup!=="function") throw new Error("Invalid bundled plugin export")'
           cp NOTICE dist/
+          cp THIRD_PARTY_LICENSES dist/
           (cd dist && sha256sum rembric.js > SHA256SUMS)
           bun -e 'await Bun.write("dist/build.json", JSON.stringify({repository:process.env.GITHUB_REPOSITORY,source_commit:process.env.GITHUB_SHA,bun:Bun.version,opencode_api:"2.0.24",entrypoint:"./index.ts",runtime:"self-contained",bundle_sha256:(await Bun.file("dist/SHA256SUMS").text()).split(" ")[0]},null,2)+"\n")'
       - name: Retain plugin bundle and provenance
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
           name: rembric-opencode-${{ github.sha }}
-          path: plugin/dist/
+          path: extensions/rembric/dist/
           if-no-files-found: error
           retention-days: 30
 
@@ -85,7 +91,7 @@ jobs:
         with:
           persist-credentials: false
       - name: Test release discovery and latest promotion contracts
-        run: node --test releases.test.mjs latest.test.mjs
+        run: node --test docker/releases.test.mjs docker/latest.test.mjs
       - name: Discover every unbuilt eligible upstream release
         id: releases
         env:
@@ -93,8 +99,8 @@ jobs:
           BOOTSTRAP: ${{ inputs.bootstrap || false }}
           RELEASE_ID: ${{ inputs.release_id || '' }}
           REBUILD: ${{ inputs.rebuild || false }}
-          REBUILD_NEWEST: ${{ github.event_name == 'push' }}
-        run: node releases.mjs discover
+          REBUILD_NEWEST: ${{ github.event_name == 'push' || github.event.schedule == '37 4 * * 1' }}
+        run: node docker/releases.mjs discover
 
   image:
     needs: discover
@@ -123,8 +129,8 @@ jobs:
           RELEASE_ID: ${{ matrix.release_id }}
           ASSET_SHA256: ${{ matrix.asset_sha256 }}
           BOOTSTRAP: ${{ matrix.bootstrap }}
-          REBUILD: ${{ inputs.rebuild || github.event_name == 'push' }}
-        run: node releases.mjs prepare
+          REBUILD: ${{ inputs.rebuild || github.event_name == 'push' || github.event.schedule == '37 4 * * 1' }}
+        run: node docker/releases.mjs prepare
       - name: Build and check before publication
         if: steps.prepare.outputs.skip != 'true'
         env:
@@ -133,20 +139,22 @@ jobs:
           RELEASE_ID: ${{ steps.prepare.outputs.release_id }}
           ASSET_SHA256: ${{ steps.prepare.outputs.asset_sha256 }}
         run: |
-          docker build --file Dockerfile --tag "$IMAGE" \
+          docker build --tag "$IMAGE" \
+            --build-context agent-browser=extensions/agent-browser \
             --build-arg "OPENCHAMBER_VERSION=$VERSION" \
             --build-arg "OPENCHAMBER_ASSET_SHA256=$ASSET_SHA256" \
+            --build-arg "OPENCHAMBER_SOURCE_REVISION=$GITHUB_SHA" \
             --label "org.opencontainers.image.source=https://github.com/$GITHUB_REPOSITORY" \
             --label "org.opencontainers.image.revision=$GITHUB_SHA" \
             --label "io.openchamber.upstream.release-id=$RELEASE_ID" \
-            --label "org.opencontainers.image.url=https://github.com/openchamber/openchamber/releases/tag/v$VERSION" .
+            --label "org.opencontainers.image.url=https://github.com/openchamber/openchamber/releases/tag/v$VERSION" docker
           docker image inspect "$IMAGE" --format '{{json .Config.Labels}}' > "$RUNNER_TEMP/image-labels.json"
           IMAGE_LABELS_FILE="$RUNNER_TEMP/image-labels.json" RELEASE_VERSION="$VERSION" SOURCE_COMMIT="$GITHUB_SHA" \
-            node releases.mjs verify-origin
+            node docker/releases.mjs verify-origin
           timeout 180 docker run --rm --interactive --network none --read-only --cap-drop ALL \
-            --security-opt no-new-privileges --tmpfs /tmp \
+            --security-opt no-new-privileges --tmpfs /tmp:exec,size=512m,mode=1777 --shm-size=512m \
             --env "EXPECTED_VERSION=$VERSION" --entrypoint node "$IMAGE" \
-            --input-type=module < check-image.mjs
+            --input-type=module < docker/check-image.mjs
       - name: Publish one canonical tag
         id: publish
         if: steps.prepare.outputs.skip != 'true'
@@ -166,7 +174,7 @@ jobs:
           GITHUB_TOKEN: ${{ github.token }}
           IMAGE: ${{ steps.prepare.outputs.image }}
           MANIFEST_DIGEST: ${{ steps.publish.outputs.digest }}
-        run: node releases.mjs verify-image
+        run: node docker/releases.mjs verify-image
       - name: Verify the published image's build origin
         if: steps.prepare.outputs.skip != 'true'
         env:
@@ -179,7 +187,7 @@ jobs:
           reference="$IMAGE@$MANIFEST_DIGEST"
           docker pull "$reference"
           docker image inspect "$reference" --format '{{json .Config.Labels}}' > "$RUNNER_TEMP/image-labels.json"
-          IMAGE_LABELS_FILE="$RUNNER_TEMP/image-labels.json" node releases.mjs verify-origin
+          IMAGE_LABELS_FILE="$RUNNER_TEMP/image-labels.json" node docker/releases.mjs verify-origin
 
   latest:
     needs: [discover, image]
@@ -211,7 +219,7 @@ jobs:
         id: candidate
         env:
           GITHUB_TOKEN: ${{ github.token }}
-        run: node latest.mjs candidate
+        run: node docker/latest.mjs candidate
       - name: Verify retained provenance and promote the exact registry bytes
         id: promote
         if: steps.candidate.outputs.outcome == 'ready'
@@ -232,7 +240,7 @@ jobs:
           finish() {
             status=$?
             if [ "$status" -ne 0 ] && [ "$promotion_started" = false ]; then
-              node latest.mjs setup-failed || printf '%s\n' 'Failed to record promotion setup failure' >&2
+              node docker/latest.mjs setup-failed || printf '%s\n' 'Failed to record promotion setup failure' >&2
             fi
             if [ -n "$auth_dir" ]; then rm -rf -- "$auth_dir"; fi
             exit "$status"
@@ -242,7 +250,7 @@ jobs:
           export DOCKER_CONFIG="$auth_dir"
           printf '%s' "$GITHUB_TOKEN" | timeout --kill-after 5 30 docker login ghcr.io --username "$GITHUB_ACTOR" --password-stdin
           promotion_started=true
-          node latest.mjs promote
+          node docker/latest.mjs promote
 
   verification:
     if: github.event_name == 'workflow_dispatch' && inputs.verify_digest != ''
@@ -262,7 +270,7 @@ jobs:
           RELEASE_ID: ${{ inputs.release_id }}
           MANIFEST_DIGEST: ${{ inputs.verify_digest }}
           SOURCE_COMMIT: ${{ inputs.source_commit }}
-        run: node releases.mjs verify-release
+        run: node docker/releases.mjs verify-release
       - name: Verify the exact published config without starting it
         env:
           GITHUB_TOKEN: ${{ github.token }}
@@ -276,4 +284,4 @@ jobs:
           reference="$IMAGE@$MANIFEST_DIGEST"
           docker pull "$reference"
           docker image inspect "$reference" --format '{{json .Config.Labels}}' > "$RUNNER_TEMP/image-labels.json"
-          IMAGE_LABELS_FILE="$RUNNER_TEMP/image-labels.json" node releases.mjs verify-origin
+          IMAGE_LABELS_FILE="$RUNNER_TEMP/image-labels.json" node docker/releases.mjs verify-origin

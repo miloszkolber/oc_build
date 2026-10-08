@@ -11,8 +11,8 @@ export const REPOSITORY = 'miloszkolber/openchamber';
 export const IMAGE = `ghcr.io/${REPOSITORY}`;
 export const CUTOFF = '2026-09-24T19:14:25Z';
 // Mirrors the build repository's visibility; GitHub copies it to the package.
-export const EXPECTED_PACKAGE_VISIBILITY = 'public';
-export const SEED_ID = '395994070';
+const EXPECTED_PACKAGE_VISIBILITY = 'public';
+const SEED_ID = '395994070';
 const API = 'https://api.github.com';
 export const MANIFEST_TYPES = [
   'application/vnd.oci.image.manifest.v1+json',
@@ -21,7 +21,7 @@ export const MANIFEST_TYPES = [
   'application/vnd.docker.distribution.manifest.list.v2+json',
 ];
 
-function requireValue(condition, message) {
+export function requireValue(condition, message) {
   if (!condition) throw new Error(message);
 }
 
@@ -46,7 +46,7 @@ function apiId(value) {
   return String(value);
 }
 
-export function validateDigest(digest) {
+function validateDigest(digest) {
   if (digest === null || digest === undefined) return '';
   requireValue(typeof digest === 'string' && /^sha256:[a-f0-9]{64}$/.test(digest), 'Invalid asset SHA-256 digest');
   return digest.slice(7);

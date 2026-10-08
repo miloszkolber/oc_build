@@ -1,2 +1,2 @@
 # A unified patch represents an empty context line as one significant space.
-assets/disable-self-update.patch whitespace=-blank-at-eol
+docker/self-update.patch whitespace=-blank-at-eol

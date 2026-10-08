@@ -27,7 +27,9 @@ fetch(`${base}/api/info`, { headers })
         echo "[openchamber] OpenCode server at ${target} did not become ready" >&2
         exit 1
     fi
-    sleep 1
+    # Distroless runtime does not include coreutils; use the bundled Node
+    # runtime for the retry delay instead of relying on an external sleep.
+    node -e 'setTimeout(() => {}, 1000)'
 done
 
 exec node "$cli" serve --foreground --host "${OPENCHAMBER_HOST:-0.0.0.0}" --port "${OPENCHAMBER_PORT:-4098}"
