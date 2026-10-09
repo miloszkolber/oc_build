@@ -6,7 +6,7 @@ Reuse native OpenChamber and existing OpenCode agents, not a second orchestrator
 
 | Capability | Direction | Success criteria / boundary |
 | --- | --- | --- |
-| Codex/Cursor browser QA | Baked standalone Chromium MCP | Localhost navigation; forms, keyboard, scroll and tabs; actual responsive layout/color preference; PNG/PDF; console/network. No agent browser installation. Shared human-view handoff is not delivered. |
+| Codex/Cursor browser QA | Native desktop panel plus separate baked Chromium MCP | Desktop panel supports human browsing, annotations and native Web actions. Verify actual agent integration with external OpenCode. MCP supports independent localhost navigation, interactions, responsive layout/color preference, PNG/PDF and diagnostics without browser installation; it does not share the panel. |
 | Native coding workspace | Preview, worktrees, session goals, Changes Walkthrough, actions, terminal, GitHub/Linear and desktop/mobile clients | Real chat initialization, file/repository operations and PTY I/O, not only health. Integrations retain normal credentials/prerequisites. |
 | Cursor-style point-at-element feedback | Future bounded source-aware picking | Element/region plus DOM/style/source context reaches the intended session. Cover scrolling, zoom, navigation, stale selectors and inaccessible frames. No universal DOM-to-AST promise. |
 | Paper/Subframe canvas | Existing Doop | Editable HTML variants, selected frames, pinned comments/tokens and screenshots routed to the correct repository/worktree/session. Snapshot HTML is not live component identity. |
