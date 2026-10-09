@@ -173,7 +173,7 @@ setIcon(cancelSize, (svg) => {
 // Console problems on the visible page. The badge opens a compact list under
 // the address bar and grows the dock.
 const DOCK_HEIGHT = 76;
-const narrowDock = window.matchMedia('(max-width: 480px)');
+const narrowDock = window.matchMedia('(max-width: 560px)');
 const dockHeight = () => narrowDock.matches ? 112 : DOCK_HEIGHT;
 const syncDockHeight = () => {
   void host.setHeight(dockHeight() + (consoleOpen ? CONSOLE_HEIGHT : 0)).catch(() => {});

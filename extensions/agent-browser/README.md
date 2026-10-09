@@ -1,6 +1,6 @@
 # Agent Browser for OpenChamber
 
-Agent Browser is the local 1.0.1 adaptation of upstream Server Browser v0.7.0 at commit `6c5e76ddfa21b574d0521a27f408cd643673161c`; it is not an upstream Server Browser release. It provides one temporary Chromium browser shared by OpenChamber's `openchamber_web` BrowserProvider, its surface panel, and a 37-tool MCP endpoint. It targets OpenChamber 2.1.1 or newer and `@openchamber/sdk` 2.1.1. See [NOTICE](NOTICE), [LICENSE](LICENSE), and [THIRD_PARTY_LICENSES](THIRD_PARTY_LICENSES) for precise provenance and attribution.
+Agent Browser is a local adaptation of upstream Server Browser v0.7.0 at commit `6c5e76ddfa21b574d0521a27f408cd643673161c`; it is not an upstream Server Browser release. It provides one temporary Chromium browser shared by OpenChamber's `openchamber_web` BrowserProvider, its surface panel, and a 37-tool MCP endpoint. It targets OpenChamber 2.1.1 or newer and `@openchamber/sdk` 2.1.1. See [NOTICE](NOTICE), [LICENSE](LICENSE), and [THIRD_PARTY_LICENSES](THIRD_PARTY_LICENSES) for provenance and attribution.
 
 ## Runtime layout
 
@@ -115,4 +115,4 @@ bun run check
 bun run package
 ```
 
-`bun run build` stages the complete installable package in `dist/`: `dist/package.json`, `dist/panel/index.html`, bundled `dist/panel/main.js`, `dist/service/main.js`, and `dist/broker/main.js`, with `dist/LICENSE`, `dist/NOTICE`, `dist/THIRD_PARTY_LICENSES`, `dist/README.md`, and `dist/config.example.json` beside them. `bun run check` verifies the manifest, the staged files, and the 37 unique MCP tool names. `bun run package` builds the staged package before writing the deterministic archive `dist/openchamber-agent-browser-1.0.1.zip`. `bun test test/*.test.js` is the direct test-runner form; run it after the build because the entrypoint test starts the staged `dist/` broker and guest service. Fixture tests use only local resources; Chromium integration tests run when Chrome/Chromium is installed and otherwise report a skip. The package build bundles runtime dependencies into the installable entries, so production `node_modules` are not required.
+`bun run build` stages the complete installable package in `dist/`: manifest, bundled panel/service/broker entries, licenses, README and example config. `bun run check` validates these and the 37 unique MCP tools. `bun run package` builds the deterministic `dist/openchamber-agent-browser-<version>.zip` archive using the package version. Run `bun test test/*.test.js` after the build; entrypoint and panel-layout tests use staged assets. Chromium integration tests run when Chrome is available and otherwise report skips. Runtime dependencies are bundled, so production needs no `node_modules`.
