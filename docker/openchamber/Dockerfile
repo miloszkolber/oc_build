@@ -1,11 +1,11 @@
-# syntax=docker/dockerfile:1
+# syntax=mirror.gcr.io/docker/dockerfile:1
 
 # Release to bake in. Override for a specific version; "latest" resolves the
 # newest upstream GitHub release at build time.
 ARG OPENCHAMBER_VERSION=2.1.1
 
 # --- stage 1: download and prepare the upstream web bundle ---------------------
-FROM node:22-bookworm-slim AS bundle
+FROM mirror.gcr.io/library/node:22-bookworm-slim AS bundle
 
 ARG OPENCHAMBER_VERSION
 ARG OPENCHAMBER_ASSET_SHA256=""
@@ -44,9 +44,9 @@ RUN set -eu; \
 # --- stage 2: the few host tools OpenChamber actually uses ---------------------
 # Collected with their shared-library closure so the runtime stage needs no
 # package manager. bash keeps the web terminal usable; git backs source control.
-FROM oven/bun:1.4.2 AS bun-runtime
+FROM mirror.gcr.io/oven/bun:1.4.2 AS bun-runtime
 
-FROM debian:bookworm-slim AS tools
+FROM mirror.gcr.io/library/debian:bookworm-slim AS tools
 
 RUN apt-get update \
     && apt-get install --no-install-recommends -y \

@@ -2,6 +2,13 @@
 
 ## Independent image build
 
+Base images and the Dockerfile frontend use Google's public `mirror.gcr.io`
+Docker Hub cache. This avoids anonymous GitHub-runner HTTP 429 pulls without
+new credentials or dependency-version changes. Bun, Debian and frontend
+manifest digests matched Docker Hub when switched. Distroless is unchanged.
+Cache availability is not guaranteed; a miss fails explicitly. Recheck cached
+base versions when upgrading them.
+
 This directory owns the browser Dockerfile, build context and image check.
 It does not require the app Dockerfile, upstream web bundle or host shell tools.
 `.github/workflows/browser.yml` publishes browser tags on browser-only changes,

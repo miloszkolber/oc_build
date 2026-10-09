@@ -25,6 +25,15 @@ Publishing does not itself deploy a container. Watchtower or an explicit host ro
 
 ## Build locally
 
+Docker Hub base images and the Dockerfile frontend are pulled explicitly from
+Google's public `mirror.gcr.io` cache to avoid anonymous GitHub-runner HTTP 429
+failures. Node 22, Debian bookworm, Bun 1.4.2 and frontend versions are unchanged.
+At the change, all four manifest digests matched Docker Hub exactly. Distroless
+still comes from its existing `gcr.io` source. No registry credentials are needed.
+Google keeps cached images in sync, but cache availability is not guaranteed.
+A cache miss fails explicitly rather than silently bypassing the fix with a
+rate-limited Docker Hub pull. Recheck availability when changing base versions.
+
 From the repository root:
 
 ```sh
