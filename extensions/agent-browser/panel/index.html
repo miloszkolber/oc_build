@@ -13,10 +13,8 @@
       #root { display: grid; grid-template-columns: minmax(0, 1fr); grid-template-rows: 28px 40px 34px; padding: 4px 8px; background: var(--oc-bg, transparent); color: var(--oc-fg, inherit); }
       #root.console-open { grid-template-rows: 28px 40px 34px minmax(0, 1fr); }
       .row { display: flex; align-items: center; min-width: 0; }
-      /* The status shrinks to just its state dot until it has a message to show. */
+      /* The status takes the free space, so the controls sit at the right edge. */
       .status { display: flex; flex: 1 1 0%; min-width: 0; align-items: center; gap: 6px; overflow: hidden; color: var(--oc-muted, currentColor); font-size: 11px; text-overflow: ellipsis; white-space: nowrap; }
-      .status[data-message="false"] { flex: 0 0 auto; max-width: 7px; }
-      .status[data-state="waiting"] { flex: 1 1 auto; }
       .chat-button { flex: 0 0 auto; height: 22px; padding: 0 10px; border: 1px solid var(--oc-border, currentColor); border-radius: 999px; background: transparent; color: var(--oc-fg, inherit); font-size: 11px; white-space: nowrap; cursor: pointer; }
       .chat-button[hidden] { display: none; }
       .chat-button:hover:not(:disabled) { background: var(--oc-hover, transparent); }

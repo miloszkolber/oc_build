@@ -71,6 +71,8 @@ test('bottom bar carries status, device control and hand-back; rows fit narrow a
       assert.ok(geometry.address >= 100, `Address too narrow at ${width}`);
       assert.ok(geometry.navigation.every((right) => right <= width), `Clipped navigation row at ${width}: ${JSON.stringify(geometry.navigation)}`);
       assert.ok(geometry.dock.every((right) => right <= width), `Clipped bottom bar at ${width}: ${JSON.stringify(geometry.dock)}`);
+      // The status takes the free space, so the controls end at the right edge.
+      assert.ok(Math.max(...geometry.dock) >= width - 16, `Bottom-bar controls not right-aligned at ${width}: ${JSON.stringify(geometry.dock)}`);
     }
   } finally {
     await runtime.close();
