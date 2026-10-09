@@ -33,6 +33,7 @@ if (!browser) {
   });
   assert.match(terminalOutput, /pty-ready/);
   run('sh', ['-c', 'cd /tmp && HOME=/tmp git init -q image-check && git -C image-check status --porcelain']);
+  run('sh', ['-c', 'export HOME=/tmp; git -C /tmp/image-check -c user.name=ImageCheck -c user.email=image-check@example.invalid commit -q --allow-empty -m fixture; git -C /tmp/image-check worktree add -q -b probe /tmp/image-worktree; git -C /tmp/image-worktree status --porcelain; git -C /tmp/image-check worktree remove /tmp/image-worktree']);
   assert.equal(run('node', [`${root}/bin/cli.js`, '--version']), process.env.EXPECTED_VERSION);
   for (const directory of ['bin', 'server']) for (const file of readdirSync(`${root}/${directory}`, { recursive: true })) {
     if (/\.(js|mjs|cjs)$/.test(file) && !/\.(test|spec)\./.test(file)) run('node', ['--check', `${root}/${directory}/${file}`]);
