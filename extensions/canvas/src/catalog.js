@@ -16,12 +16,18 @@ export const components = {
   DonutChart: { props: z.object({ title: text, data: series }).strict(), description: 'Distribution ring with legend and readable values' },
   BarChart: { props: z.object({ title: text, unit: text.optional(), data: series }).strict(), description: 'Nonnegative labeled bar chart with accessible values' },
   Table: { props: z.object({ title: text, columns: z.array(text).min(1).max(12), rows: z.array(z.array(z.union([text, z.number().finite().min(-1e12).max(1e12), z.boolean(), z.null()])).max(12)).max(200) }).strict(), description: 'Searchable table with sortable columns' },
+  Diagram: { props: z.object({ title: text, code: z.string().trim().min(1).max(8000), caption: text.optional() }).strict(), description: 'Mermaid diagram from DSL text (flowchart, sequence, state, ER, class, gantt, pie, …)' },
   HorizonControl: { props: z.object({ label: text, initialMonths: z.number().int().min(1).max(120), options: z.array(z.number().int().min(1).max(120)).min(1).max(12) }).strict(), description: 'Shared planning horizon control; one per canvas' },
   CostChart: { props: z.object({ title: text, currency: z.enum(['USD', 'EUR', 'GBP', 'PLN']), providers: z.array(z.object({ label: text, monthly: number, upfront: number }).strict()).min(1).max(20) }).strict(), description: 'Costs computed deterministically as upfront + monthly × shared months' },
 };
 export const catalog = defineCatalog(schema, { components, actions: {} });
 export const CATALOG_VERSION = '1';
 export const MAX_BYTES = 256 * 1024; // File API allows 2M characters; keep canvases small and fast.
+
+// Mermaid runs inside the panel. It renders with securityLevel 'strict', and
+// the panel itself is an opaque allow-scripts iframe. Reject input that could
+// escape DSL text or reconfigure the renderer anyway.
+const DISALLOWED_DIAGRAM = /<\s*(script|iframe|object|embed|style|link|meta|foreignObject|svg|img)\b|javascript\s*:|data\s*:\s*text\/html|on[a-z]+\s*=|%%\s*\{/i;
 const id = z.string().regex(/^[a-zA-Z0-9_-]{1,64}$/);
 const elementSchema = z.discriminatedUnion('type', Object.entries(components).map(([type, component]) => z.object({
   type: z.literal(type), props: component.props, children: z.array(id).max(60).optional(),
@@ -46,6 +52,10 @@ export function parseArtifact(input) {
     element.children = children;
     if (children.length && !['Stack', 'Grid', 'Card'].includes(element.type)) throw new Error(`${key}: only Stack, Grid and Card can contain children`);
     if (element.type === 'Table' && element.props.rows.some(row => row.length !== element.props.columns.length)) throw new Error(`${key}: row width must match columns`);
+    if (element.type === 'Diagram') {
+      if (element.props.code.trimStart().startsWith('---')) throw new Error(`${key}: diagram front-matter config is not allowed`);
+      if (DISALLOWED_DIAGRAM.test(element.props.code)) throw new Error(`${key}: diagram contains disallowed markup or directives`);
+    }
     if (element.type === 'HorizonControl') {
       controls++;
       if (!element.props.options.includes(element.props.initialMonths)) throw new Error(`${key}: initialMonths must be an option`);

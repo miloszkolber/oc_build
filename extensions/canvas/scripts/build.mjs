@@ -10,10 +10,10 @@ if (!result.ok) throw new Error(JSON.stringify(result));
 await rm('dist', { recursive: true, force: true });
 await mkdir('dist/panel', { recursive: true });
 await mkdir('dist/examples', { recursive: true });
-await build({ entryPoints: ['src/panel.jsx'], outfile: 'dist/panel/main.js', bundle: true, format: 'esm', platform: 'browser', target: 'es2022', minify: true, jsx: 'automatic', legalComments: 'eof', define: { 'process.env.NODE_ENV': '"production"' } });
+await build({ entryPoints: [{ in: 'src/panel.jsx', out: 'main' }], outdir: 'dist/panel', bundle: true, format: 'esm', platform: 'browser', target: 'es2022', minify: true, jsx: 'automatic', legalComments: 'eof', splitting: true, chunkNames: 'chunks/[name]-[hash]', define: { 'process.env.NODE_ENV': '"production"' } });
 for (const file of ['index.html', 'style.css']) await copyFile(`panel/${file}`, `dist/panel/${file}`);
 for (const file of ['README.md', 'VERIFICATION.md', 'LICENSE', 'NOTICE']) await copyFile(file, `dist/${file}`);
-const licensePackages = ['@openchamber/sdk', '@json-render/core', '@json-render/react', 'react', 'react-dom', 'scheduler', 'zod'];
+const licensePackages = ['@openchamber/sdk', '@json-render/core', '@json-render/react', 'react', 'react-dom', 'scheduler', 'zod', 'mermaid'];
 const licenses = [];
 for (const name of licensePackages) {
   const pkg = JSON.parse(await readFile(`node_modules/${name}/package.json`, 'utf8'));

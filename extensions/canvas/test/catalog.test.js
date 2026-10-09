@@ -45,4 +45,12 @@ describe('untrusted canvas boundary', () => {
     const used = new Set(Object.values(parsed.spec.elements).map(element => element.type));
     expect([...used].sort()).toEqual(Object.keys(components).sort());
   });
+  test('rejects diagram markup, front-matter config and directives', () => {
+    const base = { catalog_version: '1', title: 'd', spec: { root: 'x', elements: { x: { type: 'Diagram', props: { title: 'd', code: 'flowchart LR\n A-->B' } } } } };
+    expect(parseArtifact(base).spec.elements.x.type).toBe('Diagram');
+    for (const code of ['flowchart LR\n A[<script>alert(1)</script>]-->B', 'flowchart LR\n A-->B\n click A "javascript:alert(1)"', 'flowchart LR\n A[<img src=x onerror=1>]-->B', '%%{init: {"securityLevel":"loose"}}%%\nflowchart LR\n A-->B', '---\nconfig:\n  securityLevel: loose\n---\nflowchart LR\n A-->B']) {
+      const value = structuredClone(base); value.spec.elements.x.props.code = code;
+      expect(() => parseArtifact(value)).toThrow();
+    }
+  });
 });

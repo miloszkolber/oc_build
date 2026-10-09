@@ -62,9 +62,11 @@ function App() {
   const [sessionId, setSessionId] = useState(null);
   const [artifact, setArtifact] = useState(null);
   const [months, setMonths] = useState(12);
+  const [theme, setTheme] = useState('');
   const [error, setError] = useState('');
   const [notice, setNotice] = useState('');
   const session = useRef(null), generation = useRef(0), alive = useRef(true);
+  const canvasSession = useRef(null), directory = useRef(null);
   const noticeTimer = useRef(null);
 
   function flash(message) {
@@ -74,21 +76,23 @@ function App() {
   }
 
   async function refresh() {
-    const id = session.current;
-    if (!id || document.hidden) return;
+    const sessionAtRequest = session.current;
+    const id = canvasSession.current;
+    if (!id || !sessionAtRequest || document.hidden) return;
     const request = ++generation.current;
+    const current = () => alive.current && request === generation.current && session.current === sessionAtRequest;
     let path;
     try {
       path = sessionFile(id);
     } catch (failure) {
-      if (alive.current && request === generation.current && session.current === id) setError(errorMessage(failure));
+      if (current()) setError(errorMessage(failure));
       return;
     }
     let text;
     try {
       text = (await host.readFile(path)).content;
     } catch (failure) {
-      if (!alive.current || request !== generation.current || session.current !== id) return;
+      if (!current()) return;
       if (isNotFound(failure)) {
         setArtifact(null); setError('');
       } else {
@@ -98,11 +102,31 @@ function App() {
     }
     try {
       const parsed = parseArtifact(text);
-      if (!alive.current || request !== generation.current || session.current !== id) return;
+      if (!current()) return;
       setArtifact(parsed); setMonths(initialMonths(parsed)); setError('');
     } catch (failure) {
-      if (!alive.current || request !== generation.current || session.current !== id) return;
+      if (!current()) return;
       setError(`This conversation’s canvas is invalid and was left as-is: ${errorMessage(failure)}`);
+    }
+  }
+
+  async function resolveCanvasSession(id) {
+    // A subagent runs in a child session; show the top-level conversation's canvas.
+    try {
+      const projects = await host.listProjects();
+      const project = projects.projects.find(candidate => candidate.directory === directory.current) ?? projects.projects[0];
+      if (!project) return id;
+      const snapshot = await host.listSessions(project.id);
+      const byId = new Map(snapshot.sessions.map(record => [record.id, record]));
+      let currentId = id;
+      for (let hops = 0; hops < 8; hops++) {
+        const parentId = byId.get(currentId)?.parentId;
+        if (!parentId) break;
+        currentId = parentId;
+      }
+      return currentId;
+    } catch {
+      return id;
     }
   }
 
@@ -111,13 +135,20 @@ function App() {
     if (session.current === id) return;
     generation.current++;
     session.current = id;
+    canvasSession.current = null;
     setSessionId(id); setArtifact(null); setMonths(12); setError(''); setNotice('');
-    if (id) void refresh();
+    if (!id) return;
+    void (async () => {
+      const resolved = await resolveCanvasSession(id);
+      if (!alive.current || session.current !== id) return;
+      canvasSession.current = resolved;
+      void refresh();
+    })();
   }
 
   actions.current.prompt = async () => {
     try {
-      await host.compose({ text: agentPrompt(sessionFile(session.current)), mode: 'append' });
+      await host.compose({ text: agentPrompt(sessionFile(canvasSession.current ?? session.current)), mode: 'append' });
       flash('Drafted a Canvas request in the composer');
     } catch (failure) {
       setError(`Could not draft the request: ${errorMessage(failure)}`);
@@ -128,6 +159,8 @@ function App() {
     alive.current = true;
     const ready = host.onReady(context => {
       applyHostReady(context, document.documentElement);
+      directory.current = context.directory ?? null;
+      setTheme(`${context.theme?.mode ?? ''}|${context.theme?.tokens?.primary ?? ''}|${context.theme?.tokens?.elevated ?? ''}|${context.theme?.tokens?.foreground ?? ''}`);
       setConnected(true);
       select(context.session);
     });
@@ -152,7 +185,7 @@ function App() {
     {error && <KitBanner tone="error" title="Could not show this canvas" body={error} />}
     {notice && !error && <KitBanner tone="success" title={notice} />}
     <div className="workspace">
-      {artifact ? <article className="canvas" aria-label="Canvas preview"><Canvas artifact={artifact} months={months} setMonths={setMonths} /></article> : <KitEmpty title={empty.title} body={empty.body} action={empty.action} />}
+      {artifact ? <article className="canvas" aria-label="Canvas preview"><Canvas artifact={artifact} months={months} setMonths={setMonths} theme={theme} /></article> : <KitEmpty title={empty.title} body={empty.body} action={empty.action} />}
     </div>
     <span className="sr-only" role="status" aria-live="polite">{artifact ? 'Canvas for this conversation is shown.' : error ? `Canvas unavailable: ${error}` : 'Empty canvas.'}</span>
   </main>;

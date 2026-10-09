@@ -1,9 +1,62 @@
-import React, { createContext, useContext, useState } from 'react';
+import React, { createContext, useContext, useEffect, useId, useRef, useState } from 'react';
 import { defineRegistry, JSONUIProvider, Renderer } from '@json-render/react';
-import { catalog, initialMonths, totalCost } from './catalog.js';
+import { catalog, initialMonths, totalCost, errorMessage } from './catalog.js';
 
 const Controls = createContext(null);
+const Theme = createContext('');
 const colors = ['var(--series-1)', 'var(--series-2)', 'var(--series-3)', 'var(--series-4)', 'var(--series-5)'];
+
+let mermaidPromise = null;
+function loadMermaid() {
+  if (!mermaidPromise) mermaidPromise = import('mermaid').then(module => module.default);
+  return mermaidPromise;
+}
+function token(name, fallback) {
+  if (typeof document === 'undefined') return fallback;
+  const value = getComputedStyle(document.documentElement).getPropertyValue(name).trim();
+  // A host that omits a token can leave the literal string "undefined" in place.
+  return !value || value === 'undefined' || value === 'null' ? fallback : value;
+}
+function Diagram({ props }) {
+  const host = useRef(null);
+  const [error, setError] = useState('');
+  const uid = useId().replace(/[^a-zA-Z0-9_-]/g, '');
+  const themeKey = useContext(Theme);
+  useEffect(() => {
+    let alive = true;
+    setError('');
+    loadMermaid().then(async mermaid => {
+      mermaid.initialize({
+        startOnLoad: false,
+        securityLevel: 'strict',
+        theme: 'base',
+        fontFamily: token('--oc-font', 'sans-serif'),
+        themeVariables: {
+          background: token('--oc-elevated', '#ffffff'),
+          primaryColor: token('--oc-elevated', '#ffffff'),
+          primaryTextColor: token('--oc-fg', '#1f2430'),
+          primaryBorderColor: token('--oc-border', '#d9dde5'),
+          secondaryColor: token('--oc-muted-surface', '#f1f3f7'),
+          tertiaryColor: token('--oc-bg', '#ffffff'),
+          lineColor: token('--oc-muted', '#6b7280'),
+          textColor: token('--oc-fg', '#1f2430'),
+          mainBkg: token('--oc-elevated', '#ffffff'),
+          nodeBorder: token('--oc-border', '#d9dde5'),
+          clusterBkg: token('--oc-bg', '#ffffff'),
+          clusterBorder: token('--oc-border', '#d9dde5'),
+          edgeLabelBackground: token('--oc-elevated', '#ffffff'),
+          labelBackground: token('--oc-elevated', '#ffffff'),
+          fontSize: '13px',
+        },
+      });
+      const { svg } = await mermaid.render(`canvas-diagram-${uid}`, props.code);
+      if (!alive || !host.current) return;
+      host.current.innerHTML = svg;
+    }).catch(failure => { if (alive) setError(`Diagram could not be rendered: ${errorMessage(failure)}`); });
+    return () => { alive = false; };
+  }, [props.code, uid, themeKey]);
+  return <section className="card diagram-card"><h2>{props.title}</h2>{error ? <p className="muted">{error}</p> : <div className="diagram-host" ref={host} role="img" aria-label={props.title} />}{props.caption && <p className="muted diagram-caption">{props.caption}</p>}</section>;
+}
 function LineChart({ props }) {
   const maximum = Math.max(1, ...props.data.map(item => item.value));
   const points = props.data.map((item, index) => [24 + index / Math.max(1, props.data.length - 1) * 552, 160 - item.value / maximum * 136]);
@@ -48,7 +101,7 @@ const { registry } = defineRegistry(catalog, { components: {
   Text: ({ props }) => <p className="plain-text">{props.text}</p>,
   Metric: ({ props }) => <section className={`card metric-card tone-${props.tone ?? 'blue'}`}><p className="metric-label">{props.label}</p><div className="metric-line"><strong className="metric">{props.value}</strong>{props.change && <span className="trend-badge">{props.change}</span>}</div>{props.detail && <p className="muted">{props.detail}</p>}</section>,
   BarChart: ({ props }) => <Bars {...props} format={value => `${value.toLocaleString()}${props.unit ? ` ${props.unit}` : ''}`} />,
-  LineChart, DonutChart,
+  LineChart, DonutChart, Diagram,
   Table,
   HorizonControl: ({ props }) => {
     const { months, setMonths } = useContext(Controls);
@@ -63,7 +116,7 @@ const { registry } = defineRegistry(catalog, { components: {
   },
 } });
 
-export function Canvas({ artifact, months, setMonths }) {
-  return <Controls.Provider value={{ months, setMonths }}><JSONUIProvider registry={registry}><Renderer spec={artifact.spec} registry={registry} /></JSONUIProvider></Controls.Provider>;
+export function Canvas({ artifact, months, setMonths, theme = '' }) {
+  return <Theme.Provider value={theme}><Controls.Provider value={{ months, setMonths }}><JSONUIProvider registry={registry}><Renderer spec={artifact.spec} registry={registry} /></JSONUIProvider></Controls.Provider></Theme.Provider>;
 }
 export { initialMonths };

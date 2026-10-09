@@ -1044,3 +1044,38 @@ D2/Kroki and MCP Apps stay later, conditional options; sandboxed generated HTML
 stays a separately isolated experiment. This aligns with Bet A in §6/§21
 (keep the artifact declarative and file-owned) while borrowing §20's
 architecture-explorer task as the acceptance test.
+
+### Delivered: Mermaid `Diagram` component (Canvas 0.7)
+
+Implemented as recommended. `Diagram` takes `{ title, code, caption? }` where
+`code` is Mermaid DSL text, bounded to 8,000 characters. Mermaid 11.17.2 (MIT)
+is bundled as lazy esbuild chunks, so `panel/main.js` stays small and the
+Mermaid graph loads only when a canvas contains a diagram. The panel inits
+Mermaid with `securityLevel: 'strict'` and a `theme: 'base'` mapping read from
+the host `--oc-*` tokens, and re-renders on a theme change. Validation rejects
+script/event markup, `javascript:`, front-matter config and `%%{init}%%`
+directives; combined with the opaque `allow-scripts` sandbox this keeps DSL
+text from becoming an execution or reconfiguration channel. The showcase now
+includes a flowchart and a sequence diagram, and a test asserts full catalog
+coverage.
+
+### Delivered: subagent sessions show the parent canvas (Canvas 0.7)
+
+A subagent runs in a child session; the SDK exposes `parentId` only through
+session records, not the `onReady` snapshot. The extension now declares the
+`sessions` capability and, once per session switch, resolves the current
+session's lineage with `listProjects` + `listSessions`, then reads the
+top-level ancestor's canvas file. Missing capability or a failed lookup falls
+back to the current session's own file. Verified in MCP Chromium with a
+scripted child session pointing at the parent: the parent's canvas rendered.
+A QA bug was found and fixed here — the refresh guard compared the displayed
+session id against the canvas (parent) id, so parent reads were discarded; the
+guard now captures the session at request time.
+
+### Skill vs host context (open question, not implemented)
+
+A skill that documents extension functionality would duplicate context the host
+already injects, and extensions cannot ship skills. Recommendation: keep the
+panel's compose action as the just-in-time channel, and if autonomous discovery
+is still missing, add one short Canvas note to the agent instruction surface
+rather than a full skill.

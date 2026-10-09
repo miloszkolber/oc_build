@@ -49,6 +49,13 @@ focus and on every conversation switch. Late reads after a switch are
 discarded. A missing file is an empty canvas, not an error. Invalid JSON shows
 an error banner and keeps the last good rendering for that conversation.
 
+A subagent runs in a child session. With the `sessions` capability granted, the
+panel resolves the current session's ancestors once per switch and shows the
+top-level conversation's canvas, so a subagent task displays the canvas it is
+working for. If the capability is not granted, or the lookup fails, the panel
+falls back to the current session's own file. The agent request draft targets
+the same resolved file.
+
 ## Advertising to agents
 
 The contract above only helps an agent that already knows Canvas exists. OpenChamber
@@ -102,6 +109,7 @@ truth: `src/catalog.js`.
 | Metric | Value, optional detail/change and blue/green/amber accent |
 | BarChart, LineChart, DonutChart | Labeled bars, shaded trend and distribution |
 | Table | Searchable/sortable bounded data table |
+| Diagram | Mermaid diagram from DSL text (flowchart, sequence, state, ER, class, gantt, pie, …) |
 | HorizonControl, CostChart | Shared horizon and deterministic upfront + monthly × months |
 
 Catalog 1 remains compatible with 0.1.0/0.2.0 components. Files written by
@@ -112,8 +120,8 @@ export its JSON elsewhere — the panel is a presentation surface, not storage.
 ## Build and install
 
 1. Run `bun install --frozen-lockfile`, `bun test`, then `bun run package` here.
-2. Install `dist/openchamber-generative-canvas-0.6.0.zip` through OpenChamber Extensions.
-3. Review and approve the `/data/.db/openchamber/canvas/**` filesystem declaration.
+2. Install `dist/openchamber-generative-canvas-0.7.0.zip` through OpenChamber Extensions.
+3. Review and approve the `/data/.db/openchamber/canvas/**` filesystem and `sessions` declarations.
 4. Reload the client to discover the updated Canvas entry. Canvas is panel-only;
    it declares no page surface.
 

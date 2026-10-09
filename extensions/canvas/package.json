@@ -1,16 +1,28 @@
 {
   "name": "openchamber-generative-canvas",
-  "version": "0.6.0",
+  "version": "0.7.0",
   "private": true,
   "type": "module",
   "license": "MIT",
   "description": "File-backed, catalog-validated visualization and quick-tool canvas",
   "openchamber": {
     "apiVersion": 1,
-    "engines": { "openchamber": ">=2.2.0" },
+    "engines": {
+      "openchamber": ">=2.2.0"
+    },
     "contributes": {
-      "panel": { "id": "generative-canvas", "name": "Canvas", "icon": "bar-chart-box-line", "entry": "panel/index.html" },
-      "filesystem": ["/data/.db/openchamber/canvas/**"]
+      "panel": {
+        "id": "generative-canvas",
+        "name": "Canvas",
+        "icon": "bar-chart-box-line",
+        "entry": "panel/index.html"
+      },
+      "capabilities": [
+        "sessions"
+      ],
+      "filesystem": [
+        "/data/.db/openchamber/canvas/**"
+      ]
     }
   },
   "scripts": {
@@ -19,12 +31,16 @@
     "package": "bun scripts/package.mjs"
   },
   "dependencies": {
-    "@openchamber/sdk": "2.2.0",
     "@json-render/core": "0.21.0",
     "@json-render/react": "0.21.0",
+    "@openchamber/sdk": "2.2.0",
+    "mermaid": "11",
     "react": "19.3.0",
     "react-dom": "19.3.0",
     "zod": "4.6.5"
   },
-  "devDependencies": { "esbuild": "0.28.2", "fflate": "0.8.2" }
+  "devDependencies": {
+    "esbuild": "0.28.2",
+    "fflate": "0.8.2"
+  }
 }
