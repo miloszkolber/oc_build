@@ -1,52 +1,56 @@
-# Generative Canvas
+# Canvas
 
-OpenChamber 2.2.0+ panel/full-page extension for durable dashboards, charts and
-interactive quick tools. JSON selects trusted components; it never supplies
-JavaScript or HTML. Uses json-render 0.21.0 and OpenChamber SDK 2.2.0.
+OpenChamber 2.2.0+ panel/full-page extension for agent-presented data
+visualization. One conversation owns one canvas: the panel follows the
+currently selected conversation and renders its JSON with trusted components.
+JSON never supplies JavaScript or HTML. Uses json-render 0.21.0 and
+OpenChamber SDK 2.2.0.
 
 ## Use
 
-Open Canvas from the rail. The host owns its title, expand and close controls.
-The extension frame contains only the artifact selector, preview/source toggles
-and artifact menu. Selection loads automatically. The menu contains add,
-import, rename, export, reset and delete. Deletion requires confirmation.
+Open Canvas from the rail. The frame holds only preview/source toggles and an
+actions menu, top-right. There are no artifact names, no selector and no
+management: an empty conversation shows an empty canvas until its agent writes
+one. Switching conversations switches canvases immediately; nothing from the
+previous conversation is kept on screen.
 
-Use **Add dashboard** for the revenue example or **Add cost explorer** for local
-12/24/36-month comparison. Examples are clearly illustrative data, not live
-business records. Tables filter/sort locally. Charts, metric trends and responsive
-grids render with a dedicated sans-serif visualization hierarchy.
+The actions menu holds Export JSON, Copy JSON and Copy file path. Export and
+Copy use the current horizon-control selection. Horizon controls, table
+search/sort and chart rendering are local and transient; the agent's file is
+never rewritten by the panel. Copy file path reveals the exact session file
+for this conversation, useful when telling the agent where to write.
 
-Canvases are shared across projects and sessions. They live permanently at
-`/data/.db/openchamber/canvas/<id>.canvas.json`, not in project worktrees or the
-installed extension. Rename changes the display title, not the stable filename.
-Deleting or reinstalling the extension does not delete the store.
-
-The list refreshes every three seconds while the frame is visible and clean.
-New agent files appear automatically, and changed selected files reload.
-Unsaved edits and confirmation dialogs pause refresh. Save or discard before
-switching artifacts. Source edits validate before preview/save. Save controls
-persists the current horizon. Table search/sort is transient. Stale saves/deletes
-are rejected with a reload/discard recovery rather than overwriting changes.
+Tables filter/sort locally. Charts, metric trends and responsive grids render
+with a dedicated sans-serif visualization hierarchy. Examples in
+`dist/examples/` are illustrative data, not live records.
 
 ## Conversation context
 
-The SDK supplies the currently selected conversation in `onReady(context.session)`
-and publishes changes through `host.onSession(listener)`. The snapshot includes
-`id`, `title`, `busy` and optional `model`/`agent`. No selected conversation is
-represented by `null`. Project directory updates are separate. This does not
-provide the conversation's message history or attach it to the local service.
+The SDK supplies the selected conversation in `onReady(context.session)` and
+publishes changes through `host.onSession(listener)`. The snapshot carries
+`id`, `title`, `busy` and optional `model`/`agent`; `null` means no
+conversation is selected. No message history is exposed.
 
-Canvas currently uses host readiness/theme, not the session snapshot, so its
-permanent artifacts remain global. Conversation-aware selection or explicit
-artifact associations can use these SDK events without another service. No
-conversation filtering or transcript access is implemented by this rename.
+The panel polls the session file every three seconds while visible, plus on
+focus and on every conversation switch. Late reads after a switch are
+discarded. A missing file is an empty canvas, not an error. Invalid JSON shows
+an error banner and keeps the last good rendering for that conversation.
 
 ## Agent contract
 
-Write a UTF-8 `<name>.canvas.json` directly under `/data/.db/openchamber/canvas`.
-Prefer atomic replacement. Include exactly `catalog_version: "1"`, `title`, and
+Write a UTF-8 JSON document to the conversation file:
+
+`/data/.db/openchamber/canvas/<session-id>.canvas.json`
+
+Prefer atomic replacement (write a temporary file, then rename). Session ids
+are normally safe filename segments, so `<session-id>.canvas.json` applies;
+for anything unusual the panel reads `session-<16 hex>.canvas.json` using a
+deterministic FNV-1a hash — see `src/session.js`, the single source of truth.
+Nothing else in the directory is read by the panel.
+
+Include exactly `catalog_version: "1"`, `title`, and
 `spec: { "root": "id", "elements": { ... } }`. Elements contain `type`, `props`
-and optional `children`. The same JSON schema works across projects.
+and optional `children`.
 
 Build emits `dist/catalog.json`, `dist/examples/cost-explorer.canvas.json` and
 `dist/examples/revenue-pulse.canvas.json`. Validate with
@@ -61,44 +65,34 @@ Build emits `dist/catalog.json`, `dist/examples/cost-explorer.canvas.json` and
 | Table | Searchable/sortable bounded data table |
 | HorizonControl, CostChart | Shared horizon and deterministic upfront + monthly × months |
 
-Catalog 1 remains compatible with 0.1.0 components. Old project files are not
-deleted or silently relocated. Import them through the menu to copy them into
-the permanent store. Invalid agent files stay visible with an error.
+Catalog 1 remains compatible with 0.1.0/0.2.0 components. Files written by
+older global Canvas versions stay on disk but are no longer displayed; do not
+delete other files in the directory. To preserve something important, copy or
+export its JSON elsewhere — the panel is a presentation surface, not storage.
 
 ## Build and install
 
 1. Run `bun install --frozen-lockfile`, `bun test`, then `bun run package` here.
-2. Install `dist/openchamber-generative-canvas-0.2.0.zip` through OpenChamber Extensions.
-3. Review and approve the local service and `/data/.db/openchamber/canvas/**` filesystem declaration.
+2. Install `dist/openchamber-generative-canvas-0.3.0.zip` through OpenChamber Extensions.
+3. Review and approve the `/data/.db/openchamber/canvas/**` filesystem declaration.
 4. Reload the client to discover the updated Canvas entry.
 
-The SDK file API cannot rename/delete, so an on-demand Node service owns CRUD.
-It runs inside the app runtime, binds only loopback, requires the host-provided
-bearer token and uses no additional port mapping/container/model service. Its
-API accepts only validated Canvas CRUD in the fixed directory. It rejects path
-traversal and symlink files and uses atomic writes plus revision checks. Agent
-edits outside this service should use atomic writes; cross-process edits are
-not a distributed transaction.
+There is no extension service, background process, model key, generated-code
+execution or network authority. The panel reads and the agent writes through
+the host file API and the approved filesystem scope; canonical paths are
+compared so symlinks cannot widen it. The built-in browser is unchanged.
 
-**The service is not OS-sandboxed.** OpenChamber runs it with the app user's
-filesystem access. The fixed-directory restriction is enforced by this code,
-not by the manifest alone. It exposes no shell, arbitrary filesystem, remote
-URL, generated-code or model action. The extension no longer requests broad
-project-file access. Native Browser and standalone browser MCP are unchanged.
-
-Artifacts are bounded to 60,000 UTF-8 bytes to fit the SDK service body limit,
-100 elements, depth 16 and 200 stored artifacts. Structural validation rejects
-unknown props/types, actions/expressions/events, invalid graphs, numeric bounds
-and malformed table rows. Files larger than the limit fail explicitly.
+Canvases are bounded to 256 KiB of UTF-8. Structural validation rejects
+unknown props/types, actions/expressions/events, invalid graphs, numeric
+bounds and malformed table rows. Files larger than the limit fail explicitly.
 
 ## Recovery and verification
 
-Back up `/data/.db/openchamber/canvas` with app data. Restore files there without
-changing IDs. The store is independent of extension installation and project
+Back up `/data/.db/openchamber/canvas` with app data. Restore files without
+renaming them. The store is independent of extension installation and project
 deletion. Before an upgrade, retain the prior ZIP/installed directory and data
-backup. Reinstalling an old extension never requires deleting authored JSON.
+backup.
 
 See `VERIFICATION.md` for executed checks and the MCP Chromium/native desktop
-boundary. The reference layout and upstream examples inform the implementation,
-not a separate mandatory research deliverable. MCP Apps, arbitrary documents
-and simulations remain separate future capabilities.
+boundary. MCP Apps, arbitrary documents and simulations remain separate future
+capabilities.

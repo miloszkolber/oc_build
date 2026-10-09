@@ -1,5 +1,5 @@
 import { describe, test, expect } from 'bun:test';
-import { parseArtifact, snapshot, totalCost, artifactPath, catalog } from '../src/catalog.js';
+import { parseArtifact, snapshot, totalCost, catalog } from '../src/catalog.js';
 import { costExplorer } from '../src/examples.js';
 const mutated = fn => { const value = structuredClone(costExplorer); fn(value); return value; };
 describe('untrusted canvas boundary', () => {
@@ -27,7 +27,7 @@ describe('untrusted canvas boundary', () => {
     'wrong version': value => { value.catalog_version = '2'; },
   };
   for (const [name, change] of Object.entries(invalid)) test(`rejects ${name}`, () => expect(() => parseArtifact(mutated(change))).toThrow());
-  test('size limit is enforced before parsing', () => expect(() => parseArtifact(' '.repeat(60_001))).toThrow('60,000 bytes'));
+  test('size limit is enforced before parsing', () => expect(() => parseArtifact(' '.repeat(256 * 1024 + 1))).toThrow('256 KiB'));
   test('limits depth', () => {
     const value = { catalog_version: '1', title: 'deep', spec: { root: 'n0', elements: {} } };
     for (let i = 0; i < 18; i++) value.spec.elements[`n${i}`] = { type: 'Stack', props: {}, children: i < 17 ? [`n${i + 1}`] : [] };
@@ -38,9 +38,5 @@ describe('untrusted canvas boundary', () => {
     expect(value.spec.elements.horizon.props.initialMonths).toBe(36);
     expect(costExplorer.spec.elements.horizon.props.initialMonths).toBe(12);
     expect(totalCost(value.spec.elements.costs.props.providers[1], 36)).toBe(372);
-  });
-  test('confines artifact filenames', () => {
-    expect(artifactPath('costs.canvas.json')).toBe('visualizations/costs.canvas.json');
-    for (const name of ['../secret.canvas.json', '/etc/passwd', 'bad.json', 'nested/x.canvas.json']) expect(() => artifactPath(name)).toThrow();
   });
 });

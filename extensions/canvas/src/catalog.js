@@ -21,7 +21,7 @@ export const components = {
 };
 export const catalog = defineCatalog(schema, { components, actions: {} });
 export const CATALOG_VERSION = '1';
-export const MAX_BYTES = 60_000; // Fits the SDK's 64,000-character service body boundary.
+export const MAX_BYTES = 256 * 1024; // File API allows 2M characters; keep canvases small and fast.
 const id = z.string().regex(/^[a-zA-Z0-9_-]{1,64}$/);
 const elementSchema = z.discriminatedUnion('type', Object.entries(components).map(([type, component]) => z.object({
   type: z.literal(type), props: component.props, children: z.array(id).max(60).optional(),
@@ -36,7 +36,7 @@ export const artifactSchema = z.object({
 // deliberately accepts only static props and our deterministic local controls.
 export function parseArtifact(input) {
   const encoded = typeof input === 'string' ? input : JSON.stringify(input);
-  if (new TextEncoder().encode(encoded).length > MAX_BYTES) throw new Error('Canvas exceeds 60,000 bytes');
+  if (new TextEncoder().encode(encoded).length > MAX_BYTES) throw new Error('Canvas exceeds 256 KiB');
   const artifact = artifactSchema.parse(JSON.parse(encoded));
   const entries = Object.entries(artifact.spec.elements);
   if (entries.length > 100) throw new Error('Canvas exceeds 100 elements');
@@ -80,9 +80,4 @@ export function totalCost(provider, months) { return provider.upfront + provider
 
 export function errorMessage(error) {
   return error.issues ? error.issues.slice(0, 3).map(issue => `${issue.path.join('.') || 'Canvas'}: ${issue.message}`).join('\n') : error.message;
-}
-
-export function artifactPath(name) {
-  if (!/^[a-zA-Z0-9_-][a-zA-Z0-9_.-]{0,100}\.canvas\.json$/.test(name)) throw new Error('Invalid canvas filename');
-  return `visualizations/${name}`;
 }
