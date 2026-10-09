@@ -18,6 +18,7 @@ on:
       - 'docker/releases*'
       - 'docker/latest*'
       - 'extensions/agent-browser/**'
+      - 'browser/**'
       - '.github/workflows/build.yml'
   schedule:
     - cron: '17 * * * *'
@@ -64,10 +65,10 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ github.token }}
         run: |
-          version=$(node -p 'require("./extensions/agent-browser/package.json").version')
+          version=$(node -p 'require("./browser/package.json").version')
           image="ghcr.io/$GITHUB_REPOSITORY_OWNER/openchamber-browser:$version-$GITHUB_SHA"
           docker build --target browser --tag "$image" \
-            --build-context agent-browser=extensions/agent-browser \
+            --build-context browser-package=browser \
             --build-arg "OPENCHAMBER_SOURCE_REVISION=$GITHUB_SHA" \
             --label "org.opencontainers.image.source=https://github.com/$GITHUB_REPOSITORY" \
             --label "org.opencontainers.image.revision=$GITHUB_SHA" docker
@@ -174,7 +175,7 @@ jobs:
           ASSET_SHA256: ${{ steps.prepare.outputs.asset_sha256 }}
         run: |
           docker build --tag "$IMAGE" \
-            --build-context agent-browser=extensions/agent-browser \
+            --build-context browser-package=browser \
             --build-arg "OPENCHAMBER_VERSION=$VERSION" \
             --build-arg "OPENCHAMBER_ASSET_SHA256=$ASSET_SHA256" \
             --build-arg "OPENCHAMBER_SOURCE_REVISION=$GITHUB_SHA" \

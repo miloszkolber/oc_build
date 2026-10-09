@@ -1,13 +1,14 @@
 # OpenChamber build repository
 
-This repository builds the OpenChamber web image and the separate distroless `openchamber-browser` image. It also ships the Agent Browser guest extension and the Rembric OpenCode V2 plugin. Host Compose files, credentials and application data live outside this repository.
+This repository builds the OpenChamber web image and standalone distroless `openchamber-browser` MCP image. It also ships the Rembric OpenCode V2 plugin. The Agent Browser guest extension is archived in source, not packaged or used on Core. Host Compose files, credentials and application data live outside this repository.
 
 ## Layout
 
 | Path | Purpose |
 | --- | --- |
 | [`docker/`](docker/README.md) | App and browser image targets, release automation, checks and local build instructions |
-| [`extensions/agent-browser/`](extensions/agent-browser/README.md) | Agent Browser: guest extension that owns one shared Chromium and serves it to the panel and to MCP |
+| [`browser/`](browser/README.md) | Active standalone Chromium MCP package, no extension panel or guest API |
+| [`extensions/agent-browser/`](extensions/agent-browser/README.md) | Archived extension source, not deployed |
 | [`extensions/rembric/`](extensions/rembric/README.md) | Rembric OpenCode V2 plugin and its standalone build/install scripts |
 | `.github/workflows/build.yml` | GitHub Actions workflow; GitHub requires workflows to remain here |
 | `NOTICES.md` | Third-party attribution for the image and both packages |

@@ -118,3 +118,6 @@ bun run package
 ```
 
 `bun run build` stages the complete installable package in `dist/`: manifest, bundled panel/service/broker entries, licenses, README and example config. `bun run check` validates these and the 37 unique MCP tools. `bun run package` builds the deterministic `dist/openchamber-agent-browser-<version>.zip` archive using the package version. Run `bun test test/*.test.js` after the build; entrypoint and panel-layout tests use staged assets. Chromium integration tests run when Chrome is available and otherwise report skips. Runtime dependencies are bundled, so production needs no `node_modules`.
+# Archived on Core
+
+This extension is retained as historical source only. It is not installed or used on the Core host, and neither deployed image packages it. Active browser MCP development lives in [`../../browser/`](../../browser/README.md). The host MCP key is `browser`. The instructions below describe the archived implementation, not current deployment guidance.

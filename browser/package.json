@@ -1,0 +1,10 @@
+{
+  "name": "openchamber-browser",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "license": "MIT",
+  "scripts": { "build": "bun scripts/build.mjs" },
+  "devDependencies": { "esbuild": "0.25.12" },
+  "dependencies": { "ws": "8.18.3" }
+}

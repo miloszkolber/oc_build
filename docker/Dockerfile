@@ -38,13 +38,6 @@ RUN set -eu; \
     && npm install --omit=dev --ignore-scripts --no-audit --no-fund \
     && rm -rf /tmp/* /root/.npm
 
-COPY browser-panel.css /opt/openchamber/dist/browser-panel.css
-COPY surface-input.js /opt/openchamber/server/lib/guests/surface-input.js
-COPY patch-browser-surface.mjs /tmp/patch-browser-surface.mjs
-RUN node /tmp/patch-browser-surface.mjs && rm /tmp/patch-browser-surface.mjs
-COPY surface-queue-regression.mjs /tmp/surface-queue-regression.mjs
-RUN node --test /tmp/surface-queue-regression.mjs && rm /tmp/surface-queue-regression.mjs
-RUN node -e 'const fs=require("fs"),p="/opt/openchamber/dist/index.html",s=fs.readFileSync(p,"utf8"); if(s.split("</head>").length!==2)throw new Error("Unexpected web entrypoint"); fs.writeFileSync(p,s.replace("</head>","<link rel=\"stylesheet\" href=\"/browser-panel.css\"></head>"))'
 
 # --- stage 2: the few host tools OpenChamber actually uses ---------------------
 # Collected with their shared-library closure so the runtime stage needs no
@@ -68,14 +61,12 @@ COPY --from=bun-runtime /usr/local/bin/bun /usr/local/bin/bun
 COPY entrypoint.sh entrypoint.test.mjs /tmp/entrypoint-regression/
 RUN --network=none bun /tmp/entrypoint-regression/entrypoint.test.mjs
 
-WORKDIR /src/agent-browser
-COPY --from=agent-browser / ./
+WORKDIR /src/browser
+COPY --from=browser-package / ./
 
 RUN bun install --frozen-lockfile
 
-RUN --network=none bun run package \
-    && OPENCHAMBER_BROWSER_TEST_NO_SANDBOX=1 bun test \
-    && bun run check \
+RUN --network=none bun run build \
     && printf '{"chromePath":"/usr/lib/chromium/chromium"}\n' > dist/config.json
 
 # cp --parents with absolute /bin, /usr sources only resolves the symlinked
@@ -150,12 +141,12 @@ FROM gcr.io/distroless/nodejs22-debian12 AS browser
 LABEL org.opencontainers.image.title="openchamber-browser" \
       org.opencontainers.image.description="Agent Browser broker and Chromium"
 COPY --from=tools /browser-rootfs/ /
-COPY --from=tools /src/agent-browser/dist/ /opt/openchamber/extensions/agent-browser/
-COPY --from=tools /src/agent-browser/dist/LICENSE /src/agent-browser/dist/NOTICE /src/agent-browser/dist/THIRD_PARTY_LICENSES /usr/share/licenses/openchamber-agent-browser/
+COPY --from=tools /src/browser/dist/ /opt/browser/
+COPY --from=tools /src/browser/dist/LICENSE /src/browser/dist/NOTICE /src/browser/dist/THIRD_PARTY_LICENSES /usr/share/licenses/browser/
 ENV HOME=/tmp NODE_ENV=production PATH=/nodejs/bin:/usr/bin
 USER 1000:1000
 WORKDIR /tmp
-ENTRYPOINT ["/nodejs/bin/node", "/opt/openchamber/extensions/agent-browser/broker/main.js"]
+ENTRYPOINT ["/nodejs/bin/node", "/opt/browser/main.js"]
 
 # --- stage 3: distroless runtime ----------------------------------------------
 FROM gcr.io/distroless/nodejs22-debian12 AS app
@@ -163,7 +154,7 @@ FROM gcr.io/distroless/nodejs22-debian12 AS app
 ARG OPENCHAMBER_VERSION
 
 LABEL org.opencontainers.image.title="openchamber" \
-      org.opencontainers.image.description="OpenChamber web interface and Agent Browser extension (external browser and OpenCode services)" \
+      org.opencontainers.image.description="OpenChamber web interface (external OpenCode service)" \
       org.opencontainers.image.source="https://github.com/openchamber/openchamber" \
       org.opencontainers.image.version="${OPENCHAMBER_VERSION}"
 
@@ -180,8 +171,6 @@ COPY --from=bundle /opt/openchamber/node_modules/ ./node_modules/
 COPY --from=bundle /opt/openchamber/bin/ ./bin/
 COPY --from=bundle /opt/openchamber/server/ ./server/
 COPY --from=bundle /opt/openchamber/dist/ ./dist/
-COPY --from=tools /src/agent-browser/dist/ ./extensions/agent-browser/
-COPY --from=tools /src/agent-browser/dist/LICENSE /src/agent-browser/dist/NOTICE /src/agent-browser/dist/THIRD_PARTY_LICENSES /usr/share/licenses/openchamber-agent-browser/
 COPY --chmod=0755 entrypoint.sh /entrypoint.sh
 COPY openchamber-licence.txt /usr/share/licenses/openchamber/LICENSE
 
