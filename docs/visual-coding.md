@@ -15,7 +15,7 @@ Reuse native OpenChamber and existing OpenCode agents, not a second orchestrator
 
 ## Roadmap contracts
 
-Host `docker/openchamber/PLAN.md` owns priority/status. These contracts do not authorize starting paused phases.
+`docs/PLAN.md` owns priority/status. These contracts do not authorize starting paused phases.
 
 | Phase | Scope and success criteria | Rollback |
 | --- | --- | --- |
