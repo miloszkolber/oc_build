@@ -1,12 +1,16 @@
 import { test, expect } from 'bun:test';
 import fs from 'node:fs/promises';
+import { tmpdir } from 'node:os';
+import path from 'node:path';
 import { createStore } from '../src/store.js';
 import { startService } from '../src/service.js';
 import { costExplorer, revenueDashboard } from '../src/examples.js';
 import { parseArtifact } from '../src/catalog.js';
 
 async function fixture(testCase) {
-  const root = await fs.mkdtemp('/tmp/opencode/canvas-store-');
+  const base = path.join(tmpdir(), 'opencode');
+  await fs.mkdir(base, { recursive: true });
+  const root = await fs.mkdtemp(path.join(base, 'canvas-store-'));
   try { await testCase(createStore(root), root); } finally { await fs.rm(root, { recursive: true, force: true }); }
 }
 test('dashboard fits the actual restricted catalog', () => expect(parseArtifact(revenueDashboard).title).toBe('Revenue pulse'));
