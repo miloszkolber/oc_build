@@ -30,3 +30,17 @@ div:has(> [data-terminal-owner="surface:agent-browser"]) > div:first-child {
   background: #ffffff;
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.14);
 }
+
+/* Fit panel is a live full-size page, not a framed device preview. Mode comes
+ * from the broker's frame, so agent changes and reconnects stay consistent. */
+[data-terminal-owner="surface:agent-browser"][data-browser-viewport-mode="auto"] {
+  padding: 0;
+  background: none;
+}
+[data-terminal-owner="surface:agent-browser"][data-browser-viewport-mode="auto"] > canvas {
+  width: 100%;
+  height: 100%;
+  border: 0;
+  border-radius: 0;
+  box-shadow: none;
+}

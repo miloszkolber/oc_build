@@ -7,3 +7,6 @@
 !self-update.patch
 !openchamber-licence.txt
 !browser-panel.css
+!patch-browser-surface.mjs
+!surface-input.js
+!surface-queue-regression.mjs

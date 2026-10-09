@@ -47,6 +47,7 @@ export const createBrokerClientRuntime = ({ baseUrl = process.env.OPENCHAMBER_BR
         sequence: Number(response.headers.get('x-surface-seq')),
         width: Number(response.headers.get('x-surface-width')),
         height: Number(response.headers.get('x-surface-height')),
+        browserViewportMode: response.headers.get('x-browser-viewport-mode') === 'auto' ? 'auto' : 'fixed',
         title: response.headers.get('x-surface-title') ?? '',
         agentActive: response.headers.get('x-surface-agent-active') === '1',
         mime: response.headers.get('content-type')?.split(';', 1)[0] ?? 'image/jpeg',

@@ -39,6 +39,11 @@ RUN set -eu; \
     && rm -rf /tmp/* /root/.npm
 
 COPY browser-panel.css /opt/openchamber/dist/browser-panel.css
+COPY surface-input.js /opt/openchamber/server/lib/guests/surface-input.js
+COPY patch-browser-surface.mjs /tmp/patch-browser-surface.mjs
+RUN node /tmp/patch-browser-surface.mjs && rm /tmp/patch-browser-surface.mjs
+COPY surface-queue-regression.mjs /tmp/surface-queue-regression.mjs
+RUN node --test /tmp/surface-queue-regression.mjs && rm /tmp/surface-queue-regression.mjs
 RUN node -e 'const fs=require("fs"),p="/opt/openchamber/dist/index.html",s=fs.readFileSync(p,"utf8"); if(s.split("</head>").length!==2)throw new Error("Unexpected web entrypoint"); fs.writeFileSync(p,s.replace("</head>","<link rel=\"stylesheet\" href=\"/browser-panel.css\"></head>"))'
 
 # --- stage 2: the few host tools OpenChamber actually uses ---------------------

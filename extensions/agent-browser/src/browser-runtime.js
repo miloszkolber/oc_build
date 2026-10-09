@@ -546,6 +546,7 @@ export const createBrowserRuntime = ({
       mobile: typeof mobile === 'boolean' ? mobile : viewportConfig.mobile,
     };
     await applyViewportToTabs();
+    surface.retarget();
   };
 
   runtime.applyAgentViewport = (mode) => {

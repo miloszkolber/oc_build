@@ -60,6 +60,7 @@ const createFixtureRuntime = () => {
         sequence,
         bytes: Buffer.from(`${url}\n${text}`),
         mime: 'image/jpeg', width: 800, height: 600, title: 'Fixture',
+        browserViewportMode: 'auto',
       };
     },
     async surfaceInput(events) {
@@ -110,6 +111,7 @@ test('relays an authenticated surface through loopback to the one MCP browser ow
   assert.equal(first.status, 200);
   assert.equal(first.headers.get('content-type'), 'image/jpeg');
   assert.equal(first.headers.get('x-surface-seq'), '1');
+  assert.equal(first.headers.get('x-browser-viewport-mode'), 'auto');
   assert.match(await first.text(), /fixture ready/);
 
   const input = await fetch(`${relay.guest.origin}/surface/input`, {

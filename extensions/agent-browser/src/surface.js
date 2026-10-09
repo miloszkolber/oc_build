@@ -202,13 +202,15 @@ export const createSurface = (runtime) => {
           mime: 'image/jpeg',
           width: Math.round(view?.width ?? 0),
           height: Math.round(view?.height ?? 0),
+          browserViewportMode: runtime.viewportState?.mode ?? 'fixed',
           title: runtime.title,
         });
       });
       try {
         // Stream only the pixels the panel can show. A fixed 1440x900 viewport
         // in a narrow rail panel otherwise ships and decodes ~8x the needed
-        // data on every frame, which is the bulk of the felt lag on a phone.
+        // data on every frame. This bounds bandwidth and decode work, but does
+        // not by itself establish input-to-painted-frame latency.
         const cap = runtime.streamSize?.() ?? null;
         await current.cdp.sendSession(current.sessionId, 'Page.startScreencast', {
           format: 'jpeg',
@@ -244,6 +246,13 @@ export const createSurface = (runtime) => {
       throw error;
     }).finally(() => { startPromise = null; });
     return startPromise;
+  };
+
+  const retarget = () => {
+    target += 1;
+    detach();
+    latest = null;
+    for (const waiter of waiters) finishWaiter(waiter, null);
   };
 
   return {
@@ -297,8 +306,11 @@ export const createSurface = (runtime) => {
       if (runtime.controller !== controller) void runtime.contextMenu.close();
       runtime.controller = controller;
     },
-    resize({ width, height }) {
-      return runtime.setPanelSize({ width, height });
+    async resize({ width, height }) {
+      const before = JSON.stringify([runtime.viewport, runtime.streamSize?.()]);
+      const size = await runtime.setPanelSize({ width, height });
+      if (before !== JSON.stringify([runtime.viewport, runtime.streamSize?.()])) retarget();
+      return size;
     },
     async clipboard() {
       const current = await start();
@@ -310,12 +322,7 @@ export const createSurface = (runtime) => {
     },
     // The active tab changed: stop streaming the old one and wake long polls so
     // the next request starts on the new tab.
-    retarget() {
-      target += 1;
-      detach();
-      latest = null;
-      for (const waiter of waiters) finishWaiter(waiter, null);
-    },
+    retarget,
     async close() {
       if (closed) return;
       closed = true;

@@ -311,6 +311,7 @@ export const createService = ({ runtime, token = null, port = 0, allowUnauthenti
         [SURFACE_SEQ_HEADER]: String(frame.sequence),
         [SURFACE_WIDTH_HEADER]: String(frame.width),
         [SURFACE_HEIGHT_HEADER]: String(frame.height),
+        'x-browser-viewport-mode': frame.browserViewportMode === 'auto' ? 'auto' : 'fixed',
       };
       const title = surfaceTitleHeader(frame.title);
       if (title) headers[SURFACE_TITLE_HEADER] = title;
