@@ -27,3 +27,26 @@ export const revenueDashboard = {
     table: { type: 'Table', props: { title: 'Plan performance', columns: ['Plan', 'Customers', 'Revenue (€)', 'Retention'], rows: [['Pro', 706, 9800, '104%'], ['Team', 385, 9200, '110%'], ['Enterprise', 193, 5800, '116%']] } },
   } },
 };
+
+// Kitchen-sink example: exercises every catalog-1 component once so agents can
+// copy any pattern. All data is illustrative.
+export const showcase = {
+  catalog_version: '1', title: 'Catalog showcase', spec: { root: 'root', elements: {
+    root: { type: 'Stack', props: {}, children: ['heading', 'about', 'metrics', 'spotlight', 'charts', 'data', 'horizon', 'costs'] },
+    heading: { type: 'Heading', props: { eyebrow: 'CATALOG 1 · DEMO DATA', title: 'Every component, once', subtitle: 'Each section below demonstrates one catalog component with illustrative data.' } },
+    about: { type: 'Text', props: { text: 'Copy any section into a conversation canvas. Nothing here is live data.' } },
+    metrics: { type: 'Grid', props: { columns: 3 }, children: ['m1', 'm2', 'm3'] },
+    m1: { type: 'Metric', props: { label: 'Throughput', value: '1,024', change: '+12%', detail: 'Events per minute', tone: 'blue' } },
+    m2: { type: 'Metric', props: { label: 'Success rate', value: '99.2%', change: '+0.4 pts', detail: 'Trailing hour', tone: 'green' } },
+    m3: { type: 'Metric', props: { label: 'Queue depth', value: '37', change: '-8', detail: 'Needs watching', tone: 'amber' } },
+    spotlight: { type: 'Card', props: { title: 'Release note', description: 'A titled section grouping content.' }, children: ['note'] },
+    note: { type: 'Text', props: { text: 'Cards group a heading, an optional description and nested blocks.' } },
+    charts: { type: 'Grid', props: { columns: 2 }, children: ['bars', 'trend', 'mix'] },
+    bars: { type: 'BarChart', props: { title: 'Deploys per weekday', unit: 'deploys', data: [{ label: 'Mon', value: 14 }, { label: 'Tue', value: 22 }, { label: 'Wed', value: 19 }, { label: 'Thu', value: 25 }, { label: 'Fri', value: 11 }] } },
+    trend: { type: 'LineChart', props: { title: 'Latency p95', unit: 'ms', data: [{ label: '00:00', value: 210 }, { label: '04:00', value: 188 }, { label: '08:00', value: 243 }, { label: '12:00', value: 301 }, { label: '16:00', value: 264 }, { label: '20:00', value: 229 }] } },
+    mix: { type: 'DonutChart', props: { title: 'Traffic by region', data: [{ label: 'EU', value: 482 }, { label: 'US', value: 351 }, { label: 'APAC', value: 167 }] } },
+    data: { type: 'Table', props: { title: 'Service health', columns: ['Service', 'Latency (ms)', 'Healthy', 'Note'], rows: [['api', 182, true, 'Nominal'], ['worker', 940, false, 'Backlogged'], ['cache', 12, true, null]] } },
+    horizon: { type: 'HorizonControl', props: { label: 'Planning horizon', initialMonths: 12, options: [6, 12] } },
+    costs: { type: 'CostChart', props: { title: 'Projected spend', currency: 'USD', providers: [{ label: 'Current', monthly: 140, upfront: 0 }, { label: 'Reserved', monthly: 95, upfront: 400 }] } },
+  } },
+};

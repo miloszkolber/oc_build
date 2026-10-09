@@ -3,7 +3,7 @@ import { mkdir, copyFile, readFile, writeFile, rm } from 'node:fs/promises';
 import { parseManifest } from '@openchamber/sdk/schemas';
 import { z } from 'zod';
 import { parseArtifact, artifactSchema } from '../src/catalog.js';
-import { costExplorer, revenueDashboard } from '../src/examples.js';
+import { costExplorer, revenueDashboard, showcase } from '../src/examples.js';
 const manifest = JSON.parse(await readFile('package.json', 'utf8'));
 const result = parseManifest(manifest);
 if (!result.ok) throw new Error(JSON.stringify(result));
@@ -28,5 +28,6 @@ await writeFile('dist/THIRD_PARTY_LICENSES', licenses.join('\n\n----------------
 await writeFile('dist/package.json', JSON.stringify({ name: manifest.name, version: manifest.version, license: manifest.license, description: manifest.description, openchamber: manifest.openchamber }, null, 2) + '\n');
 await writeFile('dist/examples/cost-explorer.canvas.json', JSON.stringify(parseArtifact(costExplorer), null, 2) + '\n');
 await writeFile('dist/examples/revenue-pulse.canvas.json', JSON.stringify(parseArtifact(revenueDashboard), null, 2) + '\n');
+await writeFile('dist/examples/showcase.canvas.json', JSON.stringify(parseArtifact(showcase), null, 2) + '\n');
 await writeFile('dist/catalog.json', JSON.stringify(z.toJSONSchema(artifactSchema), null, 2) + '\n');
 console.log('Built Canvas panel, catalog and example');

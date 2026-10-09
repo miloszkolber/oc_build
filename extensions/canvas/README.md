@@ -1,15 +1,18 @@
 # Canvas
 
-OpenChamber 2.2.0+ panel/full-page extension for agent-presented data
-visualization. One conversation owns one canvas: the panel follows the
-currently selected conversation and renders its JSON with trusted components.
-JSON never supplies JavaScript or HTML. Uses json-render 0.21.0 and
-OpenChamber SDK 2.2.0.
+OpenChamber 2.2.0+ panel extension for agent-presented data visualization. One
+conversation owns one canvas: the panel follows the currently selected
+conversation and renders its JSON with trusted components. JSON never supplies
+JavaScript or HTML. Uses json-render 0.21.0 and OpenChamber SDK 2.2.0,
+including its UI kit (`applyHostReady`, `mountEmpty`, `mountBanner`,
+`mountMenu`) for theme, empty states, notices and the actions menu. The
+preview/source icon toggle stays custom to match the reference frame.
 
 ## Use
 
 Open Canvas from the rail. The frame holds only preview/source toggles and an
-actions menu, top-right. There are no artifact names, no selector and no
+actions menu, top-right — and only while the conversation has a canvas. Empty
+states show no buttons at all. There are no artifact names, no selector and no
 management: an empty conversation shows an empty canvas until its agent writes
 one. Switching conversations switches canvases immediately; nothing from the
 previous conversation is kept on screen.
@@ -52,9 +55,12 @@ Include exactly `catalog_version: "1"`, `title`, and
 `spec: { "root": "id", "elements": { ... } }`. Elements contain `type`, `props`
 and optional `children`.
 
-Build emits `dist/catalog.json`, `dist/examples/cost-explorer.canvas.json` and
-`dist/examples/revenue-pulse.canvas.json`. Validate with
-`bun scripts/validate.mjs <file.canvas.json>`. Source of truth: `src/catalog.js`.
+Build emits `dist/catalog.json` and `dist/examples/cost-explorer.canvas.json`,
+`dist/examples/revenue-pulse.canvas.json` and
+`dist/examples/showcase.canvas.json`. The showcase exercises every catalog-1
+component once with illustrative data — the fastest pattern reference for
+agents. Validate with `bun scripts/validate.mjs <file.canvas.json>`. Source of
+truth: `src/catalog.js`.
 
 | Component | Purpose |
 | --- | --- |
@@ -73,9 +79,10 @@ export its JSON elsewhere — the panel is a presentation surface, not storage.
 ## Build and install
 
 1. Run `bun install --frozen-lockfile`, `bun test`, then `bun run package` here.
-2. Install `dist/openchamber-generative-canvas-0.3.0.zip` through OpenChamber Extensions.
+2. Install `dist/openchamber-generative-canvas-0.4.0.zip` through OpenChamber Extensions.
 3. Review and approve the `/data/.db/openchamber/canvas/**` filesystem declaration.
-4. Reload the client to discover the updated Canvas entry.
+4. Reload the client to discover the updated Canvas entry. Canvas is panel-only;
+   it declares no page surface.
 
 There is no extension service, background process, model key, generated-code
 execution or network authority. The panel reads and the agent writes through

@@ -1,6 +1,6 @@
 import { describe, test, expect } from 'bun:test';
-import { parseArtifact, snapshot, totalCost, catalog } from '../src/catalog.js';
-import { costExplorer } from '../src/examples.js';
+import { parseArtifact, snapshot, totalCost, catalog, components } from '../src/catalog.js';
+import { costExplorer, showcase } from '../src/examples.js';
 const mutated = fn => { const value = structuredClone(costExplorer); fn(value); return value; };
 describe('untrusted canvas boundary', () => {
   test('example validates with our validator and json-render catalog', () => {
@@ -38,5 +38,11 @@ describe('untrusted canvas boundary', () => {
     expect(value.spec.elements.horizon.props.initialMonths).toBe(36);
     expect(costExplorer.spec.elements.horizon.props.initialMonths).toBe(12);
     expect(totalCost(value.spec.elements.costs.props.providers[1], 36)).toBe(372);
+  });
+  test('showcase exercises every catalog component', () => {
+    const parsed = parseArtifact(showcase);
+    expect(catalog.validate(parsed.spec).success).toBe(true);
+    const used = new Set(Object.values(parsed.spec.elements).map(element => element.type));
+    expect([...used].sort()).toEqual(Object.keys(components).sort());
   });
 });
