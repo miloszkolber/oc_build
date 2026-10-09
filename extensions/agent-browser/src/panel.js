@@ -93,6 +93,7 @@ address.placeholder = 'https://example.com';
 address.autocomplete = 'off';
 address.spellcheck = false;
 address.setAttribute('aria-label', 'Address');
+address.className = 'address';
 
 const VIEWPORT_PRESETS = Object.freeze({
   mobile: Object.freeze({ label: 'Mobile', width: 390, height: 844, mobile: true }),
@@ -116,18 +117,6 @@ viewportSelect.append(
   currentCustomOption,
   customOption,
 );
-
-const rotate = document.createElement('button');
-rotate.type = 'button';
-rotate.className = 'toolbar-button';
-rotate.title = 'Rotate the viewport';
-rotate.setAttribute('aria-label', rotate.title);
-setIcon(rotate, (svg) => {
-  addPath(svg, 'M4 12a8 8 0 0 1 13.66-5.66L20 8.5');
-  addPath(svg, 'M20 3.5v5h-5');
-  addPath(svg, 'M20 12a8 8 0 0 1-13.66 5.66L4 15.5');
-  addPath(svg, 'M4 20.5v-5h5');
-});
 
 const mobileToggle = document.createElement('button');
 mobileToggle.type = 'button';
@@ -172,13 +161,21 @@ setIcon(cancelSize, (svg) => {
 });
 // Console problems on the visible page. The badge opens a compact list under
 // the address bar and grows the dock.
-const DOCK_HEIGHT = 76;
+const DOCK_HEIGHT = 110;
+const NARROW_DOCK_HEIGHT = 138;
+const CONSOLE_HEIGHT = 132;
 const narrowDock = window.matchMedia('(max-width: 560px)');
-const dockHeight = () => narrowDock.matches ? 112 : DOCK_HEIGHT;
+const dockHeight = () => narrowDock.matches ? NARROW_DOCK_HEIGHT : DOCK_HEIGHT;
 const syncDockHeight = () => {
   void host.setHeight(dockHeight() + (consoleOpen ? CONSOLE_HEIGHT : 0)).catch(() => {});
 };
-const CONSOLE_HEIGHT = 132;
+// Hand control back to the agent. The host draws no bar of its own for this
+// extension, so the extension owns the control affordance.
+const handBack = document.createElement('button');
+handBack.type = 'button';
+handBack.className = 'hand-back';
+handBack.textContent = 'Hand back to agent';
+handBack.hidden = true;
 let consoleOpen = false;
 let consoleEntries = null;
 const problems = document.createElement('button');
@@ -330,6 +327,11 @@ const renderPageTabs = (selected, disabled) => {
   }
   // The kit clears the strip on every update; restore focus to the same tab.
   if (focusedId) pageTabs.querySelector(`.oc-sdk-tab[data-id="${CSS.escape(focusedId)}"]`)?.focus();
+  // And re-home the close control on the active pill, since update() rebuilds it.
+  const activePillId = current?.id ?? '';
+  const activePill = activePillId ? pageTabs.querySelector(`.oc-sdk-tab[data-id="${CSS.escape(activePillId)}"]`) : null;
+  if (activePill && !disabled) activePill.append(closeTab);
+  else if (closeTab.parentElement) closeTab.remove();
 };
 
 const chatButton = document.createElement('button');
@@ -340,15 +342,25 @@ chatButton.hidden = true;
 
 const pageTabsRow = document.createElement('div');
 pageTabsRow.className = 'row page-tabs-row';
-pageTabsRow.append(pageTabs, newTab, closeTab, chatButton);
+pageTabsRow.append(pageTabs, newTab, chatButton);
 
 const navigationRow = document.createElement('div');
 navigationRow.className = 'row navigation-row';
-const viewportTools = document.createElement('div');
-viewportTools.className = 'viewport-tools';
-viewportTools.append(problems, viewportSelect, rotate, mobileToggle, selectCompatibility, status);
-navigationRow.append(back, forward, reload, address, customSize, viewportTools);
-root.append(pageTabsRow, navigationRow, consolePanel);
+// Page diagnostics and device-emulation toggles sit next to the address field.
+const pageTools = document.createElement('div');
+pageTools.className = 'page-tools';
+pageTools.append(problems, mobileToggle, selectCompatibility);
+navigationRow.append(back, forward, reload, address, pageTools);
+
+// The bottom bar owns control status, the device/resolution control, and
+// hand-back. It replaces the host's surface header (hidden by the image CSS).
+const dockBar = document.createElement('div');
+dockBar.className = 'row dock-bar';
+const viewportControl = document.createElement('div');
+viewportControl.className = 'viewport-control';
+viewportControl.append(viewportSelect, customSize);
+dockBar.append(status, viewportControl, handBack);
+root.append(pageTabsRow, navigationRow, dockBar, consolePanel);
 
 let state = null;
 let requestPending = false;
@@ -420,9 +432,10 @@ const render = () => {
   viewportSelect.title = viewport?.mode === 'fixed' && viewport.source === 'agent'
     ? 'The agent chose this viewport. Pick another size to take it over.'
     : 'Viewport size';
-  rotate.disabled = disabled || viewport?.mode !== 'fixed';
   mobileToggle.disabled = disabled || !viewport;
   mobileToggle.setAttribute('aria-pressed', String(viewport?.mobile === true));
+  handBack.hidden = !(state?.controller === 'user' && state?.viewerInControl === true);
+  handBack.disabled = requestPending;
 
   let statusState = 'ready';
   let statusMessage = '';
@@ -644,7 +657,7 @@ const setViewport = (viewport) => {
 
 const closeCustomSize = () => {
   customSize.hidden = true;
-  address.hidden = false;
+  viewportSelect.hidden = false;
   render();
 };
 
@@ -654,7 +667,7 @@ viewportSelect.addEventListener('change', () => {
   if (viewportSelect.value === 'custom') {
     widthInput.value = String(current.width);
     heightInput.value = String(current.height);
-    address.hidden = true;
+    viewportSelect.hidden = true;
     customSize.hidden = false;
     widthInput.focus();
     widthInput.select();
@@ -666,10 +679,13 @@ viewportSelect.addEventListener('change', () => {
     : { mode: 'auto', mobile: current.mobile });
 });
 
-rotate.addEventListener('click', () => {
-  const current = selectedViewport();
-  if (current?.mode !== 'fixed') return;
-  setViewport({ mode: 'fixed', width: current.height, height: current.width, mobile: current.mobile });
+// Hand control back to the agent. The service clears the viewer's lease; the
+// next action opens or reuses the browser without a user in the way.
+handBack.addEventListener('click', () => {
+  if (!state) return;
+  void request('/surface/control', { controller: 'none' }).then((succeeded) => {
+    if (succeeded) render();
+  });
 });
 
 mobileToggle.addEventListener('click', () => {
@@ -686,7 +702,7 @@ const applyCustomSize = () => {
   const current = selectedViewport();
   if (!current || !customSize.reportValidity()) return;
   customSize.hidden = true;
-  address.hidden = false;
+  viewportSelect.hidden = false;
   setViewport({ mode: 'fixed', width: Number(widthInput.value), height: Number(heightInput.value), mobile: current.mobile });
 };
 

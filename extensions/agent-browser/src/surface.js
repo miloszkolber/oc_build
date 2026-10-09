@@ -1,6 +1,9 @@
 import { SURFACE_FRAME_MAX_BYTES, SURFACE_TEXT_MAX } from '@openchamber/sdk';
 
 const BUTTON_NAMES = ['left', 'middle', 'right'];
+// JPEG quality for the screencast. 62 keeps UI edges readable while cutting
+// the per-frame bytes the viewer has to receive and decode.
+const STREAM_QUALITY = 62;
 const KEY_CODES = Object.freeze({
   Backspace: 8, Tab: 9, Enter: 13, Escape: 27, PageUp: 33, PageDown: 34, End: 35, Home: 36,
   ArrowLeft: 37, ArrowUp: 38, ArrowRight: 39, ArrowDown: 40, Insert: 45, Delete: 46,
@@ -189,20 +192,31 @@ export const createSurface = (runtime) => {
         const bytes = Buffer.from(String(event.params.data ?? ''), 'base64');
         if (bytes.length === 0 || bytes.length > SURFACE_FRAME_MAX_BYTES) return;
         sequence += 1;
+        // The logical size is the viewport in CSS px: pointer coordinates are
+        // translated into that space. The encoded image may be smaller (see the
+        // screencast cap), so it is never taken from the frame metadata.
+        const view = runtime.viewport;
         scheduleFrame({
           sequence,
           bytes,
           mime: 'image/jpeg',
-          width: Math.round(event.params.metadata?.deviceWidth ?? runtime.viewport?.width ?? 0),
-          height: Math.round(event.params.metadata?.deviceHeight ?? runtime.viewport?.height ?? 0),
+          width: Math.round(view?.width ?? 0),
+          height: Math.round(view?.height ?? 0),
           title: runtime.title,
         });
       });
       try {
+        // Stream only the pixels the panel can show. A fixed 1440x900 viewport
+        // in a narrow rail panel otherwise ships and decodes ~8x the needed
+        // data on every frame, which is the bulk of the felt lag on a phone.
+        const cap = runtime.streamSize?.() ?? null;
         await current.cdp.sendSession(current.sessionId, 'Page.startScreencast', {
           format: 'jpeg',
-          quality: 72,
+          quality: STREAM_QUALITY,
           everyNthFrame: 1,
+          ...(cap && cap.maxWidth > 0 && cap.maxHeight > 0
+            ? { maxWidth: cap.maxWidth, maxHeight: cap.maxHeight }
+            : {}),
         });
       } catch (error) {
         detach();

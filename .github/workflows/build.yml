@@ -74,6 +74,9 @@ jobs:
             --env IMAGE_KIND=browser --entrypoint node "$image" --input-type=module < docker/check-image.mjs
           printf '%s' "$GITHUB_TOKEN" | docker login ghcr.io --username "$GITHUB_ACTOR" --password-stdin
           docker push "$image"
+          latest="ghcr.io/$GITHUB_REPOSITORY_OWNER/openchamber-browser:latest"
+          docker tag "$image" "$latest"
+          docker push "$latest"
 
   plugin:
     if: github.event_name == 'push'

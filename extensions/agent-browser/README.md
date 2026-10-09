@@ -76,7 +76,9 @@ The broker API is an unauthenticated, path-limited loopback bridge intended for 
 
 ## Sidecar run recipe
 
-The app image bakes the installable package into `/opt/openchamber/extensions/agent-browser`, but does not contain Chromium. The separate distroless `openchamber-browser` image starts the broker at `/opt/openchamber/extensions/agent-browser/broker/main.js`; it has no app, git or shell. Run it without application mounts or credentials, read-only root, UID 1000, dropped capabilities, `no-new-privileges`, init, bounded `/tmp` tmpfs and `shm_size: 512m`. Its authorized `OPENCHAMBER_BROWSER_NO_SANDBOX=1` exception is not a general extension default. Surface delivery keeps the newest frame at 30fps and preserves final paints on static pages.
+The app image bakes the installable package into `/opt/openchamber/extensions/agent-browser`, but does not contain Chromium. The separate distroless `openchamber-browser` image starts the broker at `/opt/openchamber/extensions/agent-browser/broker/main.js`; it has no app, git or shell. Run it without application mounts or credentials, read-only root, UID 1000, dropped capabilities, `no-new-privileges`, init, bounded `/tmp` tmpfs and `shm_size: 512m`. Its authorized `OPENCHAMBER_BROWSER_NO_SANDBOX=1` exception is not a general extension default.
+
+The panel docks to the bottom edge and draws its own control bar, so the host's surface header is hidden by the app image's `browser-panel.css`. Rows are page tabs, the address row (with back/forward/reload, the address, and the diagnostics/mobile/select toggles) and the bottom bar (control status, the device/resolution control and hand-back). Surface delivery keeps the newest frame at 30fps, preserves final paints on static pages, and caps the encoded image to the panel's CSS box so a large fixed viewport is not streamed and decoded in full.
 
 Create a private environment file for the isolated broker and give the same token to the native OpenCode service using its existing secret-management path:
 

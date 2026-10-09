@@ -601,6 +601,13 @@ test('sizes pages in CSS pixels for the viewer and keeps a chosen size fixed', {
   // When the dock returns to Auto, then the page follows the latest panel size again.
   await manager.setViewport({ mode: 'auto', mobile: false }, manager.state().generation);
   assert.equal(await innerSize(), '[600,400]');
+
+  // And the streamed image is capped to the panel, never past the viewport, so
+  // a large fixed viewport is not shipped and decoded in full.
+  await manager.setViewport({ mode: 'fixed', width: 1440, height: 900, mobile: false }, manager.state().generation);
+  assert.deepEqual(runtimes[0].streamSize(), { maxWidth: 600, maxHeight: 400 });
+  await manager.surfaceResize({ width: 4000, height: 3000 });
+  assert.deepEqual(runtimes[0].streamSize(), { maxWidth: 1440, maxHeight: 900 });
 });
 
 test('shows the viewer menu only for right clicks the page leaves alone', { skip: chromePath ? false : 'Chrome is unavailable' }, async (context) => {

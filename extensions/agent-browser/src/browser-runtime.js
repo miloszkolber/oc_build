@@ -14,6 +14,10 @@ import { applyViewport, presetViewport } from './viewports.js';
 
 const boundedText = (value, maximum = 1_000) => String(value ?? '').replace(/\s+/g, ' ').trim().slice(0, maximum);
 
+// Floor for the streamed image so a collapsed panel still shows a legible page.
+const STREAM_MIN_WIDTH = 480;
+const STREAM_MIN_HEIGHT = 320;
+
 const createTab = (targetId, sessionId, openerId) => ({
   targetId,
   sessionId,
@@ -558,6 +562,21 @@ export const createBrowserRuntime = ({
     if (viewportConfig.mode === 'auto') await applyViewportToTabs();
     const { width, height } = effectiveViewport();
     return { width, height };
+  };
+
+  // The largest image worth encoding for the viewer: the panel's CSS box,
+  // never past the viewport, with a floor so a collapsed panel stays legible.
+  // A viewport larger than the panel is otherwise streamed in full and then
+  // scaled down by the browser, costing bandwidth and decode time for pixels
+  // nobody sees.
+  runtime.streamSize = () => {
+    const view = effectiveViewport();
+    const panel = viewportConfig.panel;
+    if (!panel || panel.width <= 0 || panel.height <= 0) return null;
+    return {
+      maxWidth: Math.min(view.width, Math.max(Math.round(panel.width), STREAM_MIN_WIDTH)),
+      maxHeight: Math.min(view.height, Math.max(Math.round(panel.height), STREAM_MIN_HEIGHT)),
+    };
   };
 
   // Dock commands return once Chrome accepts them; loading and history state

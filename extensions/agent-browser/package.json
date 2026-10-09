@@ -1,6 +1,6 @@
 {
   "name": "openchamber-agent-browser",
-  "version": "1.0.2",
+  "version": "1.0.3",
   "private": false,
   "description": "Agent Browser: shared Chromium browser broker, OpenChamber BrowserProvider and surface",
   "type": "module",
@@ -20,8 +20,8 @@
         "name": "Agent Browser",
         "icon": "computer",
         "entry": "panel/index.html",
-        "dock": "top",
-        "size": 76
+        "dock": "bottom",
+        "size": 110
       },
       "service": {
         "entry": "service/main.js",

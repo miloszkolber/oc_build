@@ -1,23 +1,32 @@
-/* The shared surface header belongs to the host, not the extension iframe. */
-div:has(> [data-terminal-owner="surface:agent-browser"]) {
-  container-type: inline-size;
+/*
+ * Agent Browser host-chrome adjustments.
+ *
+ * The extension draws its own bottom bar (page tabs, address row, then a bar
+ * with control status, the device/resolution control and hand-back), so the
+ * host's surface header is redundant and hidden here. Without JavaScript this
+ * is the only lever the extension has over host-rendered chrome, so the
+ * selectors are scoped tightly to this guest's surface.
+ */
+
+/* The host surface header ("You have control" / "Hand back to agent"). */
+div:has(> [data-terminal-owner="surface:agent-browser"]) > div:first-child {
+  display: none !important;
 }
-@container (max-width: 560px) {
-  div:has(> [data-terminal-owner="surface:agent-browser"]) > div:first-child {
-    height: auto;
-    min-height: 40px;
-    padding-inline: 8px;
-    gap: 6px;
-  }
-  /* The page title is already present in the extension's tab strip. */
-  div:has(> [data-terminal-owner="surface:agent-browser"]) > div:first-child > span:first-child {
-    display: none;
-  }
-  div:has(> [data-terminal-owner="surface:agent-browser"]) > div:first-child > span:nth-child(2) {
-    flex: 1 1 0%;
-    min-width: 0;
-  }
-  div:has(> [data-terminal-owner="surface:agent-browser"]) > div:first-child > button {
-    flex-shrink: 0;
-  }
+
+/* The page sits on a dotted field inside a visible frame, so the space around
+ * a page that is narrower or shorter than the panel reads as intentional
+ * instead of the page bleeding over the panel edge. */
+[data-terminal-owner="surface:agent-browser"] {
+  padding: 10px;
+  background-color: var(--surface-background, transparent);
+  background-image: radial-gradient(circle, rgba(128, 128, 128, 0.3) 1px, transparent 1.6px);
+  background-size: 16px 16px;
+  background-position: 8px 8px;
+}
+
+[data-terminal-owner="surface:agent-browser"] > canvas {
+  border: 1px solid var(--border, rgba(128, 128, 128, 0.35));
+  border-radius: 6px;
+  background: #ffffff;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.14);
 }
