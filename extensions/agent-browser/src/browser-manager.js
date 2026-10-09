@@ -115,6 +115,20 @@ export const createBrowserManager = ({ createRuntime, now = Date.now } = {}) => 
   });
 
   return {
+    expireIdle(idleTimeoutMs) {
+      return enqueue(async () => {
+        if (closed) return false;
+        const entry = selected();
+        if (!entry || now() - entry.lastActivityAt < idleTimeoutMs) return false;
+        // Frame requests count as activity: an open viewer keeps its profile.
+        // Run behind pending actions so an in-flight navigation cannot expire.
+        controller = 'none';
+        controllingViewer = null;
+        notice = { message: 'The idle browser closed and its temporary profile was cleared. The next browser action starts a fresh profile.' };
+        await removeScope(entry);
+        return true;
+      });
+    },
     get agentActive() { return selected()?.runtime.agentActive === true; },
     perform(action, parameters, signal, _context) {
       return enqueue(async () => {

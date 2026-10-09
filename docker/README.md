@@ -4,7 +4,7 @@ This directory owns everything used to build and publish the OpenChamber web ima
 
 ## Contents
 
-- `Dockerfile`: distroless OpenChamber image with the upstream release bundle, git, bash, Chromium and the bundled Agent Browser guest package; the build runs the browser-gated suite against the same Debian Chromium packages before staging the runtime closure.
+- `Dockerfile`: separate distroless `app` and `browser` targets. The app has the upstream web bundle, git, bash and installable Agent Browser extension, but no Chromium. The browser has the broker, Chromium and its library/font closure, but no web app, git or shell. Browser-gated tests use the runtime's exact Debian Chromium packages.
 - `entrypoint.sh`: waits for the external OpenCode server, then serves the web bundle.
 - `self-update.patch`: disables the in-app update checker and installer.
 - `openchamber-licence.txt`: upstream OpenChamber license copied into the image.
@@ -27,11 +27,13 @@ gh workflow run build.yml -f release_id=403254044 -f rebuild=true
 
 Rebuild replaces that release's canonical tag after the image passes the same checks.
 
-The runtime image is distroless: no package manager, shell utilities or npm. Git, bash and Chromium are copied in with their runtime dependencies because OpenChamber's source-control features run git, the web terminal spawns a shell, and the bundled Agent Browser guest drives a server-owned browser. The OpenCode binary is not included; the host mounts it and sets `OPENCODE_BINARY`.
+Both images are distroless, with no package manager or npm. The app includes git and bash for source control and terminals. Only the browser image includes Chromium. The OpenCode binary is not included; the host mounts it in the app and sets `OPENCODE_BINARY`.
 
-The extension source and installable archive are baked into `/opt/openchamber/extensions/agent-browser`; the archive is `/opt/openchamber/extensions/agent-browser/openchamber-agent-browser-1.0.0.zip`. It is not auto-installed or auto-approved. In **Settings → Extensions**, enter that absolute server path, install it, explicitly approve **Run a local service**, then select **Agent Browser** as the Browser provider. Service approval is a trust decision rather than an OS sandbox: the relay service runs in the OpenChamber application container under its user and mount access.
+The browser image is published on pushes and weekly security rebuilds as `ghcr.io/<owner>/openchamber-browser:<extension-version>-<source-commit>`, independently of upstream app releases. Its default entrypoint starts the broker. Deploy it without application/workspace/auth mounts; a browser on the host would otherwise inherit the host user's access. Local image builds use `--target browser`; default builds select `app`.
 
-The broker entrypoint is `/opt/openchamber/extensions/agent-browser/broker/main.js`; the default web entrypoint does not start it. Run a separate instance of the same image with no application mounts or credentials, read-only root, UID 1000, all capabilities dropped, `no-new-privileges`, an init process, a bounded `/tmp` tmpfs, and `shm_size: 512m`. Set `OPENCHAMBER_BROWSER_NO_SANDBOX=1` only on this isolated sidecar; this is the authorized Chromium sandbox tradeoff for the locked-down container, not a general extension default. The browser path is fixed to `/usr/lib/chromium/chromium` in the image config. The broker requires `OPENCHAMBER_BROWSER_MCP_TOKEN` and exposes authenticated MCP on loopback port 3000. Its separate guest relay on loopback port 3001 remains unauthenticated but path-limited; do not publish or forward either port. The MCP service and surface relay share one temporary browser profile. There is no idle expiry: browser state remains until broker shutdown or failure, and controlled shutdown removes the profile. A broker restart or crash starts with an empty profile; cookies are intentionally not persistent.
+The extension source and installable archive are baked into `/opt/openchamber/extensions/agent-browser`; the archive is `/opt/openchamber/extensions/agent-browser/openchamber-agent-browser-1.0.1.zip`. It is not auto-installed or auto-approved. In **Settings → Extensions**, enter that absolute server path, install it, explicitly approve **Run a local service**, then select **Agent Browser** as the Browser provider. Service approval is a trust decision rather than an OS sandbox: the relay service runs in the OpenChamber application container under its user and mount access.
+
+The browser image starts `/opt/openchamber/extensions/agent-browser/broker/main.js`. Run it with read-only root, UID 1000, all capabilities dropped, `no-new-privileges`, an init process, bounded `/tmp` tmpfs and `shm_size: 512m`. The isolated browser uses the authorized `OPENCHAMBER_BROWSER_NO_SANDBOX=1` exception. The broker requires `OPENCHAMBER_BROWSER_MCP_TOKEN`, exposes authenticated MCP on loopback port 3000 by default (Core uses 3002), and a path-limited guest API on loopback 3001. Do not publish or forward these listeners. One temporary profile is shared by MCP and the panel; shutdown or 30 minutes without actions or an open viewer clears it. `idleTimeoutMs` permits one minute through one day. Login state is not persistent. Surface frames coalesce at 30fps, delivering the newest and final static paint without accumulating a backlog.
 
 Create a private environment file for the isolated broker and give the same token to the native OpenCode service using its existing secret-management path. Do not put the token in source control, an image, a URL, or the MCP configuration value:
 
@@ -41,7 +43,7 @@ umask 077
 printf 'OPENCHAMBER_BROWSER_MCP_TOKEN=%s\n' "$(openssl rand -hex 32)" > /etc/openchamber-browser/browser.env
 ```
 
-On the Linux host, a parallel evaluation can use the existing image without mounts or credentials. Keep MCP on a temporary port while Obscura owns 3000:
+On the Linux host, a parallel evaluation can use the existing image without application mounts or credentials. Select unused loopback ports:
 
 ```sh
 docker run -d --name openchamber-agent-browser --init --restart unless-stopped \
@@ -52,13 +54,12 @@ docker run -d --name openchamber-agent-browser --init --restart unless-stopped \
   --env OPENCHAMBER_BROWSER_NO_SANDBOX=1 \
   --env OPENCHAMBER_BROWSER_MCP_PORT=3002 \
   --env OPENCHAMBER_BROWSER_API_PORT=3001 \
-  --entrypoint /nodejs/bin/node openchamber:2.1.1 \
-  /opt/openchamber/extensions/agent-browser/broker/main.js
+  openchamber-browser:1.0.1
 ```
 
 The host-networked container binds both services to `127.0.0.1`; do not add published ports. The OpenChamber guest service can reach the relay at `127.0.0.1:3001` when it shares the host network namespace.
 
-Configure OpenCode V2 under `mcp.servers` with the secret supplied in its service environment. Use port 3002 for parallel evaluation while Obscura owns 3000; switch to 3000 only during an approved cutover:
+Configure OpenCode V2 under `mcp.servers` with the secret supplied in its service environment. The Core deployment retains port 3002 after retiring Obscura:
 
 ```jsonc
 {
@@ -96,6 +97,15 @@ docker build -t openchamber:2.1.1 \
   --build-arg OPENCHAMBER_VERSION=2.1.1 \
   --build-arg "OPENCHAMBER_SOURCE_REVISION=tree-sha256:$source_hash" \
   docker
+
+docker build --target browser -t openchamber-browser:1.0.1 \
+  --build-context agent-browser=extensions/agent-browser \
+  --build-arg "OPENCHAMBER_SOURCE_REVISION=tree-sha256:$source_hash" docker
+
+timeout 180 docker run --rm --interactive --network none --read-only --cap-drop ALL \
+  --security-opt no-new-privileges --tmpfs /tmp:exec,size=512m,mode=1777 --shm-size=512m \
+  --env IMAGE_KIND=browser --entrypoint node openchamber-browser:1.0.1 \
+  --input-type=module < docker/check-image.mjs
 
 timeout 180 docker run --rm --interactive --network none --read-only --cap-drop ALL \
   --security-opt no-new-privileges --tmpfs /tmp:exec,size=512m,mode=1777 --shm-size=512m \

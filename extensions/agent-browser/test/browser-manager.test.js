@@ -100,6 +100,54 @@ const createRuntimeFactory = () => {
 
 const managerFor = (factory) => createBrowserManager({ createRuntime: factory });
 
+test('idle expiry clears the profile and control lease; viewing keeps it alive', async () => {
+  const { factory, runtimes } = createRuntimeFactory();
+  let clock = 0;
+  const manager = createBrowserManager({ createRuntime: factory, now: () => clock });
+  await manager.perform('browser.open', { url: 'https://one.test' });
+  clock = 59_999;
+  assert.equal(await manager.expireIdle(60_000), false);
+  await manager.surfaceFrame({ after: 0, wait: 0 });
+  clock = 60_000;
+  assert.equal(await manager.expireIdle(60_000), false);
+  await manager.surfaceInput([], { viewer: 'viewer-a' });
+  clock = 120_000;
+  assert.equal(await manager.expireIdle(60_000), true);
+  assert.equal(manager.state().controller, 'none');
+  assert.equal(manager.state().scopes.length, 0);
+  assert.match(manager.state().notice.message, /temporary profile was cleared/);
+  assert.equal(runtimes[0].calls.filter(([kind]) => kind === 'close').length, 1);
+  await manager.perform('browser.open', { url: 'https://two.test' });
+  assert.equal(runtimes.length, 2);
+  assert.equal(manager.state().notice, null);
+  await manager.close();
+});
+
+test('idle expiry waits for an action and rechecks its completion activity', async () => {
+  const { factory } = createRuntimeFactory();
+  let clock = 0;
+  let finish;
+  let started;
+  const ready = new Promise((resolve) => { started = resolve; });
+  const manager = createBrowserManager({ now: () => clock, createRuntime: () => {
+    const runtime = factory();
+    runtime.perform = async () => {
+      started();
+      await new Promise((resolve) => { finish = resolve; });
+    };
+    return runtime;
+  } });
+  const action = manager.perform('browser.open', {});
+  await ready;
+  clock = 120_000;
+  const expiry = manager.expireIdle(60_000);
+  finish();
+  await action;
+  assert.equal(await expiry, false);
+  assert.equal(manager.state().scopes.length, 1);
+  await manager.close();
+});
+
 test('uses one global runtime for provider, MCP, and surface work across chat contexts', async () => {
   const { factory, runtimes } = createRuntimeFactory();
   const manager = managerFor(factory);

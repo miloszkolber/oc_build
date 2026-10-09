@@ -43,7 +43,7 @@ const isAuthorized = (request, token) => {
 const initializeResult = (requestedVersion) => ({
   protocolVersion: requestedVersion === PROTOCOL_VERSION ? requestedVersion : PROTOCOL_VERSION,
   capabilities: { tools: { listChanged: false } },
-  serverInfo: { name: 'openchamber-agent-browser', version: '1.0.0' },
+  serverInfo: { name: 'openchamber-agent-browser', version: '1.0.1' },
 });
 
 export const createMcpService = ({ runtime, token, port = 3000, apiReady = () => true } = {}) => {

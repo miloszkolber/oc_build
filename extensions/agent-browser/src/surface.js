@@ -118,6 +118,9 @@ export const createSurface = (runtime) => {
   let sequence = 0;
   let closed = false;
   let startPromise = null;
+  let pendingFrame = null;
+  let publishTimer = null;
+  let publishedAt = 0;
   // Bumps whenever the runtime's active tab changes.
   let target = 0;
   let swallowEscapeUp = false;
@@ -130,13 +133,38 @@ export const createSurface = (runtime) => {
   };
 
   const publish = (frame) => {
+    publishedAt = performance.now();
     latest = frame;
     for (const waiter of waiters) {
       if (frame.sequence > waiter.after) finishWaiter(waiter, frame);
     }
   };
 
+  // Keep the newest picture at 30fps, not a backlog of every compositor frame.
+  // Unlike everyNthFrame, the trailing timer also delivers a single final paint
+  // on a static page. Chrome is acknowledged immediately so it cannot stall.
+  const scheduleFrame = (frame) => {
+    pendingFrame = frame;
+    if (publishTimer !== null) return;
+    const delay = Math.max(0, 1000 / 30 - (performance.now() - publishedAt));
+    if (delay === 0) {
+      pendingFrame = null;
+      publish(frame);
+      return;
+    }
+    publishTimer = setTimeout(() => {
+      publishTimer = null;
+      const next = pendingFrame;
+      pendingFrame = null;
+      if (next && !closed) publish(next);
+    }, delay);
+    publishTimer.unref?.();
+  };
+
   const detach = () => {
+    clearTimeout(publishTimer);
+    publishTimer = null;
+    pendingFrame = null;
     unsubscribe?.();
     unsubscribe = null;
     stopScreencast(page);
@@ -161,7 +189,7 @@ export const createSurface = (runtime) => {
         const bytes = Buffer.from(String(event.params.data ?? ''), 'base64');
         if (bytes.length === 0 || bytes.length > SURFACE_FRAME_MAX_BYTES) return;
         sequence += 1;
-        publish({
+        scheduleFrame({
           sequence,
           bytes,
           mime: 'image/jpeg',

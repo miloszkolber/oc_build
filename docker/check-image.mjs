@@ -1,6 +1,6 @@
 // Streamed into an isolated, network-disabled image; never starts a web service.
 import assert from 'node:assert/strict';
-import { mkdtempSync, readFileSync, readdirSync, rmSync, statSync, writeFileSync } from 'node:fs';
+import { existsSync, mkdtempSync, readFileSync, readdirSync, rmSync, statSync, writeFileSync } from 'node:fs';
 import { spawnSync } from 'node:child_process';
 import http from 'node:http';
 import net from 'node:net';
@@ -9,9 +9,12 @@ import { dirname, join } from 'node:path';
 import { pathToFileURL } from 'node:url';
 
 const root = '/opt/openchamber';
+const browserOnly = process.env.IMAGE_KIND === 'browser';
 assert.notEqual(process.getuid(), 0, 'Image must run as a non-root user');
 assert.equal(process.versions.node.split('.')[0], '22', 'Image must retain Node 22');
-const pkg = JSON.parse(readFileSync(join(root, 'package.json'), 'utf8'));
+let pkg;
+if (!browserOnly) {
+pkg = JSON.parse(readFileSync(join(root, 'package.json'), 'utf8'));
 assert.equal(pkg.version, process.env.EXPECTED_VERSION, 'Baked package version');
 for (const directory of ['bin', 'server', 'dist', 'node_modules']) {
   assert(statSync(join(root, directory)).isDirectory(), `Missing ${directory} directory`);
@@ -19,6 +22,12 @@ for (const directory of ['bin', 'server', 'dist', 'node_modules']) {
 assert(statSync(join(root, 'dist/index.html')).isFile(), 'Missing web entrypoint');
 assert(statSync('/usr/share/licenses/openchamber/LICENSE').isFile(), 'Missing upstream license');
 assert(statSync('/entrypoint.sh').mode & 0o111, 'Launcher must be executable');
+assert(!existsSync('/usr/lib/chromium/chromium'), 'App image must not contain Chromium');
+} else {
+for (const file of ['package.json', 'dist', 'node_modules', '/bin/bash', '/usr/bin/git']) {
+  assert(!existsSync(file.startsWith('/') ? file : join(root, file)), `Browser image must not contain ${file}`);
+}
+}
 const browserRoot = join(root, 'extensions/agent-browser');
 const browserManifest = JSON.parse(readFileSync(join(browserRoot, 'package.json'), 'utf8'));
 assert.equal(browserManifest.openchamber?.contributes?.service?.provides?.[0], 'browser', 'Bundled guest must provide a browser');
@@ -34,7 +43,7 @@ for (const file of ['LICENSE', 'NOTICE', 'THIRD_PARTY_LICENSES']) {
   assert(statSync(`/usr/share/licenses/openchamber-agent-browser/${file}`).isFile(),
     `Missing browser extension attribution ${file}`);
 }
-for (const packageName of ['chromium', 'chromium-common']) {
+if (browserOnly) for (const packageName of ['chromium', 'chromium-common']) {
   assert(statSync(`/usr/share/licenses/debian/${packageName}.copyright`).isFile(),
     `Missing Debian ${packageName} attribution`);
 }
@@ -46,9 +55,13 @@ function run(command, args) {
 }
 // Git and a POSIX shell back source control and the web terminal; both must work
 // without a package manager in the image.
+if (!browserOnly) {
 run('git', ['--version']);
 run('sh', ['-c', 'cd /tmp && HOME=/tmp git init -q repo && HOME=/tmp git -C repo status --porcelain >/dev/null']);
-const chromiumVersion = run('/usr/lib/chromium/chromium', ['--version']);
+}
+let chromiumVersion;
+if (browserOnly) {
+chromiumVersion = run('/usr/lib/chromium/chromium', ['--version']);
 assert.match(chromiumVersion, /Chromium/i,
   'Bundled Chromium executable must start and report its version');
 const browserBuild = JSON.parse(readFileSync('/usr/share/openchamber/browser-build.json', 'utf8'));
@@ -70,20 +83,24 @@ for (const packageName of ['chromium', 'chromium-common', 'fonts-liberation', 'c
 }
 assert.equal(JSON.parse(readFileSync(join(browserRoot, 'config.json'), 'utf8')).chromePath,
   '/usr/lib/chromium/chromium', 'The broker must use the image Chromium path explicitly');
+}
 // The HTTPS remote helper is a separate binary with its own library closure;
 // a missing libcurl there only shows up as a failed clone.
+if (!browserOnly) {
 const helper = spawnSync('/usr/lib/git-core/git-remote-https', ['https://example.invalid/x.git'],
   { encoding: 'utf8', timeout: 20_000 });
 assert(!/error while loading shared libraries/.test(helper.stderr || ''),
   `git-remote-https cannot load its libraries: ${(helper.stderr || '').trim()}`);
 run('sh', ['-n', '/entrypoint.sh']);
 assert.equal(run('node', [join(root, 'bin/cli.js'), '--version']), pkg.version, 'CLI must import and report the baked version');
+}
 for (const file of ['panel/main.js', 'service/main.js', 'broker/main.js']) {
   run('node', ['--check', join(browserRoot, file)]);
 }
 // Check runtime modules only. Upstream ships test sources that need a test-runner
 // transform, so a duplicate binding in an unused test file is not image corruption.
 let checkedModules = 0;
+if (!browserOnly) {
 for (const directory of ['bin', 'server']) {
   for (const entry of readdirSync(join(root, directory), { recursive: true, withFileTypes: true })) {
     if (!entry.isFile() || !/\.(?:js|mjs|cjs)$/.test(entry.name)) continue;
@@ -93,9 +110,11 @@ for (const directory of ['bin', 'server']) {
   }
 }
 assert(checkedModules > 100, `Expected many runtime modules, checked ${checkedModules}`);
+}
 
 // Exercise the packaged broker, guest service, Chromium and MCP against an
 // exact-origin loopback fixture in the same restricted runtime as this check.
+if (browserOnly) {
 const listen = (server) => new Promise((resolve, reject) => {
   server.once('error', reject);
   server.listen(0, '127.0.0.1', () => resolve(server.address().port));
@@ -299,6 +318,8 @@ try {
   }
 }
 
+}
+if (!browserOnly) {
 // Exercise the actual patched route handlers, not a marker-text assertion.
 const { registerOpenChamberRoutes } = await import(pathToFileURL(join(root, 'server/lib/opencode/openchamber-routes.js')));
 for (const runtime of [undefined, 'web', 'desktop']) {
@@ -330,4 +351,7 @@ for (const runtime of [undefined, 'web', 'desktop']) {
     assert.deepEqual(response.body, body, `${method} body (${runtime || 'default'} runtime)`);
   }
 }
-console.log(`Image checks passed for OpenChamber ${pkg.version}: non-root, Node/Git/shell/Chromium ${chromiumVersion}, browser guest, CLI/layout, ${checkedModules} module syntax, update guards`);
+console.log(`Image checks passed for OpenChamber ${pkg.version}: non-root, Node/Git/shell, browser extension, CLI/layout, ${checkedModules} module syntax, update guards; no Chromium`);
+} else {
+console.log(`Browser-only image checks passed: non-root, ${chromiumVersion}, Agent Browser ${browserManifest.version}; no OpenChamber app, git or shell`);
+}

@@ -47,11 +47,18 @@ export const startBroker = async ({ env = process.env, configPath, runtime } = {
     await api.close().catch(() => {});
     throw error;
   }
+  const idleTimer = setInterval(() => {
+    void browser.expireIdle?.(config.idleTimeoutMs).catch((error) => {
+      console.error('[agent-browser] Idle cleanup failed:', error instanceof Error ? error.message : String(error));
+    });
+  }, Math.min(30_000, config.idleTimeoutMs));
+  idleTimer.unref?.();
   return {
     api,
     mcp,
     get address() { return { mcp: mcp.address, api: api.address }; },
     async close() {
+      clearInterval(idleTimer);
       await mcp.close();
       await api.close();
     },

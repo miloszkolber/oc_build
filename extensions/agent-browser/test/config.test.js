@@ -5,8 +5,16 @@ import { networkGrants, originGrants, parseConfig } from '../src/config.js';
 test('defaults to no private origin grants', () => {
   const config = parseConfig({});
 
-  assert.deepEqual(config, { chromePath: null, brokerUrl: null, allowedOrigins: [], allowedNetworks: [], discoverDevServers: false });
+  assert.deepEqual(config, { chromePath: null, brokerUrl: null, allowedOrigins: [], allowedNetworks: [], discoverDevServers: false, idleTimeoutMs: 1_800_000 });
   assert.deepEqual(originGrants(config.allowedOrigins), []);
+});
+
+test('bounds idle profile expiry between one minute and one day', () => {
+  assert.equal(parseConfig({ idleTimeoutMs: 60_000 }).idleTimeoutMs, 60_000);
+  assert.equal(parseConfig({ idleTimeoutMs: 86_400_000 }).idleTimeoutMs, 86_400_000);
+  for (const idleTimeoutMs of [null, 0, -1, 59_999, 86_400_001, '60000', 60_000.5]) {
+    assert.throws(() => parseConfig({ idleTimeoutMs }), /config.idleTimeoutMs/);
+  }
 });
 
 test('accepts only the plain HTTP loopback brokerUrl the client can dial', () => {

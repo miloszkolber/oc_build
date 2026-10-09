@@ -173,6 +173,11 @@ setIcon(cancelSize, (svg) => {
 // Console problems on the visible page. The badge opens a compact list under
 // the address bar and grows the dock.
 const DOCK_HEIGHT = 76;
+const narrowDock = window.matchMedia('(max-width: 480px)');
+const dockHeight = () => narrowDock.matches ? 112 : DOCK_HEIGHT;
+const syncDockHeight = () => {
+  void host.setHeight(dockHeight() + (consoleOpen ? CONSOLE_HEIGHT : 0)).catch(() => {});
+};
 const CONSOLE_HEIGHT = 132;
 let consoleOpen = false;
 let consoleEntries = null;
@@ -339,7 +344,10 @@ pageTabsRow.append(pageTabs, newTab, closeTab, chatButton);
 
 const navigationRow = document.createElement('div');
 navigationRow.className = 'row navigation-row';
-navigationRow.append(back, forward, reload, address, customSize, problems, viewportSelect, rotate, mobileToggle, selectCompatibility, status);
+const viewportTools = document.createElement('div');
+viewportTools.className = 'viewport-tools';
+viewportTools.append(problems, viewportSelect, rotate, mobileToggle, selectCompatibility, status);
+navigationRow.append(back, forward, reload, address, customSize, viewportTools);
 root.append(pageTabsRow, navigationRow, consolePanel);
 
 let state = null;
@@ -523,7 +531,7 @@ const refresh = async () => {
 problems.addEventListener('click', () => {
   consoleOpen = !consoleOpen;
   consoleEntries = null;
-  void host.setHeight(consoleOpen ? DOCK_HEIGHT + CONSOLE_HEIGHT : DOCK_HEIGHT).catch(() => {});
+  syncDockHeight();
   render();
   void refresh();
 });
@@ -711,7 +719,8 @@ host.onReady((context) => {
   if (mounted) return;
   mounted = true;
   // A reloaded dock starts closed, whatever height the host kept for it.
-  void host.setHeight(DOCK_HEIGHT).catch(() => {});
+  syncDockHeight();
+  narrowDock.addEventListener('change', syncDockHeight);
   render();
   void refresh();
   window.setInterval(() => { void refresh(); }, 1_000);

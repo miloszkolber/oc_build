@@ -81,6 +81,10 @@ export const parseConfig = (value) => {
   if (value.discoverDevServers !== undefined && typeof value.discoverDevServers !== 'boolean') {
     throw new Error('config.discoverDevServers must be true or false');
   }
+  const idleTimeoutMs = value.idleTimeoutMs === undefined ? 30 * 60 * 1000 : value.idleTimeoutMs;
+  if (!Number.isSafeInteger(idleTimeoutMs) || idleTimeoutMs < 60_000 || idleTimeoutMs > 24 * 60 * 60 * 1000) {
+    throw new Error('config.idleTimeoutMs must be an integer from 60000 to 86400000');
+  }
   const allowedOrigins = (value.allowedOrigins ?? []).map(parseAllowedOrigin);
   return Object.freeze({
     chromePath: chromePath?.trim() ?? null,
@@ -88,6 +92,7 @@ export const parseConfig = (value) => {
     allowedOrigins: Object.freeze([...new Set(allowedOrigins)]),
     allowedNetworks: Object.freeze((value.allowedNetworks ?? []).map(parseAllowedNetwork)),
     discoverDevServers: value.discoverDevServers === true,
+    idleTimeoutMs,
   });
 };
 

@@ -75,48 +75,56 @@ RUN --network=none bun run package \
 WORKDIR /
 
 RUN set -eu; \
-    mkdir -p /rootfs; \
+    mkdir -p /rootfs /browser-rootfs; \
+    rootfs=/rootfs; \
     copy_with_libs() { \
-        cp -a --parents "$1" /rootfs; \
+        cp -a --parents "$1" "$rootfs"; \
         ldd "$1" | grep -oE '/[^ ]+\.so[^ ]*' | sort -u | while read -r lib; do \
             [ -e "$lib" ] || continue; \
-            mkdir -p "/rootfs$(dirname "$lib")"; \
-            cp -aL "$lib" "/rootfs$lib"; \
+            mkdir -p "$rootfs$(dirname "$lib")"; \
+            cp -aL "$lib" "$rootfs$lib"; \
         done; \
     }; \
     copy_with_libs /bin/bash; \
     copy_with_libs /usr/bin/git; \
+    for helper in /usr/lib/git-core/*; do \
+        [ -f "$helper" ] && [ -x "$helper" ] || continue; \
+        copy_with_libs "$helper"; \
+    done; \
+    cp -a --parents /usr/share/git-core/templates /rootfs; \
+    ln -s bash /rootfs/bin/sh; \
+    rm -rf /rootfs/usr/lib/git-core/*.test; \
+    rootfs=/browser-rootfs; \
     copy_with_libs /usr/lib/chromium/chromium; \
     copy_with_libs /usr/lib/chromium/chrome_crashpad_handler; \
     for browser_lib in /usr/lib/chromium/*.so; do \
         [ -f "$browser_lib" ] && copy_with_libs "$browser_lib"; \
     done; \
-    for helper in /usr/lib/git-core/*; do \
-        [ -f "$helper" ] && [ -x "$helper" ] || continue; \
-        copy_with_libs "$helper"; \
-    done; \
-    cp -a /usr/lib/chromium /rootfs/usr/lib/; \
+    cp -a /usr/lib/chromium /browser-rootfs/usr/lib/; \
     for assets in /etc/fonts /usr/share/fonts /usr/share/fontconfig; do \
-        [ -e "$assets" ] && cp -a --parents "$assets" /rootfs; \
+        [ -e "$assets" ] && cp -a --parents "$assets" /browser-rootfs; \
     done; \
     softokn_module="$(dpkg-query -L libnss3 | grep -m1 '/libsoftokn3\.so$' || true)"; \
     test -n "$softokn_module"; \
     dpkg-query -L libnss3 | grep -E '/(libnss|libsoftokn|libfreebl)[^/]*\.(so|chk)$' | while IFS= read -r nss_file; do \
         case "$nss_file" in \
             *.so) copy_with_libs "$nss_file" ;; \
-            *.chk) cp -a --parents "$nss_file" /rootfs ;; \
+            *.chk) cp -a --parents "$nss_file" /browser-rootfs ;; \
         esac; \
     done; \
-    mkdir -p /rootfs/usr/share/licenses/debian; \
+    mkdir -p /browser-rootfs/usr/share/licenses/debian; \
     dpkg-query -W | cut -f1 | while read -r package; do \
         name=$(printf '%s' "$package" | cut -d: -f1); \
         copyright="/usr/share/doc/$name/copyright"; \
-        [ -f "$copyright" ] && cp "$copyright" "/rootfs/usr/share/licenses/debian/$name.copyright"; \
+        [ -f "$copyright" ] && cp "$copyright" "/browser-rootfs/usr/share/licenses/debian/$name.copyright"; \
     done; \
-    test -f /rootfs/usr/share/licenses/debian/chromium.copyright; \
-    test -f /rootfs/usr/share/licenses/debian/chromium-common.copyright; \
-    test -x /rootfs/usr/lib/chromium/chromium; \
-    mkdir -p /rootfs/usr/share/openchamber; \
+    cp -a --parents /usr/share/doc/git/copyright /rootfs; \
+    test -f /browser-rootfs/usr/share/licenses/debian/chromium.copyright; \
+    test -f /browser-rootfs/usr/share/licenses/debian/chromium-common.copyright; \
+    mkdir -p /rootfs/usr/share/licenses; \
+    cp -a /browser-rootfs/usr/share/licenses/debian /rootfs/usr/share/licenses/; \
+    test -x /browser-rootfs/usr/lib/chromium/chromium; \
+    mkdir -p /browser-rootfs/usr/share/openchamber; \
     chromium_version="$(/usr/lib/chromium/chromium --version | sed 's/[[:space:]]*$//')"; \
     chromium_package_version="$(dpkg-query -W chromium | cut -f2)"; \
     chromium_common_version="$(dpkg-query -W chromium-common | cut -f2)"; \
@@ -125,19 +133,29 @@ RUN set -eu; \
     printf '{"sourceRevision":"%s","chromiumVersion":"%s","nssSoftoknModule":"%s","packages":{"chromium":"%s","chromium-common":"%s","fonts-liberation":"%s","ca-certificates":"%s"}}\n' \
         "$OPENCHAMBER_SOURCE_REVISION" "$chromium_version" "$softokn_module" "$chromium_package_version" \
         "$chromium_common_version" "$fonts_version" "$certificates_version" \
-        > /rootfs/usr/share/openchamber/browser-build.json; \
-    ln -s /usr/lib/chromium/chromium /rootfs/usr/bin/chromium; \
-    cp -a --parents /usr/share/git-core/templates /rootfs; \
-    ln -s bash /rootfs/bin/sh; \
-    rm -rf /rootfs/usr/lib/git-core/*.test
+        > /browser-rootfs/usr/share/openchamber/browser-build.json; \
+    mkdir -p /browser-rootfs/usr/bin; \
+    ln -s /usr/lib/chromium/chromium /browser-rootfs/usr/bin/chromium
+
+# Browser-only package: no web application, git, shell, or application mounts.
+FROM gcr.io/distroless/nodejs22-debian12 AS browser
+LABEL org.opencontainers.image.title="openchamber-browser" \
+      org.opencontainers.image.description="Agent Browser broker and Chromium"
+COPY --from=tools /browser-rootfs/ /
+COPY --from=tools /src/agent-browser/dist/ /opt/openchamber/extensions/agent-browser/
+COPY --from=tools /src/agent-browser/dist/LICENSE /src/agent-browser/dist/NOTICE /src/agent-browser/dist/THIRD_PARTY_LICENSES /usr/share/licenses/openchamber-agent-browser/
+ENV HOME=/tmp NODE_ENV=production PATH=/nodejs/bin:/usr/bin
+USER 1000:1000
+WORKDIR /tmp
+ENTRYPOINT ["/nodejs/bin/node", "/opt/openchamber/extensions/agent-browser/broker/main.js"]
 
 # --- stage 3: distroless runtime ----------------------------------------------
-FROM gcr.io/distroless/nodejs22-debian12
+FROM gcr.io/distroless/nodejs22-debian12 AS app
 
 ARG OPENCHAMBER_VERSION
 
 LABEL org.opencontainers.image.title="openchamber" \
-      org.opencontainers.image.description="OpenChamber web interface and shared Chromium browser service (baked release, external OpenCode server)" \
+      org.opencontainers.image.description="OpenChamber web interface and Agent Browser extension (external browser and OpenCode services)" \
       org.opencontainers.image.source="https://github.com/openchamber/openchamber" \
       org.opencontainers.image.version="${OPENCHAMBER_VERSION}"
 

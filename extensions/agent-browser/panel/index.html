@@ -33,6 +33,7 @@
       .close-tab:hover:not(:disabled), .new-tab:hover:not(:disabled) { background: var(--oc-active, var(--oc-hover, transparent)); color: var(--oc-fg, inherit); opacity: 1; }
       .close-tab svg, .new-tab svg { width: 12px; height: 12px; pointer-events: none; }
       .navigation-row { gap: 2px; }
+      .viewport-tools { display: flex; align-items: center; gap: 2px; min-width: 0; }
       .navigation-row button, input { color: inherit; }
       .navigation-row button { display: inline-flex; width: 28px; height: 28px; flex: 0 0 28px; align-items: center; justify-content: center; padding: 0; border: 0; border-radius: var(--oc-radius, 6px); background: transparent; color: var(--oc-muted, currentColor); cursor: pointer; }
       .navigation-row button:hover:not(:disabled) { background: var(--oc-hover, transparent); color: var(--oc-fg, inherit); }
@@ -65,6 +66,16 @@
       .console-source { flex: 0 1 auto; max-width: 30%; overflow: hidden; color: var(--oc-muted, currentColor); text-overflow: ellipsis; white-space: nowrap; }
       input:focus, button:focus-visible, select:focus-visible { outline: 2px solid var(--oc-focus, currentColor); outline-offset: 1px; }
       .console-list:focus-visible { outline: 2px solid var(--oc-focus, currentColor); outline-offset: -2px; }
+      @media (max-width: 480px) {
+        #root { grid-template-rows: 28px 76px; }
+        #root.console-open { grid-template-rows: 28px 76px minmax(0, 1fr); }
+        .navigation-row { display: grid; grid-template-columns: 28px 28px 28px minmax(0, 1fr); grid-template-rows: 36px 36px; }
+        .viewport-tools { grid-column: 1 / -1; }
+        .viewport-select { flex: 1; margin-left: 0; }
+        .navigation-row:has(.custom-size:not([hidden])) > button { display: none; }
+        .custom-size { grid-column: 1 / -1; margin-left: 0; }
+        .custom-size input { flex: 1; }
+      }
       @media (forced-colors: active) {
         .status::before, .page-tabs .oc-sdk-tab[aria-selected="true"], .select-compatibility[aria-pressed="true"], .mobile-toggle[aria-pressed="true"], .problems[aria-expanded="true"] { forced-color-adjust: none; background: Highlight; color: HighlightText; }
       }

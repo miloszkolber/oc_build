@@ -46,6 +46,34 @@ permissions:
   contents: read
 
 jobs:
+  browser:
+    if: github.event_name == 'push' || github.event_name == 'workflow_dispatch' || github.event.schedule == '37 4 * * 1'
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    permissions:
+      contents: read
+      packages: write
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - name: Build, check and publish the browser-only package
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+        run: |
+          version=$(node -p 'require("./extensions/agent-browser/package.json").version')
+          image="ghcr.io/$GITHUB_REPOSITORY_OWNER/openchamber-browser:$version-$GITHUB_SHA"
+          docker build --target browser --tag "$image" \
+            --build-context agent-browser=extensions/agent-browser \
+            --build-arg "OPENCHAMBER_SOURCE_REVISION=$GITHUB_SHA" \
+            --label "org.opencontainers.image.source=https://github.com/$GITHUB_REPOSITORY" \
+            --label "org.opencontainers.image.revision=$GITHUB_SHA" docker
+          timeout 180 docker run --rm --interactive --network none --read-only --cap-drop ALL \
+            --security-opt no-new-privileges --tmpfs /tmp:exec,size=512m,mode=1777 --shm-size=512m \
+            --env IMAGE_KIND=browser --entrypoint node "$image" --input-type=module < docker/check-image.mjs
+          printf '%s' "$GITHUB_TOKEN" | docker login ghcr.io --username "$GITHUB_ACTOR" --password-stdin
+          docker push "$image"
+
   plugin:
     if: github.event_name == 'push'
     runs-on: ubuntu-latest

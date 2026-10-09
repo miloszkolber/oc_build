@@ -1,6 +1,6 @@
 # Agent Browser for OpenChamber
 
-Agent Browser is the local 1.0.0 adaptation of upstream Server Browser v0.7.0 at commit `6c5e76ddfa21b574d0521a27f408cd643673161c`; it is not an upstream Server Browser release. It provides one temporary Chromium browser shared by OpenChamber's `openchamber_web` BrowserProvider, its surface panel, and a 37-tool MCP endpoint. It targets OpenChamber 2.1.1 or newer and `@openchamber/sdk` 2.1.1. See [NOTICE](NOTICE), [LICENSE](LICENSE), and [THIRD_PARTY_LICENSES](THIRD_PARTY_LICENSES) for precise provenance and attribution.
+Agent Browser is the local 1.0.1 adaptation of upstream Server Browser v0.7.0 at commit `6c5e76ddfa21b574d0521a27f408cd643673161c`; it is not an upstream Server Browser release. It provides one temporary Chromium browser shared by OpenChamber's `openchamber_web` BrowserProvider, its surface panel, and a 37-tool MCP endpoint. It targets OpenChamber 2.1.1 or newer and `@openchamber/sdk` 2.1.1. See [NOTICE](NOTICE), [LICENSE](LICENSE), and [THIRD_PARTY_LICENSES](THIRD_PARTY_LICENSES) for precise provenance and attribution.
 
 ## Runtime layout
 
@@ -41,7 +41,7 @@ The broker exposes an authenticated MCP endpoint on loopback. For OpenCode V2, d
 }
 ```
 
-The browser profile is temporary and removed on broker shutdown. A broker restart clears tabs, cookies, local/session storage, and authentication. This is shared live state, not persistence across restarts.
+The browser profile is temporary and removed on broker shutdown or idle expiry. The broker closes it after 30 minutes without an action or surface frame request; an open viewer keeps it alive. Set `idleTimeoutMs` in broker config to a value between 60000 and 86400000 milliseconds. Cleanup runs every 30 seconds, waits for pending actions and releases the control lease. The next action creates a fresh profile. Restart and expiry clear tabs, cookies, local/session storage, and authentication; this is not durable login storage.
 
 ## MCP tools
 
@@ -76,7 +76,7 @@ The broker API is an unauthenticated, path-limited loopback bridge intended for 
 
 ## Sidecar run recipe
 
-The image integration bakes the installable package into `/opt/openchamber/extensions/agent-browser`; the broker entrypoint is `/opt/openchamber/extensions/agent-browser/broker/main.js`, and the default web entrypoint does not start it. Run a separate instance of the same image with no application mounts or credentials, read-only root, UID 1000, all capabilities dropped, `no-new-privileges`, an init process, a bounded `/tmp` tmpfs, and `shm_size: 512m`. Set `OPENCHAMBER_BROWSER_NO_SANDBOX=1` only on this isolated sidecar; it is the authorized Chromium sandbox tradeoff for the locked-down container, not a general extension default.
+The app image bakes the installable package into `/opt/openchamber/extensions/agent-browser`, but does not contain Chromium. The separate distroless `openchamber-browser` image starts the broker at `/opt/openchamber/extensions/agent-browser/broker/main.js`; it has no app, git or shell. Run it without application mounts or credentials, read-only root, UID 1000, dropped capabilities, `no-new-privileges`, init, bounded `/tmp` tmpfs and `shm_size: 512m`. Its authorized `OPENCHAMBER_BROWSER_NO_SANDBOX=1` exception is not a general extension default. Surface delivery keeps the newest frame at 30fps and preserves final paints on static pages.
 
 Create a private environment file for the isolated broker and give the same token to the native OpenCode service using its existing secret-management path:
 
@@ -101,7 +101,7 @@ docker run -d --name openchamber-agent-browser --init --restart unless-stopped \
   /opt/openchamber/extensions/agent-browser/broker/main.js
 ```
 
-The host-networked container binds both services to `127.0.0.1`; do not add published ports. The OpenChamber guest service reaches the relay at `127.0.0.1:3001` when it shares the host network namespace. There is no idle expiry: browser state remains until broker shutdown or failure, and controlled shutdown removes the profile.
+The host-networked container binds both services to `127.0.0.1`; do not add published ports. The OpenChamber guest service reaches the relay at `127.0.0.1:3001` when it shares the host network namespace. Shutdown and idle expiry remove the temporary profile.
 
 ## Build and verify
 
@@ -115,4 +115,4 @@ bun run check
 bun run package
 ```
 
-`bun run build` stages the complete installable package in `dist/`: `dist/package.json`, `dist/panel/index.html`, bundled `dist/panel/main.js`, `dist/service/main.js`, and `dist/broker/main.js`, with `dist/LICENSE`, `dist/NOTICE`, `dist/THIRD_PARTY_LICENSES`, `dist/README.md`, and `dist/config.example.json` beside them. `bun run check` verifies the manifest, the staged files, and the 37 unique MCP tool names. `bun run package` builds the staged package before writing the deterministic archive `dist/openchamber-agent-browser-1.0.0.zip`. `bun test test/*.test.js` is the direct test-runner form; run it after the build because the entrypoint test starts the staged `dist/` broker and guest service. Fixture tests use only local resources; Chromium integration tests run when Chrome/Chromium is installed and otherwise report a skip. The package build bundles runtime dependencies into the installable entries, so production `node_modules` are not required.
+`bun run build` stages the complete installable package in `dist/`: `dist/package.json`, `dist/panel/index.html`, bundled `dist/panel/main.js`, `dist/service/main.js`, and `dist/broker/main.js`, with `dist/LICENSE`, `dist/NOTICE`, `dist/THIRD_PARTY_LICENSES`, `dist/README.md`, and `dist/config.example.json` beside them. `bun run check` verifies the manifest, the staged files, and the 37 unique MCP tool names. `bun run package` builds the staged package before writing the deterministic archive `dist/openchamber-agent-browser-1.0.1.zip`. `bun test test/*.test.js` is the direct test-runner form; run it after the build because the entrypoint test starts the staged `dist/` broker and guest service. Fixture tests use only local resources; Chromium integration tests run when Chrome/Chromium is installed and otherwise report a skip. The package build bundles runtime dependencies into the installable entries, so production `node_modules` are not required.
