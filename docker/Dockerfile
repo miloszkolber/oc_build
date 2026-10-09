@@ -50,11 +50,10 @@ ARG OPENCHAMBER_SOURCE_REVISION=unknown
 
 RUN apt-get update \
     && apt-get install --no-install-recommends -y \
-        bash git ca-certificates chromium fonts-liberation \
+        bash git busybox openssh-client procps ca-certificates chromium fonts-liberation \
     && rm -rf /var/lib/apt/lists/*
 
-# Build the extension and run its browser-gated suite against the exact
-# Chromium/fonts/certificate packages that will be copied into the final image.
+# Build the standalone MCP against the Chromium/font packages copied below.
 COPY --from=bun-runtime /usr/local/bin/bun /usr/local/bin/bun
 
 # Exercise the real shell entrypoint with only its Bun-backed node shim on PATH.
@@ -86,6 +85,17 @@ RUN set -eu; \
     }; \
     copy_with_libs /bin/bash; \
     copy_with_libs /usr/bin/git; \
+    copy_with_libs /usr/bin/busybox; \
+    copy_with_libs /usr/bin/ssh; \
+    copy_with_libs /usr/bin/ps; \
+    mkdir -p /rootfs/bin /rootfs/usr/bin; \
+    ln -s /usr/bin/ps /rootfs/bin/ps; \
+    for command in env ls cat cp mv rm mkdir rmdir touch head tail grep sed awk find xargs sort cut wc tr tee dirname basename readlink date sleep timeout kill ln stat chmod du df expr uname hostname id tar; do \
+        ln -s busybox "/rootfs/usr/bin/$command"; \
+    done; \
+    mkdir -p /rootfs/etc; \
+    printf 'root:x:0:0:root:/root:/sbin/nologin\nnobody:x:65534:65534:nobody:/nonexistent:/sbin/nologin\nnonroot:x:65532:65532:nonroot:/home/nonroot:/sbin/nologin\ncore:x:1000:1000:Core runtime:/home/core:/bin/bash\n' > /rootfs/etc/passwd; \
+    printf 'root:x:0:\nnogroup:x:65534:\nnonroot:x:65532:\ncore:x:1000:\n' > /rootfs/etc/group; \
     for helper in /usr/lib/git-core/*; do \
         [ -f "$helper" ] && [ -x "$helper" ] || continue; \
         copy_with_libs "$helper"; \
@@ -139,7 +149,7 @@ RUN set -eu; \
 # Browser-only package: no web application, git, shell, or application mounts.
 FROM gcr.io/distroless/nodejs22-debian12 AS browser
 LABEL org.opencontainers.image.title="openchamber-browser" \
-      org.opencontainers.image.description="Agent Browser broker and Chromium"
+      org.opencontainers.image.description="Standalone browser MCP and Chromium"
 COPY --from=tools /browser-rootfs/ /
 COPY --from=tools /src/browser/dist/ /opt/browser/
 COPY --from=tools /src/browser/dist/LICENSE /src/browser/dist/NOTICE /src/browser/dist/THIRD_PARTY_LICENSES /usr/share/licenses/browser/
@@ -160,7 +170,7 @@ LABEL org.opencontainers.image.title="openchamber" \
 
 COPY --from=tools /rootfs/ /
 
-ENV HOME=/home/openchamber \
+ENV HOME=/home/core \
     NODE_ENV=production \
     PATH=/nodejs/bin:/usr/local/bin:/usr/bin:/bin
 
@@ -176,6 +186,6 @@ COPY openchamber-licence.txt /usr/share/licenses/openchamber/LICENSE
 
 # uid/gid 1000 matches the host bind-mount owner; distroless has no user tooling.
 USER 1000:1000
-WORKDIR /home/openchamber
+WORKDIR /home/core
 
 ENTRYPOINT ["/bin/sh", "/entrypoint.sh"]

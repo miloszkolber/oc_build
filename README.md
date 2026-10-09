@@ -2,6 +2,10 @@
 
 This repository builds the OpenChamber web image and standalone distroless `openchamber-browser` MCP image. It also ships the Rembric OpenCode V2 plugin. The Agent Browser guest extension is archived in source, not packaged or used on Core. Host Compose files, credentials and application data live outside this repository.
 
+[Visual-coding parity and roadmap contracts](docs/visual-coding.md) retain the Codex/Cursor goals, tool choices and paused design phases. Core's host `docker/openchamber/PLAN.md` owns status and priority.
+
+[Runtime reliability boundaries](docs/reliability.md) covers external workspace paths, native search projection and minimal feature prerequisites.
+
 ## Layout
 
 | Path | Purpose |

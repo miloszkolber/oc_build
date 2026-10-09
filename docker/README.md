@@ -4,7 +4,7 @@ This directory owns image builds, release automation and runtime checks. Core de
 
 ## Active images
 
-- `app`: upstream OpenChamber web release, external OpenCode connection, Git and shell. No Chromium or Agent Browser extension.
+- `app`: upstream OpenChamber web release, external OpenCode, Bash/Git, a single BusyBox for basic commands, SSH client and `ps` for terminal cleanup, with their library closure. A UID/GID 1000 `core` identity supports SSH and user lookup. No package manager, Chromium or Agent Browser extension.
 - `browser`: standalone `/browser` MCP package at `/opt/browser`, Chromium and its library/font/certificate closure. No OpenChamber app, shell, Git, guest service, panel, extension manifest, ZIP or surface API.
 - Both use distroless Node 22, UID 1000 and build-time dependency installation. No runtime downloads.
 - `extensions/agent-browser` and the old `browser-panel.css`/surface patch files are archived source. Neither image applies or packages them.
@@ -15,7 +15,9 @@ App releases use upstream `openchamber-web-<version>.tgz`, with an optional `OPE
 
 The browser publishes `<browser-package-version>-<source-commit>` and `latest`. Pushes, weekly security rebuilds and manual workflows publish it independently of upstream app releases. Relevant pushes rebuild the newest app release. Core follows both `latest` tags under Watchtower.
 
-The workflow runs isolated image checks before publication. `check-image.mjs` verifies absence of the archived extension in both images. Browser checks exercise real Chromium, 37 MCP tools, bearer authentication, navigation, screenshot, private-destination policy and shutdown cleanup. App checks cover CLI, Git/shell, runtime syntax and absence of Chromium.
+The workflow runs isolated image checks before publication. `check-image.mjs` verifies absence of the archived extension in both images. Browser checks exercise real Chromium, 38 MCP tools, responsive layout and color preference, bearer authentication, navigation, screenshot, private-destination policy and shutdown cleanup. App checks cover CLI, Git/shell/basic file commands, SSH/user identity, the exact process-list call used by terminal cleanup, runtime syntax and absence of Chromium.
+
+Pure distroless without any OS tools is not compatible with native terminals, Git SSH remotes, shebang scripts or terminal process cleanup. These small, explicitly consumed tools are the deliberate exception. Project language/package toolchains and optional integration credentials are not all bundled into the web server.
 
 Publishing does not itself deploy a container. Watchtower or an explicit host rollout does that.
 

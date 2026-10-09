@@ -2,6 +2,7 @@ import assert from 'node:assert/strict';
 import { existsSync, readFileSync, readdirSync } from 'node:fs';
 import { spawnSync } from 'node:child_process';
 import http from 'node:http';
+import { createRequire } from 'node:module';
 const browser = process.env.IMAGE_KIND === 'browser';
 assert.notEqual(process.getuid(), 0);
 assert.equal(process.versions.node.split('.')[0], '22');
@@ -18,6 +19,19 @@ if (!browser) {
   assert(!existsSync('/usr/lib/chromium/chromium'));
   assert(!existsSync(`${root}/dist/browser-panel.css`));
   run('git', ['--version']); run('sh', ['-n', '/entrypoint.sh']);
+  run('ssh', ['-V']);
+  run('/bin/ps', ['-axo', 'pid=,ppid=,pgid=,stat=,lstart=,comm=']);
+  assert.equal(run('/usr/bin/env', ['node', '-e', 'console.log("env-node")']), 'env-node');
+  assert.equal(run('sh', ['-c', 'mkdir -p /tmp/shell-check; printf shell-tools | tee /tmp/shell-check/a >/dev/null; cp /tmp/shell-check/a /tmp/shell-check/b; cat /tmp/shell-check/b | grep shell-tools; rm -rf /tmp/shell-check']), 'shell-tools');
+  const pty = createRequire(`${root}/package.json`)('node-pty');
+  const terminal = pty.spawn('/bin/bash', ['-c', 'printf pty-ready'], { name: 'xterm-256color', cwd: '/tmp', cols: 80, rows: 24, env: { ...process.env, HOME: '/tmp' } });
+  let terminalOutput = '';
+  terminal.onData(data => { terminalOutput += data; });
+  await new Promise((resolve, reject) => {
+    const timeout = setTimeout(() => { terminal.kill(); reject(new Error('PTY I/O timeout')); }, 10000);
+    terminal.onExit(event => { clearTimeout(timeout); event.exitCode === 0 ? resolve() : reject(new Error(`PTY exit ${event.exitCode}`)); });
+  });
+  assert.match(terminalOutput, /pty-ready/);
   run('sh', ['-c', 'cd /tmp && HOME=/tmp git init -q image-check && git -C image-check status --porcelain']);
   assert.equal(run('node', [`${root}/bin/cli.js`, '--version']), process.env.EXPECTED_VERSION);
   for (const directory of ['bin', 'server']) for (const file of readdirSync(`${root}/${directory}`, { recursive: true })) {
@@ -64,14 +78,21 @@ if (!browser) {
     assert.match(initialized.instructions,/standalone Chromium, not OpenChamber/);
     assert.match(initialized.instructions,/verified in MCP Chromium/);
     const tools = (await rpc('tools/list')).tools;
-    assert.equal(tools.length,37);
-    assert.equal(new Set(tools.map(tool=>tool.name)).size,37);
+    assert.equal(tools.length,38);
+    assert.equal(new Set(tools.map(tool=>tool.name)).size,38);
     for(const tool of tools) assert(tool.description.startsWith('Standalone Chromium (not OpenChamber native UI): '),tool.name);
     const nav=await rpc('tools/call',{name:'browser_navigate',arguments:{url:origin}});assert(!nav.isError,JSON.stringify(nav));
+    for(const [width,height,color_scheme] of [[390,844,'dark'],[1440,900,'light']]) {
+      const sized=await rpc('tools/call',{name:'browser_set_viewport',arguments:{width,height,color_scheme}});assert(!sized.isError,JSON.stringify(sized));
+      const measured=await rpc('tools/call',{name:'browser_evaluate',arguments:{expression:'JSON.stringify({width:innerWidth,height:innerHeight,dark:matchMedia("(prefers-color-scheme: dark)").matches})'}});
+      const actual=JSON.parse(measured.content.find(c=>c.type==='text').text);
+      assert.deepEqual(actual,{width,height,dark:color_scheme==='dark'});
+    }
+    const badSize=await rpc('tools/call',{name:'browser_set_viewport',arguments:{width:0,height:844}});assert.equal(badSize.isError,true);
     const shot=await rpc('tools/call',{name:'browser_screenshot',arguments:{}});assert(shot.content.some(c=>c.type==='image'));
     await rpc('tools/call',{name:'browser_navigate',arguments:{url:deniedOrigin}});
     assert.equal(deniedRequests,0,'Blocked private destination must not receive any browser request');
   } finally { await broker.close();await new Promise(r=>fixture.close(r));await new Promise(r=>denied.close(r));rmSync(temp,{recursive:true,force:true}); }
   assert.deepEqual(readdirSync('/tmp').filter(f=>f.startsWith('openchamber-browser-')),[]);
-  console.log(`Standalone browser image passed: ${chromeVersion}, 37 MCP tools, navigation/screenshot/auth/policy; no extension or surface API`);
+  console.log(`Standalone browser image passed: ${chromeVersion}, 38 MCP tools, responsive layout/color preference/navigation/screenshot/auth/policy; no extension or surface API`);
 }

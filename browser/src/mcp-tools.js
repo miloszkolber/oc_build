@@ -52,6 +52,7 @@ export const MCP_TOOLS = Object.freeze([
   { name: 'browser_storage_state', description: 'Export cookies and the active page origin localStorage/sessionStorage as JSON.', inputSchema: objectSchema() },
   { name: 'browser_set_storage_state', description: 'Restore cookies and storage entries for the currently active origin.', inputSchema: objectSchema({ state: { type: 'object' } }, ['state']) },
   { name: 'browser_screenshot', description: 'Capture the current rendered viewport as PNG image content.', inputSchema: objectSchema({ width: { type: 'number', exclusiveMinimum: 0, maximum: 32768 }, height: { type: 'number', exclusiveMinimum: 0, maximum: 32768 } }, [], false) },
+  { name: 'browser_set_viewport', description: 'Set the real CSS layout viewport for responsive QA, optionally emulate mobile layout and the active page light/dark color preference. Screenshot width/height only change capture bounds, not layout.', inputSchema: objectSchema({ width: { type: 'integer', minimum: 1, maximum: 3840 }, height: { type: 'integer', minimum: 1, maximum: 3840 }, mobile: { type: 'boolean' }, color_scheme: { type: 'string', enum: ['light', 'dark', 'no-preference'] } }, ['width', 'height'], false) },
   { name: 'browser_pdf', description: 'Export the current page as a paginated PDF resource.', inputSchema: objectSchema({ landscape: { type: 'boolean' }, print_background: { type: 'boolean' }, scale: { type: 'number', minimum: 0.1, maximum: 2 }, paper_width: { type: 'number', exclusiveMinimum: 0, maximum: 200 }, paper_height: { type: 'number', exclusiveMinimum: 0, maximum: 200 }, margin_top: { type: 'number', minimum: 0 }, margin_bottom: { type: 'number', minimum: 0 }, margin_left: { type: 'number', minimum: 0 }, margin_right: { type: 'number', minimum: 0 } }, [], false) },
 ].map(tool => ({ ...tool, description: `Standalone Chromium (not OpenChamber native UI): ${tool.description}` })));
 
@@ -579,6 +580,18 @@ export const createMcpToolExecutor = (runtime) => {
         applied += local.length + session.length;
       }
       return textResult(`Restored ${applied} state entries.${skipped ? ` Skipped ${skipped} origin(s) that do not match the active page origin ${currentOrigin}.` : ''}`);
+    }
+
+    if (name === 'browser_set_viewport') {
+      if (![args.width, args.height].every(value => Number.isInteger(value) && value >= 1 && value <= 3840)) throw new Error('viewport dimensions must be integers from 1 to 3840');
+      if (args.mobile !== undefined && typeof args.mobile !== 'boolean') throw new Error('mobile must be a boolean');
+      if (args.color_scheme !== undefined && !['light', 'dark', 'no-preference'].includes(args.color_scheme)) throw new Error('color_scheme must be light, dark or no-preference');
+      await runtime.configureViewport({ mode: 'fixed', source: 'agent', width: args.width, height: args.height, mobile: args.mobile ?? false });
+      if (args.color_scheme !== undefined) {
+        const page = await active();
+        await page.cdp.sendSession(page.sessionId, 'Emulation.setEmulatedMedia', { features: [{ name: 'prefers-color-scheme', value: args.color_scheme }] });
+      }
+      return textResult(JSON.stringify({ width: args.width, height: args.height, mobile: args.mobile ?? false, ...(args.color_scheme === undefined ? {} : { color_scheme: args.color_scheme }) }));
     }
 
     if (name === 'browser_screenshot') {
