@@ -14,7 +14,7 @@ const objectSchema = (properties = {}, required = [], additionalProperties) => (
 });
 
 // Input schemas match the captured Obscura v0.2.4 tools/list contract. Runtime
-// behavior is implemented below against the one shared Chromium context.
+// behavior is implemented below against the standalone Chromium context.
 export const MCP_TOOLS = Object.freeze([
   { name: 'browser_navigate', description: 'Navigate to a URL and wait for the page to load.', inputSchema: objectSchema({ url: { type: 'string' }, waitUntil: { type: 'string', enum: ['load', 'domcontentloaded', 'networkidle0'] } }, ['url']) },
   { name: 'browser_snapshot', description: 'Get the current page content as text, including title, URL, readable body text, and available element references.', inputSchema: objectSchema({ max_chars: { type: 'number', minimum: 0 } }, [], false) },
@@ -53,7 +53,7 @@ export const MCP_TOOLS = Object.freeze([
   { name: 'browser_set_storage_state', description: 'Restore cookies and storage entries for the currently active origin.', inputSchema: objectSchema({ state: { type: 'object' } }, ['state']) },
   { name: 'browser_screenshot', description: 'Capture the current rendered viewport as PNG image content.', inputSchema: objectSchema({ width: { type: 'number', exclusiveMinimum: 0, maximum: 32768 }, height: { type: 'number', exclusiveMinimum: 0, maximum: 32768 } }, [], false) },
   { name: 'browser_pdf', description: 'Export the current page as a paginated PDF resource.', inputSchema: objectSchema({ landscape: { type: 'boolean' }, print_background: { type: 'boolean' }, scale: { type: 'number', minimum: 0.1, maximum: 2 }, paper_width: { type: 'number', exclusiveMinimum: 0, maximum: 200 }, paper_height: { type: 'number', exclusiveMinimum: 0, maximum: 200 }, margin_top: { type: 'number', minimum: 0 }, margin_bottom: { type: 'number', minimum: 0 }, margin_left: { type: 'number', minimum: 0 }, margin_right: { type: 'number', minimum: 0 } }, [], false) },
-]);
+].map(tool => ({ ...tool, description: `Standalone Chromium (not OpenChamber native UI): ${tool.description}` })));
 
 const TOOL_NAMES = new Set(MCP_TOOLS.map(({ name }) => name));
 const textResult = (text) => ({ content: [{ type: 'text', text: String(text) }] });

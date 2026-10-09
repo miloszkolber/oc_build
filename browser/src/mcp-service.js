@@ -43,11 +43,12 @@ const isAuthorized = (request, token) => {
 const initializeResult = (requestedVersion) => ({
   protocolVersion: requestedVersion === PROTOCOL_VERSION ? requestedVersion : PROTOCOL_VERSION,
   capabilities: { tools: { listChanged: false } },
-  serverInfo: { name: 'browser', version: '1.0.0' },
+  serverInfo: { name: 'browser', version: '1.0.1' },
+  instructions: 'These tools control standalone Chromium, not OpenChamber native Preview, terminal, sessions or worktrees. Tabs, cookies and login state are separate from OpenChamber; MCP pages do not automatically appear in its desktop UI. Report evidence as verified in MCP Chromium, not verified in OpenChamber desktop UI unless that UI was checked directly. Archived Agent Browser extension instructions do not apply.',
 });
 
 export const createMcpService = ({ runtime, token, port = 3000, apiReady = () => true } = {}) => {
-  if (typeof runtime?.performMcp !== 'function') throw new Error('createMcpService requires the shared browser manager');
+  if (typeof runtime?.performMcp !== 'function') throw new Error('createMcpService requires the standalone browser manager');
   if (typeof token !== 'string' || token.trim().length === 0) throw new Error('MCP bearer token is required');
   if (!Number.isInteger(port) || port < 0 || port > 65_535) throw new Error('MCP port must be from 0 to 65535');
   const activeRequests = new Set();

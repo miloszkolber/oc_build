@@ -58,8 +58,15 @@ if (!browser) {
     for(const path of ['/surface/frame','/browser-control','/browser/state']) assert.equal((await fetch(base+path)).status,404);
     let id=0;
     const rpc=async(method,params={})=>(await (await fetch(`${base}/mcp`,{method:'POST',headers:{authorization:'Bearer image-check','content-type':'application/json'},body:JSON.stringify({jsonrpc:'2.0',id:++id,method,params})})).json()).result;
-    assert.equal((await rpc('initialize',{protocolVersion:'2024-11-05'})).serverInfo.name,'browser');
-    assert.equal((await rpc('tools/list')).tools.length,37);
+    const initialized = await rpc('initialize',{protocolVersion:'2024-11-05'});
+    assert.equal(initialized.serverInfo.name,'browser');
+    assert.equal(initialized.serverInfo.version,pkg.version);
+    assert.match(initialized.instructions,/standalone Chromium, not OpenChamber/);
+    assert.match(initialized.instructions,/verified in MCP Chromium/);
+    const tools = (await rpc('tools/list')).tools;
+    assert.equal(tools.length,37);
+    assert.equal(new Set(tools.map(tool=>tool.name)).size,37);
+    for(const tool of tools) assert(tool.description.startsWith('Standalone Chromium (not OpenChamber native UI): '),tool.name);
     const nav=await rpc('tools/call',{name:'browser_navigate',arguments:{url:origin}});assert(!nav.isError,JSON.stringify(nav));
     const shot=await rpc('tools/call',{name:'browser_screenshot',arguments:{}});assert(shot.content.some(c=>c.type==='image'));
     await rpc('tools/call',{name:'browser_navigate',arguments:{url:deniedOrigin}});
