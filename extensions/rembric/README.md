@@ -8,7 +8,7 @@ This package is an **OpenCode V2 plugin**. It lives at `extensions/rembric/` onl
 
 - OpenCode loads it from its own plugin directory and it never appears in OpenChamber's extension list.
 - OpenChamber's extension install and service-approval flow does not apply to it.
-- The neighbouring [`../agent-browser/`](../agent-browser/README.md) package is the OpenChamber guest extension and is installed by OpenChamber instead.
+- The standalone [`../../docker/browser/`](../../docker/browser/README.md) package is a separate browser MCP, not an OpenCode plugin or OpenChamber guest extension.
 
 Upstream Rembric ships an OpenCode plugin written against the **V1** API (`export const RembricPlugin = async (ctx) => ({ config, event, 'chat.message' })`), which OpenCode 2.x does not load. This is an independently written V2 entry point that keeps upstream's vendored session protocol and maps it onto the V2 hook surface.
 

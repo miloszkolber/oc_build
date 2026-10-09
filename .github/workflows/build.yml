@@ -5,16 +5,16 @@ on:
     branches: [main]
     paths:
       - 'extensions/rembric/**'
-      - 'docker/Dockerfile'
-      - 'docker/.dockerignore'
-      - 'docker/entrypoint.sh'
-      - 'docker/entrypoint.test.mjs'
-      - 'docker/self-update.patch'
-      - 'docker/openchamber-licence.txt'
-      - 'docker/check-image.mjs'
-      - 'docker/releases*'
-      - 'docker/latest*'
-      - 'browser/**'
+      - 'docker/openchamber/Dockerfile'
+      - 'docker/openchamber/.dockerignore'
+      - 'docker/openchamber/entrypoint.sh'
+      - 'docker/openchamber/entrypoint.test.mjs'
+      - 'docker/openchamber/self-update.patch'
+      - 'docker/openchamber/openchamber-licence.txt'
+      - 'docker/openchamber/check-image.mjs'
+      - 'docker/openchamber/releases*'
+      - 'docker/openchamber/latest*'
+      - 'docker/browser/**'
       - '.github/workflows/build.yml'
   schedule:
     - cron: '17 * * * *'
@@ -61,16 +61,16 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ github.token }}
         run: |
-          version=$(node -p 'require("./browser/package.json").version')
+          version=$(node -p 'require("./docker/browser/package.json").version')
           image="ghcr.io/$GITHUB_REPOSITORY_OWNER/openchamber-browser:$version-$GITHUB_SHA"
           docker build --target browser --tag "$image" \
-            --build-context browser-package=browser \
+            --build-context browser-package=docker/browser \
             --build-arg "OPENCHAMBER_SOURCE_REVISION=$GITHUB_SHA" \
             --label "org.opencontainers.image.source=https://github.com/$GITHUB_REPOSITORY" \
-            --label "org.opencontainers.image.revision=$GITHUB_SHA" docker
+            --label "org.opencontainers.image.revision=$GITHUB_SHA" docker/openchamber
           timeout 180 docker run --rm --interactive --network none --read-only --cap-drop ALL \
             --security-opt no-new-privileges --tmpfs /tmp:exec,size=512m,mode=1777 --shm-size=512m \
-            --env IMAGE_KIND=browser --entrypoint node "$image" --input-type=module < docker/check-image.mjs
+            --env IMAGE_KIND=browser --entrypoint node "$image" --input-type=module < docker/openchamber/check-image.mjs
           printf '%s' "$GITHUB_TOKEN" | docker login ghcr.io --username "$GITHUB_ACTOR" --password-stdin
           docker push "$image"
           latest="ghcr.io/$GITHUB_REPOSITORY_OWNER/openchamber-browser:latest"
@@ -89,7 +89,7 @@ jobs:
         with:
           bun-version: '1.4.2'
       - name: Test release discovery and latest promotion contracts
-        run: node --test docker/releases.test.mjs docker/latest.test.mjs
+        run: node --test docker/openchamber/releases.test.mjs docker/openchamber/latest.test.mjs
       - name: Bundle the Rembric V2 plugin and check its export
         working-directory: extensions/rembric
         run: |
@@ -122,7 +122,7 @@ jobs:
         with:
           persist-credentials: false
       - name: Test release discovery and latest promotion contracts
-        run: node --test docker/releases.test.mjs docker/latest.test.mjs
+        run: node --test docker/openchamber/releases.test.mjs docker/openchamber/latest.test.mjs
       - name: Discover every unbuilt eligible upstream release
         id: releases
         env:
@@ -131,7 +131,7 @@ jobs:
           RELEASE_ID: ${{ inputs.release_id || '' }}
           REBUILD: ${{ inputs.rebuild || false }}
           REBUILD_NEWEST: ${{ github.event_name == 'push' || github.event.schedule == '37 4 * * 1' }}
-        run: node docker/releases.mjs discover
+        run: node docker/openchamber/releases.mjs discover
 
   image:
     needs: discover
@@ -161,7 +161,7 @@ jobs:
           ASSET_SHA256: ${{ matrix.asset_sha256 }}
           BOOTSTRAP: ${{ matrix.bootstrap }}
           REBUILD: ${{ inputs.rebuild || github.event_name == 'push' || github.event.schedule == '37 4 * * 1' }}
-        run: node docker/releases.mjs prepare
+        run: node docker/openchamber/releases.mjs prepare
       - name: Build and check before publication
         if: steps.prepare.outputs.skip != 'true'
         env:
@@ -171,21 +171,21 @@ jobs:
           ASSET_SHA256: ${{ steps.prepare.outputs.asset_sha256 }}
         run: |
           docker build --tag "$IMAGE" \
-            --build-context browser-package=browser \
+            --build-context browser-package=docker/browser \
             --build-arg "OPENCHAMBER_VERSION=$VERSION" \
             --build-arg "OPENCHAMBER_ASSET_SHA256=$ASSET_SHA256" \
             --build-arg "OPENCHAMBER_SOURCE_REVISION=$GITHUB_SHA" \
             --label "org.opencontainers.image.source=https://github.com/$GITHUB_REPOSITORY" \
             --label "org.opencontainers.image.revision=$GITHUB_SHA" \
             --label "io.openchamber.upstream.release-id=$RELEASE_ID" \
-            --label "org.opencontainers.image.url=https://github.com/openchamber/openchamber/releases/tag/v$VERSION" docker
+            --label "org.opencontainers.image.url=https://github.com/openchamber/openchamber/releases/tag/v$VERSION" docker/openchamber
           docker image inspect "$IMAGE" --format '{{json .Config.Labels}}' > "$RUNNER_TEMP/image-labels.json"
           IMAGE_LABELS_FILE="$RUNNER_TEMP/image-labels.json" RELEASE_VERSION="$VERSION" SOURCE_COMMIT="$GITHUB_SHA" \
-            node docker/releases.mjs verify-origin
+            node docker/openchamber/releases.mjs verify-origin
           timeout 180 docker run --rm --interactive --network none --read-only --cap-drop ALL \
             --security-opt no-new-privileges --tmpfs /tmp:exec,size=512m,mode=1777 --shm-size=512m \
             --env "EXPECTED_VERSION=$VERSION" --entrypoint node "$IMAGE" \
-            --input-type=module < docker/check-image.mjs
+            --input-type=module < docker/openchamber/check-image.mjs
       - name: Publish one canonical tag
         id: publish
         if: steps.prepare.outputs.skip != 'true'
@@ -205,7 +205,7 @@ jobs:
           GITHUB_TOKEN: ${{ github.token }}
           IMAGE: ${{ steps.prepare.outputs.image }}
           MANIFEST_DIGEST: ${{ steps.publish.outputs.digest }}
-        run: node docker/releases.mjs verify-image
+        run: node docker/openchamber/releases.mjs verify-image
       - name: Verify the published image's build origin
         if: steps.prepare.outputs.skip != 'true'
         env:
@@ -218,7 +218,7 @@ jobs:
           reference="$IMAGE@$MANIFEST_DIGEST"
           docker pull "$reference"
           docker image inspect "$reference" --format '{{json .Config.Labels}}' > "$RUNNER_TEMP/image-labels.json"
-          IMAGE_LABELS_FILE="$RUNNER_TEMP/image-labels.json" node docker/releases.mjs verify-origin
+          IMAGE_LABELS_FILE="$RUNNER_TEMP/image-labels.json" node docker/openchamber/releases.mjs verify-origin
 
   latest:
     needs: [discover, image]
@@ -250,7 +250,7 @@ jobs:
         id: candidate
         env:
           GITHUB_TOKEN: ${{ github.token }}
-        run: node docker/latest.mjs candidate
+        run: node docker/openchamber/latest.mjs candidate
       - name: Verify retained provenance and promote the exact registry bytes
         id: promote
         if: steps.candidate.outputs.outcome == 'ready'
@@ -271,7 +271,7 @@ jobs:
           finish() {
             status=$?
             if [ "$status" -ne 0 ] && [ "$promotion_started" = false ]; then
-              node docker/latest.mjs setup-failed || printf '%s\n' 'Failed to record promotion setup failure' >&2
+              node docker/openchamber/latest.mjs setup-failed || printf '%s\n' 'Failed to record promotion setup failure' >&2
             fi
             if [ -n "$auth_dir" ]; then rm -rf -- "$auth_dir"; fi
             exit "$status"
@@ -281,7 +281,7 @@ jobs:
           export DOCKER_CONFIG="$auth_dir"
           printf '%s' "$GITHUB_TOKEN" | timeout --kill-after 5 30 docker login ghcr.io --username "$GITHUB_ACTOR" --password-stdin
           promotion_started=true
-          node docker/latest.mjs promote
+          node docker/openchamber/latest.mjs promote
 
   verification:
     if: github.event_name == 'workflow_dispatch' && inputs.verify_digest != ''
@@ -301,7 +301,7 @@ jobs:
           RELEASE_ID: ${{ inputs.release_id }}
           MANIFEST_DIGEST: ${{ inputs.verify_digest }}
           SOURCE_COMMIT: ${{ inputs.source_commit }}
-        run: node docker/releases.mjs verify-release
+        run: node docker/openchamber/releases.mjs verify-release
       - name: Verify the exact published config without starting it
         env:
           GITHUB_TOKEN: ${{ github.token }}
@@ -315,4 +315,4 @@ jobs:
           reference="$IMAGE@$MANIFEST_DIGEST"
           docker pull "$reference"
           docker image inspect "$reference" --format '{{json .Config.Labels}}' > "$RUNNER_TEMP/image-labels.json"
-          IMAGE_LABELS_FILE="$RUNNER_TEMP/image-labels.json" node docker/releases.mjs verify-origin
+          IMAGE_LABELS_FILE="$RUNNER_TEMP/image-labels.json" node docker/openchamber/releases.mjs verify-origin

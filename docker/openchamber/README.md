@@ -5,7 +5,7 @@ This directory owns image builds, release automation and runtime checks. Core de
 ## Active images
 
 - `app`: upstream OpenChamber web release, external OpenCode, Bash/Git, a single BusyBox for basic commands, SSH client and `ps` for terminal cleanup, with their library closure. A UID/GID 1000 `core` identity supports SSH and user lookup. No package manager, Chromium or Agent Browser extension.
-- `browser`: standalone `/browser` MCP package at `/opt/browser`, Chromium and its library/font/certificate closure. No OpenChamber app, shell, Git, guest service, panel, extension manifest, ZIP or surface API.
+- `browser`: standalone `docker/browser` MCP package at `/opt/browser`, Chromium and its library/font/certificate closure. No OpenChamber app, shell, Git, guest service, panel, extension manifest, ZIP or surface API.
 - Both use distroless Node 22, UID 1000 and build-time dependency installation. No runtime downloads.
 - The custom Agent Browser extension and its unused panel/surface patches have been removed. Neither image packages a guest browser provider. The built-in browser panel runs in the desktop client.
 
@@ -27,15 +27,15 @@ From the repository root:
 
 ```sh
 docker build --target browser -t openchamber-browser:check \
-  --build-context browser-package=browser docker
+  --build-context browser-package=docker/browser docker/openchamber
 docker build --target app -t openchamber:check \
-  --build-context browser-package=browser \
-  --build-arg OPENCHAMBER_VERSION=2.2.0 docker
+  --build-context browser-package=docker/browser \
+  --build-arg OPENCHAMBER_VERSION=2.2.0 docker/openchamber
 
 docker run --rm -i --network none --read-only --cap-drop ALL \
   --security-opt no-new-privileges --tmpfs /tmp:exec,size=512m,mode=1777 \
   --shm-size=512m --env IMAGE_KIND=browser --entrypoint node \
-  openchamber-browser:check --input-type=module < docker/check-image.mjs
+  openchamber-browser:check --input-type=module < docker/openchamber/check-image.mjs
 ```
 
 For the app check set `IMAGE_KIND=app` and `EXPECTED_VERSION` to its baked upstream version. Record source revision and deployed image IDs. Mutable base/dependency resolutions mean builds are not bit-reproducible.
