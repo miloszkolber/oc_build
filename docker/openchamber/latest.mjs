@@ -7,14 +7,14 @@ import { join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { promisify } from 'node:util';
 import {
-  CUTOFF, IMAGE, MANIFEST_TYPES, REPOSITORY, ReleaseClient,
+  CUTOFF, IMAGE, MANIFEST_TYPES, PACKAGE, REPOSITORY, ReleaseClient,
   candidate, compareCandidate, requireValue, responseBytes, stableCandidate, validateId, validateVersion, verifyOrigin,
 } from './releases.mjs';
 
 const MANIFEST_LIMIT = 4 * 1024 * 1024;
 const LABEL_LIMIT = 64 * 1024;
 const run = promisify(execFile);
-const registry = `https://ghcr.io/v2/${REPOSITORY}/manifests/`;
+const registry = `https://ghcr.io/v2/${PACKAGE}/manifests/`;
 
 function digest(value) {
   requireValue(typeof value === 'string' && /^sha256:[a-f0-9]{64}$/.test(value), 'Expected registry SHA-256 digest');

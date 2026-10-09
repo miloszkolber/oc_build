@@ -7,8 +7,11 @@ import { fileURLToPath } from 'node:url';
 export const UPSTREAM = 'openchamber/openchamber';
 // GitHub's release-list Link header uses this canonical repository-ID route.
 const UPSTREAM_ID = '1054790989';
-export const REPOSITORY = 'miloszkolber/openchamber';
-export const IMAGE = `ghcr.io/${REPOSITORY}`;
+export const REPOSITORY = 'miloszkolber/oc_build';
+// The published image keeps the product name, so the GHCR package path is
+// independent of the build repository rename.
+export const IMAGE = 'ghcr.io/miloszkolber/openchamber';
+export const PACKAGE = IMAGE.slice('ghcr.io/'.length);
 export const CUTOFF = '2026-09-24T19:14:25Z';
 // Mirrors the build repository's visibility; GitHub copies it to the package.
 const EXPECTED_PACKAGE_VISIBILITY = 'public';
@@ -208,7 +211,7 @@ export class ReleaseClient {
     requireValue(['pull', 'pull,push'].includes(scope), 'Unsupported GHCR token scope');
     const url = new URL('https://ghcr.io/token');
     url.searchParams.set('service', 'ghcr.io');
-    url.searchParams.set('scope', `repository:${REPOSITORY}:${scope}`);
+    url.searchParams.set('scope', `repository:${PACKAGE}:${scope}`);
     const response = await this.request(url.href, { headers: {
       Authorization: `Basic ${Buffer.from(`${this.actor}:${this.token}`).toString('base64')}`,
     } });
@@ -226,7 +229,7 @@ export class ReleaseClient {
   async manifestDigest(release, token) {
     validateVersion(release.version);
     validateId(release.release_id);
-    const response = await this.request(`https://ghcr.io/v2/${REPOSITORY}/manifests/${release.version}-r${release.release_id}`, {
+    const response = await this.request(`https://ghcr.io/v2/${PACKAGE}/manifests/${release.version}-r${release.release_id}`, {
       method: 'HEAD', headers: { Authorization: `Bearer ${token}`, Accept: MANIFEST_TYPES.join(', ') },
     });
     if (response.status === 404) return null; // Only after successful pull-scope authentication.

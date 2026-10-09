@@ -13,7 +13,7 @@ import { RegistryAuthError, discover } from './releases.mjs';
 // Independent GitHub/OCI fixtures: ordering, labels, and exact publication bytes
 // are asserted against this contract, not computed by the promotion implementation.
 const image = 'ghcr.io/miloszkolber/openchamber';
-const source = 'https://github.com/miloszkolber/openchamber';
+const source = 'https://github.com/miloszkolber/oc_build';
 const revision = 'e'.repeat(40);
 const assetDigest = 'a'.repeat(64);
 const indexType = 'application/vnd.oci.image.index.v1+json';
@@ -78,7 +78,7 @@ function fixture(pages = [[older, newest]], options = {}) {
   const state = {
     pages, retained, documents, canonical, imageLabels, puts: [], scans: 0,
     alias: options.alias === undefined ? oldDigest ?? null : options.alias,
-    repository: { full_name: 'miloszkolber/openchamber', private: true },
+    repository: { full_name: 'miloszkolber/oc_build', private: true },
     // Observed GHCR metadata has no repository member; privacy remains independent.
     metadata: { name: 'openchamber', package_type: 'container', visibility: 'public' },
   };
@@ -91,7 +91,7 @@ function fixture(pages = [[older, newest]], options = {}) {
     if (url.origin === 'https://api.github.com') {
       assert.equal(init.headers.Authorization, 'Bearer fixture-github-secret');
       assert(!init.method || init.method === 'GET', 'GitHub is always read-only');
-      if (url.pathname === '/repos/miloszkolber/openchamber') {
+      if (url.pathname === '/repos/miloszkolber/oc_build') {
         return json(state.repository, options.repositoryStatus ?? 200);
       }
       if (url.pathname === '/users/miloszkolber/packages/container/openchamber') {
@@ -108,7 +108,7 @@ function fixture(pages = [[older, newest]], options = {}) {
       }
       const id = url.pathname.match(/^\/repos\/openchamber\/openchamber\/releases\/(\d+)$/)?.[1];
       if (id) return json(state.retained.get(id) ?? null, state.retained.has(id) ? 200 : 404);
-      const commit = url.pathname.match(/^\/repos\/miloszkolber\/openchamber\/commits\/([a-f0-9]{40})$/)?.[1];
+      const commit = url.pathname.match(/^\/repos\/miloszkolber\/oc_build\/commits\/([a-f0-9]{40})$/)?.[1];
       if (commit) return json({ sha: options.commitSha ?? commit }, commit === revision ? options.commitStatus ?? 200 : 404);
     }
     if (url.origin === 'https://ghcr.io' && url.pathname === '/token') {
@@ -566,7 +566,7 @@ test('CLI consumption failure exits nonzero and records a redacted machine resul
   try {
     await assert.rejects(promisify(execFile)(process.execPath, [fileURLToPath(new URL('./latest.mjs', import.meta.url)), 'promote'], {
       timeout: 5000, maxBuffer: 64 * 1024, env: {
-        ...process.env, GITHUB_REPOSITORY: 'miloszkolber/openchamber',
+        ...process.env, GITHUB_REPOSITORY: 'miloszkolber/oc_build',
         GITHUB_TOKEN: 'fixture-github-secret', GITHUB_ACTOR: 'fixture-actor',
         GITHUB_OUTPUT: output, GITHUB_STEP_SUMMARY: summary,
         LATEST_OUTCOME: 'ready', LATEST_VERSION: '2.1.0\nEVIL=yes',
@@ -607,7 +607,7 @@ test('the actual workflow reports failed or timed-out login before promotion, pr
         cwd: fileURLToPath(new URL('../..', import.meta.url)), timeout: 5000, maxBuffer: 64 * 1024,
         env: { ...process.env, PATH: `${directory}:${process.env.PATH}`, RUNNER_TEMP: directory,
           RUNTIME_EXECUTABLE: process.execPath, LOGIN_EXIT: String(code), NODE_CALLS: calls,
-          GITHUB_REPOSITORY: 'miloszkolber/openchamber', GITHUB_TOKEN: 'fixture-login-secret', GITHUB_ACTOR: 'fixture-actor',
+          GITHUB_REPOSITORY: 'miloszkolber/oc_build', GITHUB_TOKEN: 'fixture-login-secret', GITHUB_ACTOR: 'fixture-actor',
           GITHUB_OUTPUT: output, GITHUB_STEP_SUMMARY: summary,
           LATEST_OUTCOME: candidate.outcome, LATEST_VERSION: candidate.version, LATEST_RELEASE_ID: candidate.release_id,
           LATEST_ASSET_SHA256: candidate.asset_sha256, LATEST_PUBLISHED_AT: candidate.published_at,

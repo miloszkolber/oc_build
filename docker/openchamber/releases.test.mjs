@@ -6,7 +6,7 @@ import { ReleaseClient, RegistryAuthError, candidate, discover, prepare, verifyI
 // from the publication/identity contract, never from the implementation's output.
 const digest = 'a'.repeat(64);
 const metadata = { name: 'openchamber', package_type: 'container', visibility: 'public',
-  repository: { full_name: 'miloszkolber/openchamber', private: true } };
+  repository: { full_name: 'miloszkolber/oc_build', private: true } };
 function release(version, id, overrides = {}) {
   return { id, tag_name: `v${version}`, draft: false, prerelease: version.includes('-'),
     published_at: '2026-09-25T12:00:00Z', assets: [{
@@ -27,8 +27,8 @@ function fixture(pages, options = {}) {
     assert(init.signal instanceof AbortSignal);
     if (url.origin === 'https://api.github.com') {
       assert.equal(init.headers.Authorization, 'Bearer fixture-github');
-      if (url.pathname === '/repos/miloszkolber/openchamber') {
-        return response(options.repository ?? { full_name: 'miloszkolber/openchamber', private: true },
+      if (url.pathname === '/repos/miloszkolber/oc_build') {
+        return response(options.repository ?? { full_name: 'miloszkolber/oc_build', private: true },
           options.repositoryStatus ?? 200);
       }
       if (url.pathname === '/users/miloszkolber/packages/container/openchamber') {
@@ -222,7 +222,7 @@ test('package privacy is required, repository identity is checked, and missing l
   }
   // The build repository is public by design; its identity still has to match.
   for (const repository of [
-    { full_name: 'miloszkolber/openchamber', private: false },
+    { full_name: 'miloszkolber/oc_build', private: false },
     { full_name: 'other/openchamber', private: true },
   ]) {
     const client = fixture(pages, { repository }).client;
@@ -240,13 +240,13 @@ test('package privacy is required, repository identity is checked, and missing l
 test('published image provenance must identify the private build source, checked commit, version, and release', () => {
   const input = { version: '2.0.1', releaseId: '395994070', sourceCommit: 'e'.repeat(40) };
   const labels = {
-    'org.opencontainers.image.source': 'https://github.com/miloszkolber/openchamber',
+    'org.opencontainers.image.source': 'https://github.com/miloszkolber/oc_build',
     'org.opencontainers.image.revision': 'e'.repeat(40),
     'org.opencontainers.image.version': '2.0.1',
     'io.openchamber.upstream.release-id': '395994070',
   };
   assert.deepEqual(verifyOrigin(labels, input), {
-    source: 'https://github.com/miloszkolber/openchamber', revision: 'e'.repeat(40), version: '2.0.1', release_id: '395994070',
+    source: 'https://github.com/miloszkolber/oc_build', revision: 'e'.repeat(40), version: '2.0.1', release_id: '395994070',
   });
   for (const [key, wrong] of [
     ['org.opencontainers.image.source', 'https://github.com/openchamber/openchamber'],
