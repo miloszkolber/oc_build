@@ -1,6 +1,6 @@
 {
   "name": "openchamber-generative-canvas",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "private": true,
   "type": "module",
   "license": "MIT",
@@ -11,7 +11,8 @@
     "contributes": {
       "panel": { "id": "generative-canvas", "name": "Canvas", "icon": "bar-chart-box-line", "entry": "panel/index.html" },
       "page": true,
-      "capabilities": ["files"]
+      "filesystem": ["/data/.db/openchamber/canvas/**"],
+      "service": { "entry": "service/main.js", "runtime": "host" }
     }
   },
   "scripts": {

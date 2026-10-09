@@ -7,9 +7,13 @@ const number = z.number().finite().min(0).max(1e9);
 const series = z.array(z.object({ label: text, value: number }).strict()).min(1).max(30);
 export const components = {
   Stack: { props: z.object({}).strict(), slots: ['default'], description: 'Vertical layout' },
+  Grid: { props: z.object({ columns: z.number().int().min(1).max(4).optional() }).strict(), slots: ['default'], description: 'Responsive dashboard grid; collapses in narrow panels' },
+  Heading: { props: z.object({ title: text, subtitle: text.optional(), eyebrow: text.optional() }).strict(), description: 'Dashboard heading' },
   Card: { props: z.object({ title: text, description: text.optional() }).strict(), slots: ['default'], description: 'Titled section' },
   Text: { props: z.object({ text: z.string().max(4000) }).strict(), description: 'Plain text, never HTML' },
-  Metric: { props: z.object({ label: text, value: text, detail: text.optional() }).strict(), description: 'Summary value' },
+  Metric: { props: z.object({ label: text, value: text, detail: text.optional(), change: text.optional(), tone: z.enum(['blue', 'green', 'amber']).optional() }).strict(), description: 'Summary value and trend' },
+  LineChart: { props: z.object({ title: text, unit: text.optional(), data: series }).strict(), description: 'Trend line with shaded area and accessible data' },
+  DonutChart: { props: z.object({ title: text, data: series }).strict(), description: 'Distribution ring with legend and readable values' },
   BarChart: { props: z.object({ title: text, unit: text.optional(), data: series }).strict(), description: 'Nonnegative labeled bar chart with accessible values' },
   Table: { props: z.object({ title: text, columns: z.array(text).min(1).max(12), rows: z.array(z.array(z.union([text, z.number().finite().min(-1e12).max(1e12), z.boolean(), z.null()])).max(12)).max(200) }).strict(), description: 'Searchable table with sortable columns' },
   HorizonControl: { props: z.object({ label: text, initialMonths: z.number().int().min(1).max(120), options: z.array(z.number().int().min(1).max(120)).min(1).max(12) }).strict(), description: 'Shared planning horizon control; one per canvas' },
@@ -17,7 +21,7 @@ export const components = {
 };
 export const catalog = defineCatalog(schema, { components, actions: {} });
 export const CATALOG_VERSION = '1';
-export const MAX_BYTES = 256 * 1024;
+export const MAX_BYTES = 60_000; // Fits the SDK's 64,000-character service body boundary.
 const id = z.string().regex(/^[a-zA-Z0-9_-]{1,64}$/);
 const elementSchema = z.discriminatedUnion('type', Object.entries(components).map(([type, component]) => z.object({
   type: z.literal(type), props: component.props, children: z.array(id).max(60).optional(),
@@ -32,7 +36,7 @@ export const artifactSchema = z.object({
 // deliberately accepts only static props and our deterministic local controls.
 export function parseArtifact(input) {
   const encoded = typeof input === 'string' ? input : JSON.stringify(input);
-  if (new TextEncoder().encode(encoded).length > MAX_BYTES) throw new Error('Canvas exceeds 256 KiB');
+  if (new TextEncoder().encode(encoded).length > MAX_BYTES) throw new Error('Canvas exceeds 60,000 bytes');
   const artifact = artifactSchema.parse(JSON.parse(encoded));
   const entries = Object.entries(artifact.spec.elements);
   if (entries.length > 100) throw new Error('Canvas exceeds 100 elements');
@@ -40,7 +44,7 @@ export function parseArtifact(input) {
   for (const [key, element] of entries) {
     const children = element.children ?? [];
     element.children = children;
-    if (children.length && !['Stack', 'Card'].includes(element.type)) throw new Error(`${key}: only Stack and Card can contain children`);
+    if (children.length && !['Stack', 'Grid', 'Card'].includes(element.type)) throw new Error(`${key}: only Stack, Grid and Card can contain children`);
     if (element.type === 'Table' && element.props.rows.some(row => row.length !== element.props.columns.length)) throw new Error(`${key}: row width must match columns`);
     if (element.type === 'HorizonControl') {
       controls++;

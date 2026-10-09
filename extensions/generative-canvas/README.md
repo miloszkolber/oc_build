@@ -1,65 +1,91 @@
 # Generative Canvas
 
-OpenChamber 2.2.0+ panel and full-page extension for agent-generated charts,
-tables and local quick tools. Uses pinned `json-render` 0.21.0 and a small,
-versioned component catalog. No service, model subscription, remote assets or
-browser broker. Native Browser and standalone browser MCP stay independent.
+OpenChamber 2.2.0+ panel/full-page extension for durable dashboards, charts and
+interactive quick tools. JSON selects trusted components; it never supplies
+JavaScript or HTML. Uses json-render 0.21.0 and OpenChamber SDK 2.2.0.
 
-## Install and use
+## Use
 
-1. Run `bun install --frozen-lockfile` and `bun run package` in this directory.
-2. In OpenChamber → Extensions, install `dist/openchamber-generative-canvas-0.1.0.zip` (or the absolute `dist` directory visible to the app server).
-3. Approve **project files** only. Open Canvas from the rail or its full-page view.
-4. Try the cost explorer. Change 12/24/36 months; totals recalculate locally. Table headers sort and the filter searches rows.
-5. Ask an agent to write `visualizations/<name>.canvas.json` in the open project. Refresh files, select and load. Refresh/load are explicit; no filesystem polling.
-6. Use JSON source or Import JSON for drafts. Invalid input reports an error and retains the previous valid canvas.
-7. Export JSON downloads the current horizon. Save snapshot creates a uniquely named new file under `visualizations/`, never overwrites the source. Table search/sort is transient and not exported.
+Open Canvas from the rail. The host owns its title, expand and close controls.
+The extension frame contains only the artifact selector, preview/source toggles
+and artifact menu. Selection loads automatically. The menu contains add,
+import, rename, export, reset and delete. Deletion requires confirmation.
 
-The host SDK owns project file access, approval, confinement and atomic writes.
-This extension does not request outside-project filesystem, network, model,
-shell, prompt or service access. No project is required for the example/import.
-Changing projects clears the canvas, file list and source draft. Late reads are
-discarded. A write already submitted remains a host-owned operation, not a
-cancellable transaction; wait for save to finish before changing project.
+Use **Add dashboard** for the revenue example or **Add cost explorer** for local
+12/24/36-month comparison. Examples are clearly illustrative data, not live
+business records. Tables filter/sort locally. Charts, metric trends and responsive
+grids render with a dedicated sans-serif visualization hierarchy.
+
+Canvases are shared across projects and sessions. They live permanently at
+`/data/.db/openchamber/canvas/<id>.canvas.json`, not in project worktrees or the
+installed extension. Rename changes the display title, not the stable filename.
+Deleting or reinstalling the extension does not delete the store.
+
+The list refreshes every three seconds while the frame is visible and clean.
+New agent files appear automatically, and changed selected files reload.
+Unsaved edits and confirmation dialogs pause refresh. Save or discard before
+switching artifacts. Source edits validate before preview/save. Save controls
+persists the current horizon. Table search/sort is transient. Stale saves/deletes
+are rejected with a reload/discard recovery rather than overwriting changes.
 
 ## Agent contract
 
-Write a UTF-8 JSON file with exactly `catalog_version: "1"`, `title` and `spec`.
-The spec uses json-render's flat `{ "root": "id", "elements": { ... } }` shape.
-Each element has `type`, `props`, and optional `children`. Start from
-`dist/examples/cost-explorer.canvas.json`. Build emits `dist/catalog.json` with
-the component schemas. Source of truth: `src/catalog.js`.
-Validate agent-written files with `bun scripts/validate.mjs <file.canvas.json>`.
+Write a UTF-8 `<name>.canvas.json` directly under `/data/.db/openchamber/canvas`.
+Prefer atomic replacement. Include exactly `catalog_version: "1"`, `title`, and
+`spec: { "root": "id", "elements": { ... } }`. Elements contain `type`, `props`
+and optional `children`. The same JSON schema works across projects.
 
-| Component | Props | Behavior |
-| --- | --- | --- |
-| Stack | `{}` | Vertical layout; children allowed |
-| Card | `title`, optional `description` | Section; children allowed |
-| Text | `text` | Escaped plain text |
-| Metric | `label`, `value`, optional `detail` | Summary value |
-| BarChart | `title`, optional `unit`, `data: [{label,value}]` | Nonnegative bars and readable values |
-| Table | `title`, `columns: string[]`, `rows: scalar[][]` | Local filter/sort |
-| HorizonControl | `label`, `initialMonths`, `options: number[]` | One per canvas, shared horizon |
-| CostChart | `title`, `currency`, `providers: [{label,monthly,upfront}]` | Deterministic `upfront + monthly × months`; default 12 without a control |
+Build emits `dist/catalog.json`, `dist/examples/cost-explorer.canvas.json` and
+`dist/examples/revenue-pulse.canvas.json`. Validate with
+`bun scripts/validate.mjs <file.canvas.json>`. Source of truth: `src/catalog.js`.
 
-For an agent: “Create a catalog-1 canvas under visualizations using this
-extension's catalog and example. Do not generate JS/HTML, event handlers,
-bindings, expressions, URLs or actions. Validate with parseArtifact before
-loading. Use components already registered in the catalog.”
+| Component | Purpose |
+| --- | --- |
+| Stack, Grid, Card | Vertical layout, responsive 1–4-column grids and sections |
+| Heading, Text | Dashboard hierarchy and escaped plain text |
+| Metric | Value, optional detail/change and blue/green/amber accent |
+| BarChart, LineChart, DonutChart | Labeled bars, shaded trend and distribution |
+| Table | Searchable/sortable bounded data table |
+| HorizonControl, CostChart | Shared horizon and deterministic upfront + monthly × months |
 
-## Limits and verification
+Catalog 1 remains compatible with 0.1.0 components. Old project files are not
+deleted or silently relocated. Import them through the menu to copy them into
+the permanent store. Invalid agent files stay visible with an error.
 
-The validator rejects unknown props/types, events/actions/dynamic expressions,
-cycles, repeated children, missing/unreachable nodes, mismatched table rows,
-non-finite/out-of-range numbers, more than one horizon control, depth over 16,
-more than 100 elements and artifacts over 256 KiB. Text is rendered through
-React, never `innerHTML`. Generated files remain untrusted data. No HTML/JS
-fallback or automatic URL/source-reference fetching is supported.
+## Build and install
 
-Run `bun test` then `bun run package`. Browser verification must include actual
-controls, invalid-source recovery, reload/export, narrow panel and full-page
-layout. MCP Chromium checks do not imply native desktop-client acceptance.
+1. Run `bun install --frozen-lockfile`, `bun test`, then `bun run package` here.
+2. Install `dist/openchamber-generative-canvas-0.2.0.zip` through OpenChamber Extensions.
+3. Review and approve the local service and `/data/.db/openchamber/canvas/**` filesystem declaration.
+4. Reload the client to discover the updated Canvas entry.
 
-This is a first catalog, not an unlimited app builder. Add deterministic
-components for evidenced tools. MCP Apps portability and an isolated arbitrary
-document renderer are separate future slices, not capabilities of this MVP.
+The SDK file API cannot rename/delete, so an on-demand Node service owns CRUD.
+It runs inside the app runtime, binds only loopback, requires the host-provided
+bearer token and uses no additional port mapping/container/model service. Its
+API accepts only validated Canvas CRUD in the fixed directory. It rejects path
+traversal and symlink files and uses atomic writes plus revision checks. Agent
+edits outside this service should use atomic writes; cross-process edits are
+not a distributed transaction.
+
+**The service is not OS-sandboxed.** OpenChamber runs it with the app user's
+filesystem access. The fixed-directory restriction is enforced by this code,
+not by the manifest alone. It exposes no shell, arbitrary filesystem, remote
+URL, generated-code or model action. The extension no longer requests broad
+project-file access. Native Browser and standalone browser MCP are unchanged.
+
+Artifacts are bounded to 60,000 UTF-8 bytes to fit the SDK service body limit,
+100 elements, depth 16 and 200 stored artifacts. Structural validation rejects
+unknown props/types, actions/expressions/events, invalid graphs, numeric bounds
+and malformed table rows. Files larger than the limit fail explicitly.
+
+## Recovery and verification
+
+Back up `/data/.db/openchamber/canvas` with app data. Restore files there without
+changing IDs. The store is independent of extension installation and project
+deletion. Before an upgrade, retain the prior ZIP/installed directory and data
+backup. Reinstalling an old extension never requires deleting authored JSON.
+
+See `VERIFICATION.md` for executed checks and the MCP Chromium/native desktop
+boundary. The reference layout and upstream examples inform the implementation,
+not a separate mandatory research deliverable. MCP Apps, arbitrary documents
+and simulations remain separate future capabilities.

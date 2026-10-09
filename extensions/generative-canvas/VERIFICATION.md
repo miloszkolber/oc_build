@@ -1,28 +1,24 @@
-# Canvas 0.1.0 verification
+# Canvas 0.2.0 verification
 
-Executed on 2026-10-09 against OpenChamber web 2.2.0. This is **MCP Chromium**
-evidence, not verification in OpenChamber's native desktop client.
+Current checks on OpenChamber web 2.2.0 are **MCP Chromium**, not native desktop
+acceptance. Tests use the production registry and actual storage/service code.
 
-| Boundary | Executed evidence |
-| --- | --- |
-| Validator and renderer | 23 Bun tests passed, including actual React registry rendering, escaped text, unknown components/props/actions/expressions, graph integrity, limits and source-preserving snapshots |
-| Package | SDK manifest parse, production esbuild bundle, full dependency license collection, ZIP round-trip and example CLI validation passed |
-| Native host integration | Initially folder-installed, then final ZIP installed through `/api/guests` at `/data/.db/openchamber/extensions/generative-canvas`; approved only `files` through the normal permissions dialog; Canvas appeared on the rail and rendered in OpenChamber's sandboxed full-page iframe; keyboard Space activated the example, Tab/ArrowRight selected 36 months, screenshot confirmed €432/€372 |
-| Local controls | Served panel in MCP Chromium: 36 months updates VPS €432 and home server €372; table search retains the matching row; export Blob contains horizon 36 |
-| Invalid input | Unknown HTML component rejected; previous valid canvas retained |
-| Responsive rendering | Actual 390×844 light/dark viewports inspected; chart/control/table layout fits without page-level horizontal overflow |
-| File workflow | Test host used the real SDK bridge and real approved OpenChamber file API in disposable project `/home/core/.cache/generative-canvas-qa`: list, stat, read and unique snapshot write passed; original horizon 12 unchanged, saved horizon 36 |
-| Reload | Test-host page reloaded; explicit refresh/load of saved snapshot restored 36-month totals |
-| Context switch | Held a read result, switched projects, then released it; new project remained empty, file selection cleared and stale canvas did not render |
+- 31 Bun tests passed: renderer/schema boundaries plus permanent-store CRUD, revision conflicts, simultaneous saves, invalid-update preservation, traversal/symlink refusal, invalid-file visibility, authenticated HTTP health/CRUD.
+- Both independent Docker builds and their restricted image checks passed. App builds without browser input or Chromium packages. Browser builds without app bundle/Git/shell input and exercises real Chromium/auth/policy/38 MCP tools.
+- Production Canvas 0.2.0 ZIP installed through the supported extension API, normal approval dialog reviewed local service and exact Canvas filesystem declaration. The real host sandbox rendered the compact selector/menu and cost explorer. Keyboard menu activation created a permanent artifact.
+- Rich revenue dashboard inspected at a 540px panel width in dark mode. Grids, metric accents, line/area trend, distribution ring and table were rendered, not static screenshots of a proposed design.
+- Final 390×844 light/dark dashboard inspected. Root and preview scroll widths equal 390px. Line-chart axis labels, distribution legend and table remain readable without root horizontal overflow.
+- Real-service UI checks passed: blank artifact creation, invalid source rejection without changing the saved file, corrected source save/preview, stable-ID rename, reload, delete cancellation and confirmed deletion of only the QA artifact.
+- Atomically agent-written JSON appeared automatically with no Load button. New selected-file revisions reloaded. An external update during an unsaved source edit produced a revision conflict, retained the draft and recovered through Discard.
+- Cost controls saved 36 months into the permanent file (VPS €432, home server €372). Export Blob contained the stable filename and 36-month horizon. Export was captured in the QA host rather than claiming a native desktop download.
+- App release/latest regression suite passed all 42 tests in Node 22 with a writable temporary directory.
 
-The test host is a temporary same-origin fixture so the tools can inspect frame
-DOM. Production OpenChamber uses an opaque `allow-scripts` iframe, which correctly
-blocks that inspection. Its keyboard interactions were checked separately in
-MCP Chromium. File workflow verifies the SDK/file API boundary, **not native
-desktop click handling**. No production sandbox was weakened to run checks.
+The temporary same-origin QA host uses the real SDK and proxies to the actual
+approved extension-service API. It permits DOM inspection without weakening
+OpenChamber's opaque production iframe. Additional CRUD/source/reload checks
+are recorded with their actual outcomes in `/tmp/opencode/canvas-v2/`.
 
-Operator acceptance still needed: reload desktop, open Canvas in panel/full-page,
-try the example, load an agent-written file and save/export in the chosen project.
-There is no arbitrary HTML/JS execution, MCP Apps adapter or automatic live file
-subscription. Table filter/sort is ephemeral; horizon is included in snapshots.
-P2–P6 remain paused. Search indexing remains disabled and outside the roadmap.
+Native desktop acceptance is still operator-owned. Check the selector/menu,
+preview/source, automatic discovery, save/reload, rename and confirmed delete.
+No MCP Apps transport, arbitrary generated-code renderer or live business-data
+connection is claimed. The service has host-user access and is not OS-sandboxed.

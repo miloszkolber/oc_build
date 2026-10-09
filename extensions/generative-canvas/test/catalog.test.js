@@ -27,7 +27,7 @@ describe('untrusted canvas boundary', () => {
     'wrong version': value => { value.catalog_version = '2'; },
   };
   for (const [name, change] of Object.entries(invalid)) test(`rejects ${name}`, () => expect(() => parseArtifact(mutated(change))).toThrow());
-  test('size limit is enforced before parsing', () => expect(() => parseArtifact(' '.repeat(256 * 1024 + 1))).toThrow('256 KiB'));
+  test('size limit is enforced before parsing', () => expect(() => parseArtifact(' '.repeat(60_001))).toThrow('60,000 bytes'));
   test('limits depth', () => {
     const value = { catalog_version: '1', title: 'deep', spec: { root: 'n0', elements: {} } };
     for (let i = 0; i < 18; i++) value.spec.elements[`n${i}`] = { type: 'Stack', props: {}, children: i < 17 ? [`n${i + 1}`] : [] };
