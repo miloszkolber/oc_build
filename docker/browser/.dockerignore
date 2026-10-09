@@ -1,2 +1,11 @@
-node_modules
-dist
+**
+!Dockerfile
+!package.json
+!bun.lock
+!src/
+!src/**
+!scripts/
+!scripts/**
+!LICENSE
+!NOTICE
+!THIRD_PARTY_LICENSES

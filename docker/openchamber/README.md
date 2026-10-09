@@ -1,6 +1,6 @@
-# OpenChamber images
+# OpenChamber app image
 
-This directory owns image builds, release automation and runtime checks. Core deployment is in the host repository at `docker/openchamber`.
+This directory owns the app image, release automation and app runtime checks. The independent browser image is built from `../browser/Dockerfile` and published by `.github/workflows/browser.yml`. Core deployment is in the host repository at `docker/openchamber`.
 
 ## Active images
 
@@ -15,7 +15,7 @@ App releases use upstream `openchamber-web-<version>.tgz`, with an optional `OPE
 
 The browser publishes `<browser-package-version>-<source-commit>` and `latest`. Pushes, weekly security rebuilds and manual workflows publish it independently of upstream app releases. Relevant pushes rebuild the newest app release. Core follows both `latest` tags under Watchtower.
 
-The workflow runs isolated image checks before publication. `check-image.mjs` verifies absence of the archived extension in both images. Browser checks exercise real Chromium, 38 MCP tools, responsive layout and color preference, bearer authentication, navigation, screenshot, private-destination policy and shutdown cleanup. App checks cover CLI, Git/shell/basic file commands, SSH/user identity, the exact process-list call used by terminal cleanup, runtime syntax and absence of Chromium.
+Each workflow runs its own isolated image check before publication. This directory's `check-image.mjs` covers CLI, Git/shell/basic file commands, SSH/user identity, PTY output, terminal process cleanup, runtime syntax and absence of Chromium. The browser check lives in `docker/browser/check-image.mjs`.
 
 Pure distroless without any OS tools is not compatible with native terminals, Git SSH remotes, shebang scripts or terminal process cleanup. These small, explicitly consumed tools are the deliberate exception. Project language/package toolchains and optional integration credentials are not all bundled into the web server.
 
@@ -28,19 +28,16 @@ Publishing does not itself deploy a container. Watchtower or an explicit host ro
 From the repository root:
 
 ```sh
-docker build --target browser -t openchamber-browser:check \
-  --build-context browser-package=docker/browser docker/openchamber
-docker build --target app -t openchamber:check \
-  --build-context browser-package=docker/browser \
+docker build -t openchamber:check \
   --build-arg OPENCHAMBER_VERSION=2.2.0 docker/openchamber
 
 docker run --rm -i --network none --read-only --cap-drop ALL \
   --security-opt no-new-privileges --tmpfs /tmp:exec,size=512m,mode=1777 \
-  --shm-size=512m --env IMAGE_KIND=browser --entrypoint node \
-  openchamber-browser:check --input-type=module < docker/openchamber/check-image.mjs
+  --env EXPECTED_VERSION=2.2.0 --entrypoint node \
+  openchamber:check --input-type=module < docker/openchamber/check-image.mjs
 ```
 
-For the app check set `IMAGE_KIND=app` and `EXPECTED_VERSION` to its baked upstream version. Record source revision and deployed image IDs. Mutable base/dependency resolutions mean builds are not bit-reproducible.
+Set `EXPECTED_VERSION` to the baked upstream version. No named build context or browser sources are needed. Record source revision and deployed image IDs. Mutable base/dependency resolutions mean builds are not bit-reproducible.
 
 ## Browser operation
 

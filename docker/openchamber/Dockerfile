@@ -48,34 +48,23 @@ FROM oven/bun:1.4.2 AS bun-runtime
 
 FROM debian:bookworm-slim AS tools
 
-ARG OPENCHAMBER_SOURCE_REVISION=unknown
-
 RUN apt-get update \
     && apt-get install --no-install-recommends -y \
-        bash git busybox openssh-client procps ca-certificates chromium fonts-liberation \
+        bash git busybox openssh-client procps ca-certificates \
     && rm -rf /var/lib/apt/lists/*
 
-# Build the standalone MCP against the Chromium/font packages copied below.
 COPY --from=bun-runtime /usr/local/bin/bun /usr/local/bin/bun
 
 # Exercise the real shell entrypoint with only its Bun-backed node shim on PATH.
 COPY entrypoint.sh entrypoint.test.mjs /tmp/entrypoint-regression/
 RUN --network=none bun /tmp/entrypoint-regression/entrypoint.test.mjs
 
-WORKDIR /src/browser
-COPY --from=browser-package / ./
-
-RUN bun install --frozen-lockfile
-
-RUN --network=none bun run build \
-    && printf '{"chromePath":"/usr/lib/chromium/chromium"}\n' > dist/config.json
-
 # cp --parents with absolute /bin, /usr sources only resolves the symlinked
 # Debian /usr layout correctly from the filesystem root.
 WORKDIR /
 
 RUN set -eu; \
-    mkdir -p /rootfs /browser-rootfs; \
+    mkdir -p /rootfs; \
     rootfs=/rootfs; \
     copy_with_libs() { \
         cp -a --parents "$1" "$rootfs"; \
@@ -105,60 +94,13 @@ RUN set -eu; \
     cp -a --parents /usr/share/git-core/templates /rootfs; \
     ln -s bash /rootfs/bin/sh; \
     rm -rf /rootfs/usr/lib/git-core/*.test; \
-    rootfs=/browser-rootfs; \
-    copy_with_libs /usr/lib/chromium/chromium; \
-    copy_with_libs /usr/lib/chromium/chrome_crashpad_handler; \
-    for browser_lib in /usr/lib/chromium/*.so; do \
-        [ -f "$browser_lib" ] && copy_with_libs "$browser_lib"; \
-    done; \
-    cp -a /usr/lib/chromium /browser-rootfs/usr/lib/; \
-    for assets in /etc/fonts /usr/share/fonts /usr/share/fontconfig; do \
-        [ -e "$assets" ] && cp -a --parents "$assets" /browser-rootfs; \
-    done; \
-    softokn_module="$(dpkg-query -L libnss3 | grep -m1 '/libsoftokn3\.so$' || true)"; \
-    test -n "$softokn_module"; \
-    dpkg-query -L libnss3 | grep -E '/(libnss|libsoftokn|libfreebl)[^/]*\.(so|chk)$' | while IFS= read -r nss_file; do \
-        case "$nss_file" in \
-            *.so) copy_with_libs "$nss_file" ;; \
-            *.chk) cp -a --parents "$nss_file" /browser-rootfs ;; \
-        esac; \
-    done; \
-    mkdir -p /browser-rootfs/usr/share/licenses/debian; \
+    mkdir -p /rootfs/usr/share/licenses/debian; \
     dpkg-query -W | cut -f1 | while read -r package; do \
         name=$(printf '%s' "$package" | cut -d: -f1); \
         copyright="/usr/share/doc/$name/copyright"; \
-        [ -f "$copyright" ] && cp "$copyright" "/browser-rootfs/usr/share/licenses/debian/$name.copyright"; \
+        [ -f "$copyright" ] && cp "$copyright" "/rootfs/usr/share/licenses/debian/$name.copyright"; \
     done; \
-    cp -a --parents /usr/share/doc/git/copyright /rootfs; \
-    test -f /browser-rootfs/usr/share/licenses/debian/chromium.copyright; \
-    test -f /browser-rootfs/usr/share/licenses/debian/chromium-common.copyright; \
-    mkdir -p /rootfs/usr/share/licenses; \
-    cp -a /browser-rootfs/usr/share/licenses/debian /rootfs/usr/share/licenses/; \
-    test -x /browser-rootfs/usr/lib/chromium/chromium; \
-    mkdir -p /browser-rootfs/usr/share/openchamber; \
-    chromium_version="$(/usr/lib/chromium/chromium --version | sed 's/[[:space:]]*$//')"; \
-    chromium_package_version="$(dpkg-query -W chromium | cut -f2)"; \
-    chromium_common_version="$(dpkg-query -W chromium-common | cut -f2)"; \
-    fonts_version="$(dpkg-query -W fonts-liberation | cut -f2)"; \
-    certificates_version="$(dpkg-query -W ca-certificates | cut -f2)"; \
-    printf '{"sourceRevision":"%s","chromiumVersion":"%s","nssSoftoknModule":"%s","packages":{"chromium":"%s","chromium-common":"%s","fonts-liberation":"%s","ca-certificates":"%s"}}\n' \
-        "$OPENCHAMBER_SOURCE_REVISION" "$chromium_version" "$softokn_module" "$chromium_package_version" \
-        "$chromium_common_version" "$fonts_version" "$certificates_version" \
-        > /browser-rootfs/usr/share/openchamber/browser-build.json; \
-    mkdir -p /browser-rootfs/usr/bin; \
-    ln -s /usr/lib/chromium/chromium /browser-rootfs/usr/bin/chromium
-
-# Browser-only package: no web application, git, shell, or application mounts.
-FROM gcr.io/distroless/nodejs22-debian12 AS browser
-LABEL org.opencontainers.image.title="openchamber-browser" \
-      org.opencontainers.image.description="Standalone browser MCP and Chromium"
-COPY --from=tools /browser-rootfs/ /
-COPY --from=tools /src/browser/dist/ /opt/browser/
-COPY --from=tools /src/browser/dist/LICENSE /src/browser/dist/NOTICE /src/browser/dist/THIRD_PARTY_LICENSES /usr/share/licenses/browser/
-ENV HOME=/tmp NODE_ENV=production PATH=/nodejs/bin:/usr/bin
-USER 1000:1000
-WORKDIR /tmp
-ENTRYPOINT ["/nodejs/bin/node", "/opt/browser/main.js"]
+    cp -a --parents /usr/share/doc/git/copyright /rootfs
 
 # --- stage 3: distroless runtime ----------------------------------------------
 FROM gcr.io/distroless/nodejs22-debian12 AS app

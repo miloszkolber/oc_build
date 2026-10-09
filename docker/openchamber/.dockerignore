@@ -1,5 +1,4 @@
 # Keep the primary build context limited to image inputs; never include plugins or host data.
-# The standalone browser package enters through the browser-package named context.
 **
 !Dockerfile
 !entrypoint.sh

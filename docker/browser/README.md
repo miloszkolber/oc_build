@@ -1,5 +1,26 @@
 # Standalone browser MCP
 
+## Independent image build
+
+This directory owns the browser Dockerfile, build context and image check.
+It does not require the app Dockerfile, upstream web bundle or host shell tools.
+`.github/workflows/browser.yml` publishes browser tags on browser-only changes,
+weekly rebuilds and manual dispatch. App changes do not trigger a browser build.
+
+From the repository root:
+
+```sh
+docker build -t openchamber-browser:check docker/browser
+docker run --rm -i --network none --read-only --cap-drop ALL \
+  --security-opt no-new-privileges --tmpfs /tmp:exec,size=512m,mode=1777 \
+  --shm-size=512m --entrypoint node openchamber-browser:check \
+  --input-type=module < docker/browser/check-image.mjs
+```
+
+The check exercises real Chromium, 38 MCP tools, responsive layout/color
+preference, authentication, navigation, screenshot, destination policy and
+cleanup. Runtime paths and image names remain unchanged.
+
 This package is the active Chromium MCP backend. The custom Agent Browser extension has been removed. This package has no guest service, panel, extension manifest, install ZIP or surface routes.
 
 ## Tool routing and evidence
