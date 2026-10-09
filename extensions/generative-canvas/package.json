@@ -1,0 +1,31 @@
+{
+  "name": "openchamber-generative-canvas",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "license": "MIT",
+  "description": "File-backed, catalog-validated visualization and quick-tool canvas",
+  "openchamber": {
+    "apiVersion": 1,
+    "engines": { "openchamber": ">=2.2.0" },
+    "contributes": {
+      "panel": { "id": "generative-canvas", "name": "Canvas", "icon": "bar-chart-box-line", "entry": "panel/index.html" },
+      "page": true,
+      "capabilities": ["files"]
+    }
+  },
+  "scripts": {
+    "build": "bun scripts/build.mjs",
+    "test": "bun test test",
+    "package": "bun scripts/package.mjs"
+  },
+  "dependencies": {
+    "@openchamber/sdk": "2.2.0",
+    "@json-render/core": "0.21.0",
+    "@json-render/react": "0.21.0",
+    "react": "19.3.0",
+    "react-dom": "19.3.0",
+    "zod": "4.6.5"
+  },
+  "devDependencies": { "esbuild": "0.28.2", "fflate": "0.8.2" }
+}

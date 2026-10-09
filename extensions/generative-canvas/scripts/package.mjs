@@ -1,0 +1,13 @@
+import { readFile, writeFile } from 'node:fs/promises';
+import { zipSync, unzipSync } from 'fflate';
+await import('./build.mjs');
+const { version } = JSON.parse(await readFile('dist/package.json', 'utf8'));
+const files = ['package.json', 'README.md', 'VERIFICATION.md', 'LICENSE', 'NOTICE', 'THIRD_PARTY_LICENSES', 'catalog.json', 'panel/index.html', 'panel/style.css', 'panel/main.js', 'examples/cost-explorer.canvas.json'];
+const entries = {};
+for (const file of files) entries[file] = [new Uint8Array(await readFile(`dist/${file}`)), { mtime: new Date('1980-01-01T00:00:00Z') }];
+const archive = zipSync(entries, { level: 9 });
+const checked = unzipSync(archive);
+for (const file of files) if (!checked[file]) throw new Error(`Missing ${file}`);
+const output = `dist/openchamber-generative-canvas-${version}.zip`;
+await writeFile(output, archive);
+console.log(output);

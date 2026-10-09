@@ -1,0 +1,8 @@
+Generative Canvas reuses the SDK panel/theme integration and packaging approach
+from Agent Browser 1.0.4, recovered from repository commit 8d3c128. The browser
+broker, service, BrowserProvider, authentication and arbitrary-page surface are
+not included. Inherited MIT attribution is retained in LICENSE.
+
+Bundled json-render core/react 0.21.0 are Apache-2.0, by Vercel, Inc.
+OpenChamber SDK 2.2.0, React/React DOM 19.3.0 and Zod 4.6.5 are MIT.
+Full dependency license texts are included in THIRD_PARTY_LICENSES at build time.
