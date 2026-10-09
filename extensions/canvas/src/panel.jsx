@@ -2,28 +2,48 @@ import React, { useEffect, useRef, useState } from 'react';
 import { createRoot } from 'react-dom/client';
 import { connectHost } from '@openchamber/sdk';
 import { applyHostReady, mountBanner, mountEmpty, mountMenu } from '@openchamber/sdk/ui';
-import { parseArtifact, snapshot, errorMessage } from './catalog.js';
+import { parseArtifact, errorMessage } from './catalog.js';
 import { sessionFile } from './session.js';
 import { Canvas, initialMonths } from './renderer.jsx';
 
 const host = connectHost();
-const paths = {
-  eye: 'M2 12s3-7 10-7 10 7 10 7-3 7-10 7S2 12 2 12m10-3a3 3 0 1 0 0 6 3 3 0 0 0 0-6',
-  code: 'm8 6-6 6 6 6m8-12 6 6-6 6',
-};
-const Icon = ({ name }) => <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d={paths[name]} /></svg>;
+const actions = { current: {} };
 
 function isNotFound(failure) {
   return failure?.code === 'NOT_FOUND' || /NOT_FOUND/.test(failure?.message ?? '');
 }
 
-function KitEmpty({ title, body }) {
+function agentPrompt(path) {
+  return [
+    'Create a Canvas for this conversation — an in-app visualization the user can see, not a chat message.',
+    '',
+    `Write one JSON file here (atomic replace): ${path}`,
+    '',
+    'Format: { "catalog_version": "1", "title": "...", "spec": { "root": "id", "elements": { ... } } }',
+    'Each element: { "type": "...", "props": { ... }, "children": ["id", ...] }.',
+    'Components: Stack, Grid (columns 1-4), Card, Heading, Text, Metric (label/value/change/detail/tone), BarChart, LineChart, DonutChart (title + data:[{label,value}]), Table (columns + rows), HorizonControl (initialMonths + options), CostChart (currency + providers:[{label,monthly,upfront}]).',
+    'Stack/Grid/Card may have children; all other components are leaves.',
+    'Use trusted component JSON only — never HTML, scripts, events or expressions.',
+  ].join('\n');
+}
+
+function KitEmpty({ title, body, action }) {
   const root = useRef(null), handle = useRef(null);
+  const run = useRef(null);
+  run.current = action?.onClick ?? null;
   useEffect(() => {
-    handle.current = mountEmpty(root.current, { title, body });
+    handle.current = mountEmpty(root.current, {
+      title, body,
+      ...(action ? { action: { label: action.label, onClick: () => run.current?.() } } : {}),
+    });
     return () => { handle.current?.dispose(); handle.current = null; };
   }, []);
-  useEffect(() => { handle.current?.update({ title, body }); }, [title, body]);
+  useEffect(() => {
+    handle.current?.update({
+      title, body,
+      ...(action ? { action: { label: action.label, onClick: () => run.current?.() } } : {}),
+    });
+  }, [title, body, action?.label]);
   return <div ref={root} className="kit-mount" />;
 }
 
@@ -37,7 +57,7 @@ function KitBanner({ tone, title, body }) {
   return <div ref={root} className="kit-mount banner-mount" />;
 }
 
-function CanvasMenu({ artifact, sessionId }) {
+function CanvasMenu({ sessionId }) {
   const root = useRef(null), handle = useRef(null);
   useEffect(() => {
     handle.current = mountMenu(root.current, {
@@ -46,23 +66,16 @@ function CanvasMenu({ artifact, sessionId }) {
     return () => { handle.current?.dispose(); handle.current = null; };
   }, []);
   useEffect(() => {
-    handle.current?.update({ items: [
-      { id: 'exportJson', label: 'Export JSON', disabled: !artifact },
-      { id: 'copyJson', label: 'Copy JSON', disabled: !artifact },
-      { id: 'copyPath', label: 'Copy file path', disabled: !sessionId },
-    ] });
-  }, [artifact, sessionId]);
+    handle.current?.update({ items: [{ id: 'copyPath', label: 'Copy file path', disabled: !sessionId }] });
+  }, [sessionId]);
   return <div ref={root} className="kit-mount menu-mount" />;
 }
-
-const actions = { current: {} };
 
 function App() {
   const [connected, setConnected] = useState(false);
   const [sessionId, setSessionId] = useState(null);
   const [artifact, setArtifact] = useState(null);
   const [months, setMonths] = useState(12);
-  const [view, setView] = useState('preview');
   const [error, setError] = useState('');
   const [notice, setNotice] = useState('');
   const session = useRef(null), generation = useRef(0), alive = useRef(true);
@@ -72,15 +85,6 @@ function App() {
     setNotice(message);
     clearTimeout(noticeTimer.current);
     noticeTimer.current = setTimeout(() => { if (alive.current) setNotice(''); }, 2500);
-  }
-
-  function sourceText() {
-    if (!artifact) return '';
-    try {
-      return JSON.stringify(snapshot(artifact, months), null, 2);
-    } catch {
-      return JSON.stringify(artifact, null, 2);
-    }
   }
 
   async function refresh() {
@@ -125,27 +129,20 @@ function App() {
     if (id) void refresh();
   }
 
-  actions.current.exportJson = () => {
-    const url = URL.createObjectURL(new Blob([sourceText() + '\n'], { type: 'application/json' }));
-    const anchor = document.createElement('a');
-    anchor.href = url; anchor.download = 'canvas.json'; anchor.click();
-    setTimeout(() => URL.revokeObjectURL(url), 1000);
-    flash('Exported the current view as canvas.json');
-  };
-  actions.current.copyJson = async () => {
-    try {
-      await host.writeClipboard(sourceText() + '\n');
-      flash('Copied the canvas JSON to the clipboard');
-    } catch (failure) {
-      setError(`Could not copy the canvas JSON: ${errorMessage(failure)}`);
-    }
-  };
   actions.current.copyPath = async () => {
     try {
       await host.writeClipboard(sessionFile(session.current));
       flash('Copied the canvas file path');
     } catch (failure) {
       setError(`Could not copy the file path: ${errorMessage(failure)}`);
+    }
+  };
+  actions.current.prompt = async () => {
+    try {
+      await host.compose({ text: agentPrompt(sessionFile(session.current)), mode: 'append' });
+      flash('Drafted a Canvas request in the composer');
+    } catch (failure) {
+      setError(`Could not draft the request: ${errorMessage(failure)}`);
     }
   };
 
@@ -171,24 +168,16 @@ function App() {
     ? { title: 'Connecting…', body: 'Waiting for the host.' }
     : !sessionId
       ? { title: 'No conversation', body: 'Open a conversation to see its canvas.' }
-      : { title: 'Empty canvas', body: 'Ask the agent to visualize or present data in this conversation.' };
+      : { title: 'Empty canvas', body: 'Ask the agent to visualize or present data in this conversation.', action: { label: 'Draft a request for the agent', onClick: () => actions.current.prompt() } };
 
   return <main>
     {artifact && <div className="controls">
-      <div className="view-switch" role="group" aria-label="Canvas view">
-        <button aria-label="Preview" title="Preview" aria-pressed={view === 'preview'} onClick={() => setView('preview')}><Icon name="eye" /></button>
-        <button aria-label="JSON source" title="JSON source" aria-pressed={view === 'source'} onClick={() => setView('source')}><Icon name="code" /></button>
-      </div>
-      <CanvasMenu artifact={artifact} sessionId={sessionId} />
+      <CanvasMenu sessionId={sessionId} />
     </div>}
     {error && <KitBanner tone="error" title="Could not show this canvas" body={error} />}
     {notice && !error && <KitBanner tone="success" title={notice} />}
     <div className="workspace">
-      {view === 'source' ? (
-        artifact ? <pre className="source" aria-label="Canvas JSON source">{sourceText()}</pre> : <KitEmpty title={empty.title} body={empty.body} />
-      ) : (
-        artifact ? <article className="canvas" aria-label="Canvas preview"><Canvas artifact={artifact} months={months} setMonths={setMonths} /></article> : <KitEmpty title={empty.title} body={empty.body} />
-      )}
+      {artifact ? <article className="canvas" aria-label="Canvas preview"><Canvas artifact={artifact} months={months} setMonths={setMonths} /></article> : <KitEmpty title={empty.title} body={empty.body} action={empty.action} />}
     </div>
     <span className="sr-only" role="status" aria-live="polite">{artifact ? 'Canvas for this conversation is shown.' : error ? `Canvas unavailable: ${error}` : 'Empty canvas.'}</span>
   </main>;

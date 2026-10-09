@@ -3,19 +3,31 @@
 OpenChamber 2.2.0+ panel extension for agent-presented data visualization. One
 conversation owns one canvas: the panel follows the currently selected
 conversation and renders its JSON with trusted components. JSON never supplies
-JavaScript or HTML. Uses json-render 0.21.0 and OpenChamber SDK 2.2.0,
-including its UI kit (`applyHostReady`, `mountEmpty`, `mountBanner`,
-`mountMenu`) for theme, empty states, notices and the actions menu. The
-preview/source icon toggle stays custom to match the reference frame.
+JavaScript or HTML, and the panel never shows JSON to the user. Uses
+json-render 0.21.0 and OpenChamber SDK 2.2.0.
+
+Styling is derived entirely from the host theme variables written by
+`applyHostReady` (`--oc-bg`, `--oc-fg`, `--oc-elevated`, `--oc-muted`,
+`--oc-border`, `--oc-hover`, `--oc-primary`, `--oc-radius`, `--oc-font`, the
+`--oc-*` status colours and the `--oc-*-text` aliases). Cards, tables, badges
+and controls use the same radius, borders and type scale as the rest of
+OpenChamber, so a canvas looks like part of the app rather than a dropped-in
+website. Empty states, notices and the actions menu use the SDK UI kit
+(`mountEmpty`, `mountBanner`, `mountMenu`).
 
 ## Use
 
-Open Canvas from the rail. The frame holds only preview/source toggles and an
-actions menu, top-right — and only while the conversation has a canvas. Empty
-states show no buttons at all. There are no artifact names, no selector and no
-management: an empty conversation shows an empty canvas until its agent writes
-one. Switching conversations switches canvases immediately; nothing from the
-previous conversation is kept on screen.
+Open Canvas from the rail. The panel is preview-only: it renders the
+conversation's canvas and never shows raw JSON. There is no export, no copy
+JSON, no source view. While a canvas exists, a single top-right menu offers
+**Copy file path** — useful when pointing an agent at the file. The agent's
+file is never rewritten by the panel.
+
+An empty conversation shows an empty canvas with one action, **Draft a request
+for the agent**, which inserts a ready-made Canvas prompt (contract, component
+list and exact file path) into the composer. Nothing is sent automatically;
+edit or send it yourself. Empty states and notices use the SDK UI kit; there
+are no other buttons.
 
 The actions menu holds Export JSON, Copy JSON and Copy file path. Export and
 Copy use the current horizon-control selection. Horizon controls, table
@@ -38,6 +50,26 @@ The panel polls the session file every three seconds while visible, plus on
 focus and on every conversation switch. Late reads after a switch are
 discarded. A missing file is an empty canvas, not an error. Invalid JSON shows
 an error banner and keeps the last good rendering for that conversation.
+
+## Advertising to agents
+
+The contract above only helps an agent that already knows Canvas exists. OpenChamber
+extensions cannot contribute skills or instruction files, so the panel advertises
+through what it can reach:
+
+| Mechanism | Who sees it | Behaviour |
+| --- | --- | --- |
+| Empty-state action | User | **Draft a request for the agent** composes the full contract, component list and exact path into the composer |
+| **Copy file path** menu | User | Hands the precise session file to an agent or a person |
+| Empty-state text | User | Names the intent: ask the agent to visualize or present data |
+| `contributes.commands` / `actions` | User | Not used: a slash command resolves to an attach chip, not a prompt, so it cannot carry the contract cleanly |
+| Host skill or `AGENTS.md` | Agent | Outside the extension. Strongest autonomous discovery; recommended as a small follow-up |
+
+Recommended follow-up: add a short Canvas note to the agent instruction surface
+(a skill or the repository `AGENTS.md`) that states the file path pattern, the
+catalog components and "hidden in the Canvas panel — write JSON, never chat".
+That removes the compose step for agents that read instructions. The compose
+action covers the case where no instruction was read.
 
 ## Agent contract
 

@@ -3,15 +3,15 @@ import { defineRegistry, JSONUIProvider, Renderer } from '@json-render/react';
 import { catalog, initialMonths, totalCost } from './catalog.js';
 
 const Controls = createContext(null);
-const colors = ['#6389f2', '#52c4ad', '#e4b35c', '#b38cee', '#e788a2'];
+const colors = ['var(--series-1)', 'var(--series-2)', 'var(--series-3)', 'var(--series-4)', 'var(--series-5)'];
 function LineChart({ props }) {
   const maximum = Math.max(1, ...props.data.map(item => item.value));
   const points = props.data.map((item, index) => [24 + index / Math.max(1, props.data.length - 1) * 552, 160 - item.value / maximum * 136]);
   const line = points.map(point => point.join(',')).join(' ');
   return <section className="card chart-card"><div className="section-heading"><h2>{props.title}</h2><span className="chart-label">{props.unit ?? 'TREND'}</span></div><svg className="line-chart" viewBox="0 0 600 180" preserveAspectRatio="none" role="img" aria-label={props.title}><desc>{props.data.map(item => `${item.label}: ${item.value}`).join(', ')}</desc>
     {[24, 69, 114, 160].map(y => <line key={y} x1="24" x2="576" y1={y} y2={y} className="chart-grid" />)}
-    <polygon points={`24,160 ${line} 576,160`} fill={colors[0]} opacity=".12" />
-    <polyline points={line} fill="none" stroke={colors[0]} strokeWidth="3" strokeLinejoin="round" />
+    <polygon points={`24,160 ${line} 576,160`} fill={colors[0]} fillOpacity=".12" />
+    <polyline points={line} fill="none" stroke={colors[0]} strokeWidth="2.5" strokeLinejoin="round" strokeLinecap="round" />
     {points.map(([x, y], index) => <circle key={index} cx={x} cy={y} r="4" fill={colors[0]}><title>{props.data[index].label}: {props.data[index].value.toLocaleString()} {props.unit}</title></circle>)}
   </svg><div className="axis-labels"><span>{props.data[0].label}</span><span>{props.data.at(-1).label}</span></div></section>;
 }
@@ -35,7 +35,7 @@ function Table({ props }) {
     const left = a[sort.index], right = b[sort.index];
     return (typeof left === 'number' && typeof right === 'number' ? left - right : String(left ?? '').localeCompare(String(right ?? ''))) * sort.direction;
   });
-  return <section className="card"><div className="section-heading"><h2>{props.title}</h2><label>Filter rows <input value={query} onChange={event => setQuery(event.target.value)} type="search" /></label></div><div className="table-scroll"><table>
+  return <section className="card"><div className="section-heading"><h2>{props.title}</h2><div className="search-field"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true"><circle cx="11" cy="11" r="7" /><path d="m20 20-3.5-3.5" /></svg><input value={query} onChange={event => setQuery(event.target.value)} type="search" aria-label="Filter rows" placeholder="Filter rows" /></div></div><div className="table-scroll"><table>
     <thead><tr>{props.columns.map((column, index) => <th key={index} aria-sort={sort?.index === index ? sort.direction === 1 ? 'ascending' : 'descending' : 'none'}><button onClick={() => setSort({ index, direction: sort?.index === index ? -sort.direction : 1 })}>{column}{sort?.index === index ? sort.direction === 1 ? ' ↑' : ' ↓' : ''}</button></th>)}</tr></thead>
     <tbody>{rows.map((row, index) => <tr key={index}>{row.map((cell, column) => <td key={column}>{String(cell ?? '—')}</td>)}</tr>)}</tbody>
   </table></div><p className="muted">{rows.length} of {props.rows.length} rows{rows.length === 0 ? ' · No matching rows' : ''}</p></section>;
