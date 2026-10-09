@@ -1,5 +1,15 @@
 # Canvas verification
 
+## 0.9.0
+
+- Visual alignment with the app's own panels: cards are filled (`color-mix(fg 5.5%)`),
+  borderless, 12 px radius, 16 px padding; table rows are filled rounded rows with
+  gaps instead of hairlines; section titles 1.0625rem; panel padding 16 px.
+  Inspected in MCP Chromium at 700 px, light and dark.
+- 28 Bun tests pass; installed with the `filesystem` + `sessions` grants.
+
+## 0.8.1
+
 Current checks on OpenChamber web 2.2.0 are **MCP Chromium**, not native desktop
 acceptance. Tests use the production registry and actual panel code.
 

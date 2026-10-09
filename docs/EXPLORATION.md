@@ -1106,7 +1106,25 @@ search field lost its double focus ring, and the sort arrow now reserves a
 fixed-width slot so sorting no longer reflows columns (measured identical
 column widths before and after sorting).
 
-### Optimizing Canvas with the app's own Mermaid renderer (option, not yet taken)
+### Canvas 0.9 and the workspace skill (implemented)
+
+Canvas 0.9 aligns the panel with OpenChamber's own panels (Files, Git, Context):
+borderless filled cards, 12 px radius, filled row-style tables, 16 px panel
+padding and slightly larger section titles. Decision recorded from the operator's
+reference screenshots rather than invented.
+
+A new `workspace` skill collection was added under
+`/home/core/agents/skills/workspace` (umbrella `SKILL.md` plus
+`references/canvas.md`, `references/browser.md` and a maintainer `README.md`),
+and the collection table in `/home/core/agents/README.md` now lists six
+collections. It owns product-surface guidance — the Canvas contract, and the
+native-panel versus standalone-browser-MCP boundary — so a future panel module
+has one obvious owner.
+
+The operator chose to keep the full `mermaid` dependency rather than switch to
+`beautiful-mermaid`; the option below stays recorded for reference.
+
+### Optimizing Canvas with the app's own Mermaid renderer (option, not taken)
 
 The app does not expose its markdown renderer to extensions, so a Canvas
 `Diagram` cannot reuse it directly. It can, however, reuse the **same library**:
