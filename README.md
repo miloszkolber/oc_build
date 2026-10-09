@@ -13,7 +13,7 @@ This repository builds the OpenChamber web image and standalone distroless `open
 | `.github/workflows/build.yml` | GitHub Actions workflow; GitHub requires workflows to remain here |
 | `NOTICES.md` | Third-party attribution for the image and both packages |
 
-`extensions/` holds two different kinds of package. Agent Browser is an OpenChamber guest extension: OpenChamber installs it, the user approves its local service, and it contributes the browser panel and provider. Rembric is an OpenCode V2 plugin: OpenCode loads it, and it never appears in OpenChamber's extension list.
+`extensions/agent-browser` is historical OpenChamber guest source. It must not be installed on Core without fresh operator authorization. Rembric is an active OpenCode V2 plugin and never appears in OpenChamber's extension list.
 
 The repository is public, so GitHub also makes the linked `ghcr.io/miloszkolber/openchamber` package public. The image release checks record this expectation. Never commit host configuration or secrets.
 

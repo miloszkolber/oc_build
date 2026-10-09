@@ -10,14 +10,10 @@ on:
       - 'docker/entrypoint.sh'
       - 'docker/entrypoint.test.mjs'
       - 'docker/self-update.patch'
-      - 'docker/browser-panel.css'
-      - 'docker/patch-browser-surface.mjs'
-      - 'docker/surface-*'
       - 'docker/openchamber-licence.txt'
       - 'docker/check-image.mjs'
       - 'docker/releases*'
       - 'docker/latest*'
-      - 'extensions/agent-browser/**'
       - 'browser/**'
       - '.github/workflows/build.yml'
   schedule:
@@ -93,7 +89,7 @@ jobs:
         with:
           bun-version: '1.4.2'
       - name: Test release discovery and latest promotion contracts
-        run: node --test docker/releases.test.mjs docker/latest.test.mjs docker/surface-input.test.mjs
+        run: node --test docker/releases.test.mjs docker/latest.test.mjs
       - name: Bundle the Rembric V2 plugin and check its export
         working-directory: extensions/rembric
         run: |
@@ -126,7 +122,7 @@ jobs:
         with:
           persist-credentials: false
       - name: Test release discovery and latest promotion contracts
-        run: node --test docker/releases.test.mjs docker/latest.test.mjs docker/surface-input.test.mjs
+        run: node --test docker/releases.test.mjs docker/latest.test.mjs
       - name: Discover every unbuilt eligible upstream release
         id: releases
         env:
