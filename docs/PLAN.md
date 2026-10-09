@@ -14,7 +14,7 @@
 | P1 | Consolidate docs/remove archive file | Complete | |
 | P1 | Actual desktop/LAN acceptance | Complete — operator accepted | |
 | P1 | Independent app/browser builds | Complete — CI publication verified | Verified Google public cache fixes runner HTTP429. App CI37994072146 and browser CI37994072071 pass checks/publication; app provenance/privacy/latest promotion pass. Both local restricted builds and 42 tests pass. No new credentials or services. |
-| P1 | Generative UI canvas extension | 0.8 installed — desktop acceptance pending | Read-only panel; Mermaid `Diagram`; subagent sessions show the parent canvas; empty state shows a copyable agent request; no toasts. Confirm native desktop appearance and behavior. |
+| P1 | Generative UI canvas extension | 0.8.1 installed — desktop acceptance pending | Read-only panel; Mermaid `Diagram`; subagent sessions show the parent canvas; empty state shows a copyable agent request; no toasts; readable type. Confirm native desktop appearance and behavior. |
 | P1 | External-agent native feature integration | Pending | Inventory native tools actually advertised to external OpenCode; add only missing scoped integration, without assuming managed-child injection or duplicating browser control. |
 | P2 | Visual QA/OpenPencil handoff | Paused | Real app chosen; desktop/mobile/light/dark suites pass; import/reopen/export records fidelity losses. macOS/file-sharing steps supplied. |
 | P3 | Doop canvas/comment-to-session bridge | Paused | Selected HTML/comments/actual image reach correct repository/worktree/session; reload/conflict/switch safety. |

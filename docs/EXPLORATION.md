@@ -1096,6 +1096,34 @@ and **Insert into composer** below — for transparency rather than a bare
 button. Success toasts were removed; they shifted the centered empty state and
 were the cause of the mis-alignment the operator flagged. A read failure is now
 an absolutely-positioned overlay, verified not to move the canvas or empty
-state. A type/spacing pass (h1 1.125rem, h2 and body 0.8125rem, metric 1.5rem,
-14 px card padding, host radius) brings the canvas closer to OpenChamber's
-compact chrome; inspected at 520–760 px in light and dark.
+state. A type/spacing pass brings the canvas closer to OpenChamber's compact
+chrome; inspected at 520–760 px in light and dark.
+
+Canvas 0.8.1 corrects the type pass: `applyHostReady` pins the panel root at
+`0.875rem` (14 px), so the earlier rem values rendered 12.25 px body text.
+Body/table text is now `1rem` (14 px), h1 `1.375rem`, metric `2rem`. The table
+search field lost its double focus ring, and the sort arrow now reserves a
+fixed-width slot so sorting no longer reflows columns (measured identical
+column widths before and after sorting).
+
+### Optimizing Canvas with the app's own Mermaid renderer (option, not yet taken)
+
+The app does not expose its markdown renderer to extensions, so a Canvas
+`Diagram` cannot reuse it directly. It can, however, reuse the **same library**:
+OpenChamber bundles `beautiful-mermaid` (Luki Labs, MIT), which is published on
+npm at **1.1.3**. Measured facts: the app's vendored chunk is ~155 KB, while the
+`mermaid` dependency Canvas ships is ~1.8 MB across 105 lazy chunks;
+`beautiful-mermaid` is "zero DOM dependencies" (it returns SVG strings) and
+covers flowchart, sequence, class, ER, state and xychart. It does **not** cover
+gantt, pie, journey, timeline, mindmap, quadrant or sankey.
+
+Recommendation: swap `mermaid` → `beautiful-mermaid` for an ~10× smaller bundle,
+deterministic offline rendering and rendering identical to chat. Accept the
+smaller diagram set, or keep full `mermaid` for the exotic types. Not done in
+this slice because it changes the diagram contract and needs its own render
+verification.
+
+Related discovery: the operator reports agents do **not** spontaneously emit
+Mermaid blocks in chat, even though OpenChamber renders them. That strengthens
+the case for advertising Canvas (and Mermaid) to agents through the instruction
+surface, since the capability exists but is not being used.
