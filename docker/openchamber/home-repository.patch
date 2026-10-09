@@ -1,0 +1,16 @@
+--- a/server/lib/git/service.js
++++ b/server/lib/git/service.js
+@@ -2519,6 +2519,13 @@
+   const repoRoot = topLevel.stdout.trim();
+   const reason = unsupportedRepositoryRootReason(repoRoot);
+   if (!reason) return true;
++  // Opt in to one existing home-root checkout, never filesystem roots.
++  // Keep repository-root.js unchanged so VCS initialization remains guarded.
++  const allowedHome = String(process.env.OPENCHAMBER_ALLOWED_HOME_REPOSITORY ?? '').trim();
++  if (reason === 'home' && allowedHome && path.resolve(allowedHome) === path.resolve(repoRoot)) {
++    return true;
++  }
++
+   if (!warnedUnsupportedRoots.has(repoRoot)) {
+     warnedUnsupportedRoots.add(repoRoot);
+     console.warn(`[git] Ignoring repository rooted at ${repoRoot} (${reason}): Git features are disabled for ${directoryPath}`);

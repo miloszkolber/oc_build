@@ -10,6 +10,7 @@ on:
       - 'docker/openchamber/entrypoint.sh'
       - 'docker/openchamber/entrypoint.test.mjs'
       - 'docker/openchamber/self-update.patch'
+      - 'docker/openchamber/home-repository.patch'
       - 'docker/openchamber/openchamber-licence.txt'
       - 'docker/openchamber/check-image.mjs'
       - 'docker/openchamber/releases*'

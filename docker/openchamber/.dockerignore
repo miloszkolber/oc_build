@@ -5,4 +5,5 @@
 !entrypoint.sh
 !entrypoint.test.mjs
 !self-update.patch
+!home-repository.patch
 !openchamber-licence.txt

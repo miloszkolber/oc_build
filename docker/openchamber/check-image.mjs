@@ -34,6 +34,26 @@ if (!browser) {
   assert.match(terminalOutput, /pty-ready/);
   run('sh', ['-c', 'cd /tmp && HOME=/tmp git init -q image-check && git -C image-check status --porcelain']);
   run('sh', ['-c', 'export HOME=/tmp; git -C /tmp/image-check -c user.name=ImageCheck -c user.email=image-check@example.invalid commit -q --allow-empty -m fixture; git -C /tmp/image-check worktree add -q -b probe /tmp/image-worktree; git -C /tmp/image-worktree status --porcelain; git -C /tmp/image-check worktree remove /tmp/image-worktree']);
+  run('node', ['--input-type=module', '-e', `
+    import assert from 'node:assert/strict';
+    process.env.HOME = '/tmp/image-check';
+    const { isGitRepository } = await import('${root}/server/lib/git/service.js');
+    const { vcsInitRefusal, unsupportedRepositoryRootReason } = await import('${root}/server/lib/git/repository-root.js');
+    delete process.env.OPENCHAMBER_ALLOWED_HOME_REPOSITORY;
+    assert.equal(await isGitRepository('/tmp/image-check'), false);
+    process.env.OPENCHAMBER_ALLOWED_HOME_REPOSITORY = '/tmp';
+    assert.equal(await isGitRepository('/tmp/image-check'), false);
+    process.env.OPENCHAMBER_ALLOWED_HOME_REPOSITORY = '/tmp/image-check';
+    assert.equal(await isGitRepository('/tmp/image-check'), true);
+    assert.equal(await isGitRepository('/tmp'), false);
+    assert.equal(unsupportedRepositoryRootReason('/'), 'filesystem-root');
+    assert(vcsInitRefusal('POST', '/api/vcs/init', { 'x-opencode-directory': '/tmp/image-check' }));
+    assert(vcsInitRefusal('POST', '/api/vcs/init', { 'x-opencode-directory': '/' }));
+    delete process.env.OPENCHAMBER_ALLOWED_HOME_REPOSITORY;
+    assert.equal(await isGitRepository('/tmp/image-check'), false);
+    process.env.HOME = '/tmp';
+    assert.equal(await isGitRepository('/tmp/image-check'), true);
+  `]);
   assert.equal(run('node', [`${root}/bin/cli.js`, '--version']), process.env.EXPECTED_VERSION);
   for (const directory of ['bin', 'server']) for (const file of readdirSync(`${root}/${directory}`, { recursive: true })) {
     if (/\.(js|mjs|cjs)$/.test(file) && !/\.(test|spec)\./.test(file)) run('node', ['--check', `${root}/${directory}/${file}`]);

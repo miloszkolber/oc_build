@@ -19,6 +19,8 @@ The workflow runs isolated image checks before publication. `check-image.mjs` ve
 
 Pure distroless without any OS tools is not compatible with native terminals, Git SSH remotes, shebang scripts or terminal process cleanup. These small, explicitly consumed tools are the deliberate exception. Project language/package toolchains and optional integration credentials are not all bundled into the web server.
 
+Upstream rejects repositories rooted at the user's home directory even when Git itself detects them. The image applies `home-repository.patch`: `OPENCHAMBER_ALLOWED_HOME_REPOSITORY` opts in to exactly one existing home-root checkout, such as Core's `/home/core`. This is a local image setting, not an upstream environment variable. Unset/mismatched paths stay rejected. Filesystem-root detection and home/root VCS initialization guards remain unchanged. Restricted image checks cover the opt-in and both guards. The strict patch fails the build if the upstream implementation changes.
+
 Publishing does not itself deploy a container. Watchtower or an explicit host rollout does that.
 
 ## Build locally

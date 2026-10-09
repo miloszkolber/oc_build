@@ -16,6 +16,7 @@ RUN apt-get update \
 
 WORKDIR /opt/openchamber
 COPY self-update.patch /tmp/self-update.patch
+COPY home-repository.patch /tmp/home-repository.patch
 
 RUN set -eu; \
     version="${OPENCHAMBER_VERSION}"; \
@@ -34,6 +35,7 @@ RUN set -eu; \
     && rm /tmp/openchamber.tgz \
     && test "$(node -e 'console.log(require("./package.json").version)')" = "$version" \
     && patch --batch --forward --fuzz=0 -p1 < /tmp/self-update.patch \
+    && patch --batch --forward --fuzz=0 -p1 < /tmp/home-repository.patch \
     && npm install -g npm@12 --no-audit --no-fund \
     && npm install --omit=dev --ignore-scripts --no-audit --no-fund \
     && rm -rf /tmp/* /root/.npm
