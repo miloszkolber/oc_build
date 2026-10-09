@@ -248,6 +248,11 @@ test('published image provenance must identify the private build source, checked
   assert.deepEqual(verifyOrigin(labels, input), {
     source: 'https://github.com/miloszkolber/oc_build', revision: 'e'.repeat(40), version: '2.0.1', release_id: '395994070',
   });
+  // Images from before the repository rename carry the former source URL and
+  // remain valid provenance because GitHub redirects it to the same repository.
+  assert.deepEqual(verifyOrigin({ ...labels, 'org.opencontainers.image.source': 'https://github.com/miloszkolber/openchamber' }, input), {
+    source: 'https://github.com/miloszkolber/oc_build', revision: 'e'.repeat(40), version: '2.0.1', release_id: '395994070',
+  });
   for (const [key, wrong] of [
     ['org.opencontainers.image.source', 'https://github.com/openchamber/openchamber'],
     ['org.opencontainers.image.revision', 'f'.repeat(40)],

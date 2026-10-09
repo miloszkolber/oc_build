@@ -12,6 +12,10 @@ export const REPOSITORY = 'miloszkolber/oc_build';
 // independent of the build repository rename.
 export const IMAGE = 'ghcr.io/miloszkolber/openchamber';
 export const PACKAGE = IMAGE.slice('ghcr.io/'.length);
+// Images published before the build repository was renamed to oc_build carry the
+// former source URL. GitHub redirects it to the same repository, so it is
+// accepted as equivalent build provenance.
+const PRE_RENAME_SOURCE = 'https://github.com/miloszkolber/openchamber';
 export const CUTOFF = '2026-09-24T19:14:25Z';
 // Mirrors the build repository's visibility; GitHub copies it to the package.
 const EXPECTED_PACKAGE_VISIBILITY = 'public';
@@ -276,7 +280,8 @@ export function verifyOrigin(labels, { version, releaseId, sourceCommit }) {
   validateId(releaseId);
   requireValue(typeof sourceCommit === 'string' && /^[a-f0-9]{40}$/.test(sourceCommit), 'Expected build source commit');
   requireValue(labels && typeof labels === 'object' && !Array.isArray(labels), 'Expected image labels');
-  requireValue(labels['org.opencontainers.image.source'] === `https://github.com/${REPOSITORY}`,
+  const source = labels['org.opencontainers.image.source'];
+  requireValue(source === `https://github.com/${REPOSITORY}` || source === PRE_RENAME_SOURCE,
     'Published image has the wrong build source');
   requireValue(labels['org.opencontainers.image.revision'] === sourceCommit, 'Published image has the wrong source commit');
   requireValue(labels['org.opencontainers.image.version'] === version, 'Published image has the wrong version');
