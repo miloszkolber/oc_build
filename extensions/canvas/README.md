@@ -18,14 +18,14 @@ website. Empty states, notices and the actions menu use the SDK UI kit
 ## Use
 
 Open Canvas from the rail. The panel is a read-only presentation: it renders
-the conversation's canvas and nothing else. There are no controls, no menu, no
-toolbar — not even when a canvas exists. Raw JSON is never shown, and the
-panel never writes the agent's file.
+the conversation's canvas and nothing else. There is no toolbar and no menu.
+Raw JSON is never shown, and the panel never writes the agent's file.
 
-An empty conversation shows an empty canvas with one action, **Draft a request
-for the agent**, which inserts a ready-made Canvas prompt (contract, component
-list and exact file path) into the composer. Nothing is sent automatically;
-edit or send it yourself. Empty states and notices use the SDK UI kit.
+An empty conversation shows the request the agent needs, as a read-only field:
+collapsed with a fade, expandable to a scrollable view, with a copy button and
+**Insert into composer** below. Nothing is sent automatically — copy it or
+insert it, then send it yourself. There are no toasts; a read failure appears
+as a floating notice that does not move the canvas.
 
 The actions menu holds Export JSON, Copy JSON and Copy file path. Export and
 Copy use the current horizon-control selection. Horizon controls, table
@@ -64,14 +64,13 @@ through what it can reach:
 
 | Mechanism | Who sees it | Behaviour |
 | --- | --- | --- |
-| Empty-state action | User | **Draft a request for the agent** composes the full contract, component list and exact path into the composer |
+| Read-only request field | User | Shows the full contract, component list and exact path; copy button, expand/scroll, **Insert into composer** |
 | Empty-state text | User | Names the intent: ask the agent to visualize or present data |
 | `contributes.commands` / `actions` | User | Not used: a slash command resolves to an attach chip, not a prompt, so it cannot carry the contract cleanly |
 | Host skill or `AGENTS.md` | Agent | Outside the extension. Strongest autonomous discovery; recommended as a small follow-up |
 
-The panel deliberately exposes no toolbar of its own. Earlier versions offered
-**Copy file path**, but the agent request draft covers the same need without
-permanent chrome.
+The panel deliberately exposes no toolbar of its own; the request field lives
+only in the empty state.
 
 Recommended follow-up: add a short Canvas note to the agent instruction surface
 (a skill or the repository `AGENTS.md`) that states the file path pattern, the
@@ -120,7 +119,7 @@ export its JSON elsewhere — the panel is a presentation surface, not storage.
 ## Build and install
 
 1. Run `bun install --frozen-lockfile`, `bun test`, then `bun run package` here.
-2. Install `dist/openchamber-generative-canvas-0.7.0.zip` through OpenChamber Extensions.
+2. Install `dist/openchamber-generative-canvas-0.8.0.zip` through OpenChamber Extensions.
 3. Review and approve the `/data/.db/openchamber/canvas/**` filesystem and `sessions` declarations.
 4. Reload the client to discover the updated Canvas entry. Canvas is panel-only;
    it declares no page surface.

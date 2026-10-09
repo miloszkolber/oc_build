@@ -1072,10 +1072,30 @@ A QA bug was found and fixed here — the refresh guard compared the displayed
 session id against the canvas (parent) id, so parent reads were discarded; the
 guard now captures the session at request time.
 
-### Skill vs host context (open question, not implemented)
+### Skill vs host context (answered)
+
+OpenChamber **does** render Mermaid itself: the app bundles `beautiful-mermaid`
+(~155 KB, much smaller than the 1.8 MB Mermaid graph) in its markdown renderer,
+and exposes a `mermaidRenderingMode` setting. So an agent can already put a
+Mermaid block in chat. Canvas's value is therefore the *combined* presentation —
+metrics, charts, tables and diagrams in one structured canvas — not Mermaid
+alone. Worth noting as a possible later optimization: OpenChamber's renderer is
+far lighter than the Mermaid dependency Canvas ships.
 
 A skill that documents extension functionality would duplicate context the host
-already injects, and extensions cannot ship skills. Recommendation: keep the
-panel's compose action as the just-in-time channel, and if autonomous discovery
-is still missing, add one short Canvas note to the agent instruction surface
-rather than a full skill.
+already injects, and extensions cannot ship skills. Decision: keep the
+in-panel request as the just-in-time channel (now a read-only field with copy
+and insert), and add at most one short Canvas note to the agent instruction
+surface if autonomous discovery still proves missing.
+
+### Delivered: request field, toast removal and alignment pass (Canvas 0.8)
+
+The empty state now shows the agent request in a read-only field — collapsed
+with an overflow gradient, expandable to a scrollable view, with a copy button
+and **Insert into composer** below — for transparency rather than a bare
+button. Success toasts were removed; they shifted the centered empty state and
+were the cause of the mis-alignment the operator flagged. A read failure is now
+an absolutely-positioned overlay, verified not to move the canvas or empty
+state. A type/spacing pass (h1 1.125rem, h2 and body 0.8125rem, metric 1.5rem,
+14 px card padding, host radius) brings the canvas closer to OpenChamber's
+compact chrome; inspected at 520–760 px in light and dark.
