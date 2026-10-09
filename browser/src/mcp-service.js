@@ -43,7 +43,7 @@ const isAuthorized = (request, token) => {
 const initializeResult = (requestedVersion) => ({
   protocolVersion: requestedVersion === PROTOCOL_VERSION ? requestedVersion : PROTOCOL_VERSION,
   capabilities: { tools: { listChanged: false } },
-  serverInfo: { name: 'browser', version: '1.1.0' },
+  serverInfo: { name: 'browser', version: '1.1.1' },
   instructions: 'These tools control standalone Chromium, not OpenChamber native Preview, terminal, sessions or worktrees. Tabs, cookies and login state are separate from OpenChamber; MCP pages do not automatically appear in its desktop UI. Report evidence as verified in MCP Chromium, not verified in OpenChamber desktop UI unless that UI was checked directly. Archived Agent Browser extension instructions do not apply.',
 });
 

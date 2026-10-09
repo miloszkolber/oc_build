@@ -9,26 +9,38 @@ export const startBroker = async ({ env = process.env, configPath } = {}) => {
   let runtime = null;
   let lastActivity = Date.now();
   let queue = Promise.resolve();
+  let idleTimer = null;
+  let closing = false;
   const reset = async () => { const old = runtime; runtime = null; await old?.close(); };
   const enqueue = task => { const next = queue.catch(() => {}).then(task); queue = next; return next; };
+  const scheduleIdle = () => {
+    clearTimeout(idleTimer);
+    if (closing || !runtime) return;
+    idleTimer = setTimeout(() => {
+      void enqueue(async () => {
+        if (runtime && Date.now() - lastActivity >= config.idleTimeoutMs) await reset();
+        else scheduleIdle();
+      }).catch(error => console.error(error.message));
+    }, Math.max(1, config.idleTimeoutMs - (Date.now() - lastActivity)));
+    idleTimer.unref();
+  };
   const manager = {
     performMcp(name, args, signal) {
       return enqueue(async () => {
         signal?.throwIfAborted();
+        clearTimeout(idleTimer);
         lastActivity = Date.now();
         if (!runtime) runtime = createBrowserRuntime({ ...config, noSandbox: env.OPENCHAMBER_BROWSER_NO_SANDBOX === '1' });
         try { return await runtime.performMcp(name, args, signal); }
         catch (error) { if (!runtime.browserCdp?.isOpen) await reset(); throw error; }
-        finally { lastActivity = Date.now(); }
+        finally { lastActivity = Date.now(); scheduleIdle(); }
       });
     },
     close: () => enqueue(reset),
   };
   const mcp = createMcpService({ runtime: manager, token: env.OPENCHAMBER_BROWSER_MCP_TOKEN, port: Number(env.OPENCHAMBER_BROWSER_MCP_PORT ?? 3002) });
   await mcp.listen();
-  const timer = setInterval(() => { void enqueue(async () => { if (runtime && Date.now() - lastActivity >= config.idleTimeoutMs) await reset(); }).catch(error => console.error(error.message)); }, Math.min(30000, config.idleTimeoutMs));
-  timer.unref();
-  return { mcp, get address() { return mcp.address; }, async close() { clearInterval(timer); await mcp.close(); await manager.close(); } };
+  return { mcp, get address() { return mcp.address; }, async close() { closing = true; clearTimeout(idleTimer); await mcp.close(); await manager.close(); } };
 };
 if (process.argv[1] && path.resolve(process.argv[1]) === fileURLToPath(import.meta.url)) {
   startBroker().then(broker => {

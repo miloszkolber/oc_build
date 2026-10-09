@@ -22,7 +22,7 @@ The browser is not an application build runner, test-framework installation, Fir
 
 ## Resource behavior
 
-The final distroless image contains bundled MCP JavaScript and Chromium's shared-library/NSS/font closure. Its only JavaScript runtime dependency is bundled `ws`; esbuild and Bun are build-only. There is no shell, Git, package manager, SDK, extension panel or screencast loop. Chromium launches lazily on browser use. After 30 minutes without actions the runtime closes and removes its profile. No profile exists at cold idle. An open active web page may consume significant resources until tabs close or expiry runs; close probe tabs when done, without shortening the settled login window.
+The final distroless image contains bundled MCP JavaScript and Chromium's shared-library/NSS/font closure. Its only JavaScript runtime dependency is bundled `ws`; esbuild and Bun are build-only. There is no shell, Git, package manager, SDK, extension panel or screencast loop. Chromium launches lazily on browser use. A one-shot deadline resets after each action and closes/removes the profile after 30 minutes idle, without periodic idle polling. No profile or expiry timer exists at cold idle. An active web page may consume significant resources until tabs close or expiry runs; close probe tabs when done, without shortening the settled login window.
 
 Build with `bun install --frozen-lockfile && bun run build`. The browser image copies only `dist/` to `/opt/browser`, plus Chromium and its library/font closure. Configuration and the existing `OPENCHAMBER_BROWSER_*` environment names remain compatible. The host MCP key is `browser`.
 
