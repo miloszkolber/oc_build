@@ -3,6 +3,7 @@
 | Directory | Kind | Loaded by |
 | --- | --- | --- |
 | [`rembric/`](rembric/README.md) | OpenCode V2 plugin | OpenCode, from its plugin configuration |
+| [`canvas/`](canvas/README.md) | Canvas panel/full-page guest | OpenChamber, from its extension ZIP |
 
 Rembric is not an OpenChamber guest extension and never appears in OpenChamber's extension list. See its README for build and install instructions.
 

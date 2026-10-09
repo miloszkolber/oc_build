@@ -2,9 +2,9 @@ name: Canvas extension
 on:
   push:
     branches: [main]
-    paths: ['extensions/generative-canvas/**', '.github/workflows/canvas.yml']
+    paths: ['extensions/canvas/**', '.github/workflows/canvas.yml']
   pull_request:
-    paths: ['extensions/generative-canvas/**', '.github/workflows/canvas.yml']
+    paths: ['extensions/canvas/**', '.github/workflows/canvas.yml']
   workflow_dispatch:
 permissions:
   contents: read
@@ -13,7 +13,7 @@ jobs:
     runs-on: ubuntu-latest
     defaults:
       run:
-        working-directory: extensions/generative-canvas
+        working-directory: extensions/canvas
     steps:
       - uses: actions/checkout@v4
       - uses: oven-sh/setup-bun@v2
@@ -26,4 +26,4 @@ jobs:
       - uses: actions/upload-artifact@v4
         with:
           name: openchamber-generative-canvas
-          path: extensions/generative-canvas/dist/openchamber-generative-canvas-*.zip
+          path: extensions/canvas/dist/openchamber-generative-canvas-*.zip

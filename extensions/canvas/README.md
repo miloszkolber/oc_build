@@ -28,6 +28,19 @@ switching artifacts. Source edits validate before preview/save. Save controls
 persists the current horizon. Table search/sort is transient. Stale saves/deletes
 are rejected with a reload/discard recovery rather than overwriting changes.
 
+## Conversation context
+
+The SDK supplies the currently selected conversation in `onReady(context.session)`
+and publishes changes through `host.onSession(listener)`. The snapshot includes
+`id`, `title`, `busy` and optional `model`/`agent`. No selected conversation is
+represented by `null`. Project directory updates are separate. This does not
+provide the conversation's message history or attach it to the local service.
+
+Canvas currently uses host readiness/theme, not the session snapshot, so its
+permanent artifacts remain global. Conversation-aware selection or explicit
+artifact associations can use these SDK events without another service. No
+conversation filtering or transcript access is implemented by this rename.
+
 ## Agent contract
 
 Write a UTF-8 `<name>.canvas.json` directly under `/data/.db/openchamber/canvas`.

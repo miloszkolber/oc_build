@@ -9,7 +9,7 @@ This repository builds the OpenChamber web image and standalone distroless `open
 | [`docker/openchamber/`](docker/openchamber/README.md) | App and browser image targets, release automation, checks and local build instructions |
 | [`docker/browser/`](docker/browser/README.md) | Active standalone Chromium MCP package, no extension panel or guest API |
 | [`extensions/rembric/`](extensions/rembric/README.md) | Rembric OpenCode V2 plugin and its standalone build/install scripts |
-| [`extensions/generative-canvas/`](extensions/generative-canvas/README.md) | File-backed json-render Canvas panel, charts and interactive quick tools |
+| [`extensions/canvas/`](extensions/canvas/README.md) | File-backed json-render Canvas panel, charts and interactive quick tools |
 
 ## Build and release
 
