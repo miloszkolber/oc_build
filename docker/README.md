@@ -7,7 +7,7 @@ This directory owns image builds, release automation and runtime checks. Core de
 - `app`: upstream OpenChamber web release, external OpenCode, Bash/Git, a single BusyBox for basic commands, SSH client and `ps` for terminal cleanup, with their library closure. A UID/GID 1000 `core` identity supports SSH and user lookup. No package manager, Chromium or Agent Browser extension.
 - `browser`: standalone `/browser` MCP package at `/opt/browser`, Chromium and its library/font/certificate closure. No OpenChamber app, shell, Git, guest service, panel, extension manifest, ZIP or surface API.
 - Both use distroless Node 22, UID 1000 and build-time dependency installation. No runtime downloads.
-- `extensions/agent-browser` and the old `browser-panel.css`/surface patch files are archived source. Neither image applies or packages them.
+- The custom Agent Browser extension and its unused panel/surface patches have been removed. Neither image packages a guest browser provider. The built-in browser panel runs in the desktop client.
 
 ## Publication
 

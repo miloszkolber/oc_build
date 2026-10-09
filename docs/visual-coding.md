@@ -2,7 +2,7 @@
 
 ## Capability contract
 
-Reuse native OpenChamber and existing OpenCode agents, not a second orchestrator. `browser` MCP is standalone Chromium, not native Preview or a desktop browser attachment. Agent Browser stays archived. Restoring visible human/agent shared-browser control needs fresh operator approval.
+Reuse native OpenChamber and existing OpenCode agents, not a second orchestrator. Prefer the native desktop browser panel for interactive browsing, annotations and OpenChamber Web actions. `browser` MCP remains standalone Chromium, not a desktop attachment. The custom Agent Browser extension has been removed.
 
 | Capability | Direction | Success criteria / boundary |
 | --- | --- | --- |

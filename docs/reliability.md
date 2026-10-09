@@ -27,7 +27,7 @@ Until repaired, Core keeps `messageSearchEnabled=false`. This stops indexing but
 
 ## Minimal does not mean missing native prerequisites
 
-`agentWebToolEnabled` is the agent browser/web switch. `agentControlToolEnabled` covers broader native workspace/control features. Disable only the former when choosing standalone browser MCP. Do not break native controls to prevent browser confusion. Managed-child plugin injection is a separate integration boundary; do not assume settings inject tools into external OpenCode.
+`agentWebToolEnabled` enables native browser/web actions and `agentControlToolEnabled` covers broader native workspace features. Core enables both with `browserProvider=builtin` for the preferred desktop browser panel. Standalone MCP remains a separate browser. Managed-child plugin injection is a separate integration boundary; do not assume settings inject tools into external OpenCode.
 
 The app's distroless Node base includes only explicit OS-tool exceptions: Bash/Git, one BusyBox for basic commands and model-archive extraction, SSH for Git remotes, and a real `ps` for terminal process-group cleanup. UID 1000 has a passwd/group identity. Chromium and agent QA remain in the separate distroless browser image.
 
