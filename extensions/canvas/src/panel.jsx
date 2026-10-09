@@ -1,7 +1,7 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { createRoot } from 'react-dom/client';
 import { connectHost } from '@openchamber/sdk';
-import { applyHostReady, mountBanner, mountEmpty, mountMenu } from '@openchamber/sdk/ui';
+import { applyHostReady, mountBanner, mountEmpty } from '@openchamber/sdk/ui';
 import { parseArtifact, errorMessage } from './catalog.js';
 import { sessionFile } from './session.js';
 import { Canvas, initialMonths } from './renderer.jsx';
@@ -55,20 +55,6 @@ function KitBanner({ tone, title, body }) {
   }, []);
   useEffect(() => { handle.current?.update({ title, tone, body }); }, [title, tone, body]);
   return <div ref={root} className="kit-mount banner-mount" />;
-}
-
-function CanvasMenu({ sessionId }) {
-  const root = useRef(null), handle = useRef(null);
-  useEffect(() => {
-    handle.current = mountMenu(root.current, {
-      label: '···', variant: 'outline', items: [], onSelect: id => actions.current[id]?.(),
-    });
-    return () => { handle.current?.dispose(); handle.current = null; };
-  }, []);
-  useEffect(() => {
-    handle.current?.update({ items: [{ id: 'copyPath', label: 'Copy file path', disabled: !sessionId }] });
-  }, [sessionId]);
-  return <div ref={root} className="kit-mount menu-mount" />;
 }
 
 function App() {
@@ -129,14 +115,6 @@ function App() {
     if (id) void refresh();
   }
 
-  actions.current.copyPath = async () => {
-    try {
-      await host.writeClipboard(sessionFile(session.current));
-      flash('Copied the canvas file path');
-    } catch (failure) {
-      setError(`Could not copy the file path: ${errorMessage(failure)}`);
-    }
-  };
   actions.current.prompt = async () => {
     try {
       await host.compose({ text: agentPrompt(sessionFile(session.current)), mode: 'append' });
@@ -171,9 +149,6 @@ function App() {
       : { title: 'Empty canvas', body: 'Ask the agent to visualize or present data in this conversation.', action: { label: 'Draft a request for the agent', onClick: () => actions.current.prompt() } };
 
   return <main>
-    {artifact && <div className="controls">
-      <CanvasMenu sessionId={sessionId} />
-    </div>}
     {error && <KitBanner tone="error" title="Could not show this canvas" body={error} />}
     {notice && !error && <KitBanner tone="success" title={notice} />}
     <div className="workspace">

@@ -36,9 +36,7 @@ main { display:flex;flex-direction:column;height:100%;min-width:0; }
 button { color:inherit;font:inherit;cursor:pointer; }
 button:disabled { opacity:.5;cursor:default; }
 :focus-visible { outline:none;box-shadow:0 0 0 2px var(--oc-focus, var(--focus, var(--primary))); }
-.controls { display:flex;justify-content:flex-end;gap:6px;padding:8px 10px 2px;flex-shrink:0; }
 .kit-mount { display:flex;min-width:0; }
-.menu-mount { align-items:center; }
 .banner-mount { padding:8px 10px 0; }
 .workspace { flex:1;min-height:0;min-width:0;display:flex;overflow:hidden; }
 .workspace .kit-mount { margin:auto;width:100%;max-width:400px; }
