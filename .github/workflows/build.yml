@@ -10,6 +10,7 @@ on:
       - 'docker/entrypoint.sh'
       - 'docker/entrypoint.test.mjs'
       - 'docker/self-update.patch'
+      - 'docker/browser-panel.css'
       - 'docker/openchamber-licence.txt'
       - 'docker/check-image.mjs'
       - 'docker/releases*'

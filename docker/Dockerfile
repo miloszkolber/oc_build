@@ -38,6 +38,9 @@ RUN set -eu; \
     && npm install --omit=dev --ignore-scripts --no-audit --no-fund \
     && rm -rf /tmp/* /root/.npm
 
+COPY browser-panel.css /opt/openchamber/dist/browser-panel.css
+RUN node -e 'const fs=require("fs"),p="/opt/openchamber/dist/index.html",s=fs.readFileSync(p,"utf8"); if(s.split("</head>").length!==2)throw new Error("Unexpected web entrypoint"); fs.writeFileSync(p,s.replace("</head>","<link rel=\"stylesheet\" href=\"/browser-panel.css\"></head>"))'
+
 # --- stage 2: the few host tools OpenChamber actually uses ---------------------
 # Collected with their shared-library closure so the runtime stage needs no
 # package manager. bash keeps the web terminal usable; git backs source control.

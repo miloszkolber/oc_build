@@ -1,0 +1,23 @@
+/* The shared surface header belongs to the host, not the extension iframe. */
+div:has(> [data-terminal-owner="surface:agent-browser"]) {
+  container-type: inline-size;
+}
+@container (max-width: 560px) {
+  div:has(> [data-terminal-owner="surface:agent-browser"]) > div:first-child {
+    height: auto;
+    min-height: 40px;
+    padding-inline: 8px;
+    gap: 6px;
+  }
+  /* The page title is already present in the extension's tab strip. */
+  div:has(> [data-terminal-owner="surface:agent-browser"]) > div:first-child > span:first-child {
+    display: none;
+  }
+  div:has(> [data-terminal-owner="surface:agent-browser"]) > div:first-child > span:nth-child(2) {
+    flex: 1 1 0%;
+    min-width: 0;
+  }
+  div:has(> [data-terminal-owner="surface:agent-browser"]) > div:first-child > button {
+    flex-shrink: 0;
+  }
+}

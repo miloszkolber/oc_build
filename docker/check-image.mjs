@@ -20,6 +20,8 @@ for (const directory of ['bin', 'server', 'dist', 'node_modules']) {
   assert(statSync(join(root, directory)).isDirectory(), `Missing ${directory} directory`);
 }
 assert(statSync(join(root, 'dist/index.html')).isFile(), 'Missing web entrypoint');
+assert(readFileSync(join(root, 'dist/index.html'), 'utf8').includes('/browser-panel.css'), 'Host browser header stylesheet must be linked');
+assert(statSync(join(root, 'dist/browser-panel.css')).isFile(), 'Host browser header stylesheet must be packaged');
 assert(statSync('/usr/share/licenses/openchamber/LICENSE').isFile(), 'Missing upstream license');
 assert(statSync('/entrypoint.sh').mode & 0o111, 'Launcher must be executable');
 assert(!existsSync('/usr/lib/chromium/chromium'), 'App image must not contain Chromium');
