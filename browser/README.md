@@ -8,7 +8,7 @@ The `browser` MCP controls standalone Chromium. Use it for web navigation, DOM i
 
 Tabs, cookies and login state are separate from OpenChamber. MCP pages do not automatically appear in the desktop UI. Report evidence as "verified in MCP Chromium". Only claim "verified in OpenChamber's desktop UI" after checking that UI directly. Do not load archived extension instructions for active MCP work.
 
-Every tool description identifies this boundary, and MCP initialization supplies the routing instructions. Keep the MCP key `browser` and existing tool names stable. On Core, the native agent browser-control tool remains disabled so it is not advertised as a second browser-control path.
+Every tool description identifies this boundary, and MCP initialization supplies the routing instructions. Keep the MCP key `browser` and existing tool names stable. On Core, `agentWebToolEnabled=false` disables only the duplicate agent browser path. `agentControlToolEnabled=true` preserves native workspace/control features; it is not a browser-only switch. External OpenCode does not automatically receive managed-child plugins.
 
 It provides 38 browser tools, bearer authentication, destination grants, temporary profile and 30-minute idle expiry. The MCP listens on loopback 3002 by default. `/health` shares that port. Core exposes `/mcp` over Caddy HTTPS 3003.
 
