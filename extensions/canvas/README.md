@@ -13,8 +13,10 @@ Styling is derived entirely from the host theme variables written by
 and controls use the same radius, borders and type scale as the rest of
 OpenChamber, so a canvas looks like part of the app rather than a dropped-in
 website. Mermaid diagrams are themed from the same tokens across their diagram
-types, so they too follow the host in light and dark. Empty states, notices and
-the actions menu use the SDK UI kit (`mountEmpty`, `mountBanner`, `mountMenu`).
+types, so they too follow the host in light and dark. The panel renders its own
+empty state, error notice and controls from those tokens, matching the app's
+control metrics and focus treatment rather than embedding the imperative SDK UI
+kit.
 
 ## Use
 
@@ -28,11 +30,10 @@ collapsed with a fade, expandable to a scrollable view, with a copy button and
 insert it, then send it yourself. There are no toasts; a read failure appears
 as a floating notice that does not move the canvas.
 
-The actions menu holds Export JSON, Copy JSON and Copy file path. Export and
-Copy use the current horizon-control selection. Horizon controls, table
-search/sort and chart rendering are local and transient; the agent's file is
-never rewritten by the panel. Copy file path reveals the exact session file
-for this conversation, useful when telling the agent where to write.
+Interaction is local and transient: horizon controls, table search and sort,
+and diagram rendering. The panel never writes back, so a change made here never
+rewrites the agent's file. To tell the agent where to write, expand the request
+field in the empty state and copy or insert it.
 
 Tables filter/sort locally. Charts, metric trends and responsive grids render
 with a dedicated sans-serif visualization hierarchy. Examples in
@@ -123,7 +124,7 @@ export its JSON elsewhere — the panel is a presentation surface, not storage.
 ## Build and install
 
 1. Run `bun install --frozen-lockfile`, `bun test`, then `bun run package` here.
-2. Install `dist/openchamber-generative-canvas-0.9.4.zip` through OpenChamber Extensions.
+2. Install `dist/openchamber-generative-canvas-0.9.5.zip` through OpenChamber Extensions.
 3. Review and approve the `/data/.db/openchamber/canvas/**` filesystem and `sessions` declarations.
 4. Reload the client to discover the updated Canvas entry. Canvas is panel-only;
    it declares no page surface.

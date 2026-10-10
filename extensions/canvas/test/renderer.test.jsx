@@ -17,6 +17,17 @@ test('diagram accessible name prefers mermaid accTitle and exposes accDescr', ()
   expect(html).toContain('aria-label="Named by DSL"');
   expect(html).toContain('Explained in DSL');
 });
+test('line chart scales uniformly and the diagram announces a loading state', () => {
+  const artifact = parseArtifact({ catalog_version: '1', title: 'scaling', spec: { root: 'r', elements: {
+    r: { type: 'Stack', props: {}, children: ['line', 'diagram'] },
+    line: { type: 'LineChart', props: { title: 'Trend', data: [{ label: 'a', value: 1 }, { label: 'b', value: 2 }] } },
+    diagram: { type: 'Diagram', props: { title: 'Flow', code: 'flowchart LR\n A-->B' } },
+  } } });
+  const html = renderToStaticMarkup(<Canvas artifact={artifact} months={12} setMonths={() => {}} />);
+  expect(html).not.toContain('preserveAspectRatio');
+  expect(html).toContain('Rendering diagram…');
+  expect(html).toContain('aria-busy="true"');
+});
 test('plain text never becomes executable markup', () => {
   const value = parseArtifact({ catalog_version: '1', title: 'untrusted', spec: { root: 'text', elements: { text: { type: 'Text', props: { text: '<img src=x onerror=alert(1)>' } } } } });
   const html = renderToStaticMarkup(<Canvas artifact={value} months={12} setMonths={() => {}} />);

@@ -1,5 +1,33 @@
 # Canvas verification
 
+## 0.9.5
+
+- UI polish pass against the app's own control metrics (read from the SDK UI
+  kit CSS) and the host root scale. Harness reproduced `applyHostReady`'s
+  `font-size: 0.875rem` so the review matched the real panel.
+- Line chart no longer distorts. It used `preserveAspectRatio="none"` with a
+  fixed height, so circles became ellipses and strokes stretched. It now uses
+  `aspect-ratio: 600/180`; a point measured 4.35×4.35 px at 327 px wide instead
+  of 4.35×6.22 px before.
+- Horizon control keyboard focus is now visible. The radio input is visually
+  hidden, so focus had no indicator; the option label shows the host focus ring
+  (`0 0 0 2px`), verified by focusing the input.
+- Search field aligned to the kit's `.oc-sdk-input`: `var(--radius)` corner,
+  inset 1px border, hover wash and an inset 2px focus ring. Trend badge font
+  matched `.oc-sdk-badge` (11 px). Error notice matched `.oc-sdk-banner`
+  (8 px radius, 8×12 px padding).
+- Diagram shows a "Rendering diagram…" status and keeps the host hidden until
+  the async Mermaid render finishes, so a canvas never shows a blank card and
+  assistive technology does not announce an empty image.
+- Fixed a React warning: the line chart point `<title>` now renders a single
+  string instead of a child array.
+- README corrected: removed a stale actions-menu / Export-JSON description and
+  an inaccurate claim that the panel embeds the SDK UI kit. It now documents the
+  token-styled chrome and the local, transient interaction.
+- Reviewed in MCP Chromium at 360, 520 and 780 px in light and dark: no
+  horizontal overflow, diagrams and interactions hold. 37 Bun tests pass;
+  production ZIP `openchamber-generative-canvas-0.9.5.zip` builds.
+
 ## 0.9.4
 
 - Mermaid theming completed. The previous map set roughly 15 of the base

@@ -26,7 +26,11 @@ function diagramAccessibility(code, fallback) {
   return { title: code.match(ACC_TITLE)?.[1]?.trim() || fallback, description: code.match(ACC_DESCR)?.[1]?.trim() || '' };
 }
 function Diagram({ props }) {
+  // Mermaid is loaded and rendered asynchronously. The host stays empty in the
+  // React tree (Mermaid writes into it), so the loading and error messages are
+  // siblings rather than children React could reconcile away.
   const host = useRef(null);
+  const [status, setStatus] = useState('pending');
   const [error, setError] = useState('');
   const uid = useId().replace(/[^a-zA-Z0-9_-]/g, '');
   const themeKey = useContext(Theme);
@@ -34,7 +38,7 @@ function Diagram({ props }) {
   const descrId = `diagram-desc-${uid}`;
   useEffect(() => {
     let alive = true;
-    setError('');
+    setStatus('pending'); setError('');
     const resolve = createColorResolver();
     loadMermaid().then(async mermaid => {
       mermaid.initialize({
@@ -46,21 +50,27 @@ function Diagram({ props }) {
       const { svg } = await mermaid.render(`canvas-diagram-${uid}`, props.code);
       if (!alive || !host.current) return;
       host.current.innerHTML = svg;
-    }).catch(failure => { if (alive) setError(`Diagram could not be rendered: ${errorMessage(failure)}`); })
-      .finally(() => resolve.dispose?.());
+      setStatus('ready');
+    }).catch(failure => {
+      if (!alive) return;
+      setError(`Diagram could not be rendered: ${errorMessage(failure)}`);
+      setStatus('error');
+    }).finally(() => resolve.dispose?.());
     return () => { alive = false; };
   }, [props.code, uid, themeKey]);
-  return <section className="card diagram-card"><h2>{props.title}</h2>{error ? <p className="muted">{error}</p> : <div className="diagram-host" ref={host} role="img" aria-label={label} aria-describedby={description ? descrId : undefined} />}{description && <span className="sr-only" id={descrId}>{description}</span>}{props.caption && <p className="muted diagram-caption">{props.caption}</p>}</section>;
+  return <section className="card diagram-card"><h2>{props.title}</h2>{error
+    ? <p className="muted">{error}</p>
+    : status !== 'ready' && <p className="muted diagram-status">Rendering diagram…</p>}<div className="diagram-host" ref={host} role={error ? undefined : 'img'} aria-label={error ? undefined : label} aria-describedby={!error && description ? descrId : undefined} aria-busy={status === 'pending'} hidden={status !== 'ready'} />{description && <span className="sr-only" id={descrId}>{description}</span>}{props.caption && <p className="muted diagram-caption">{props.caption}</p>}</section>;
 }
 function LineChart({ props }) {
   const maximum = Math.max(1, ...props.data.map(item => item.value));
   const points = props.data.map((item, index) => [24 + index / Math.max(1, props.data.length - 1) * 552, 160 - item.value / maximum * 136]);
   const line = points.map(point => point.join(',')).join(' ');
-  return <section className="card chart-card"><div className="section-heading"><h2>{props.title}</h2><span className="chart-label">{props.unit ?? 'TREND'}</span></div><svg className="line-chart" viewBox="0 0 600 180" preserveAspectRatio="none" role="img" aria-label={props.title}><desc>{props.data.map(item => `${item.label}: ${item.value}`).join(', ')}</desc>
+  return <section className="card chart-card"><div className="section-heading"><h2>{props.title}</h2><span className="chart-label">{props.unit ?? 'TREND'}</span></div><svg className="line-chart" viewBox="0 0 600 180" role="img" aria-label={props.title}><desc>{props.data.map(item => `${item.label}: ${item.value}`).join(', ')}</desc>
     {[24, 69, 114, 160].map(y => <line key={y} x1="24" x2="576" y1={y} y2={y} className="chart-grid" />)}
     <polygon points={`24,160 ${line} 576,160`} fill={colors[0]} fillOpacity=".12" />
     <polyline points={line} fill="none" stroke={colors[0]} strokeWidth="2.5" strokeLinejoin="round" strokeLinecap="round" />
-    {points.map(([x, y], index) => <circle key={index} cx={x} cy={y} r="4" fill={colors[0]}><title>{props.data[index].label}: {props.data[index].value.toLocaleString()} {props.unit}</title></circle>)}
+    {points.map(([x, y], index) => <circle key={index} cx={x} cy={y} r="4" fill={colors[0]}><title>{`${props.data[index].label}: ${props.data[index].value.toLocaleString()}${props.unit ? ` ${props.unit}` : ''}`}</title></circle>)}
   </svg><div className="axis-labels"><span>{props.data[0].label}</span><span>{props.data.at(-1).label}</span></div></section>;
 }
 function DonutChart({ props }) {
