@@ -100,10 +100,9 @@ component once with illustrative data — the fastest pattern reference for
 agents. Validate with `bun scripts/validate.mjs <file.canvas.json>`. Source of
 truth: `src/catalog.js`.
 
-Dependencies are pinned exactly and monitored: `bun scripts/check-deps.mjs`
-reports newer npm releases (`--strict` fails on drift). A scheduled workflow
-opens one tracking issue on drift, a report-only step runs on every openchamber
-build, and Dependabot opens update pull requests.
+Dependencies are pinned exactly. Dependabot opens weekly update pull requests
+for `/extensions/canvas`; merging one runs the normal tests, package step and
+ZIP artifact. No custom scanner is needed.
 
 | Component | Purpose |
 | --- | --- |

@@ -1,6 +1,6 @@
 {
   "name": "openchamber-generative-canvas",
-  "version": "0.9.1",
+  "version": "0.9.2",
   "private": true,
   "type": "module",
   "license": "MIT",
@@ -14,7 +14,7 @@
       "panel": {
         "id": "generative-canvas",
         "name": "Canvas",
-        "icon": "bar-chart-box-line",
+        "icon": "painting-ai-line",
         "entry": "panel/index.html"
       },
       "capabilities": [
@@ -28,8 +28,7 @@
   "scripts": {
     "build": "bun scripts/build.mjs",
     "test": "bun test test",
-    "package": "bun scripts/package.mjs",
-    "check-deps": "bun scripts/check-deps.mjs"
+    "package": "bun scripts/package.mjs"
   },
   "dependencies": {
     "@json-render/core": "0.21.0",

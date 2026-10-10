@@ -69,10 +69,8 @@ search index).
 
 **Status: Done**
 
-- [x] `extensions/canvas/scripts/check-deps.mjs` reports newer npm releases; `--strict` fails on drift.
-- [x] Scheduled weekly job opens or updates one tracking issue on drift.
-- [x] Report-only step on every openchamber build.
-- [x] Dependabot pull requests for `/extensions/canvas`.
+- [x] Exact pins for extension dependencies (Mermaid pinned so upgrades are deliberate).
+- [x] Dependabot pull requests for `/extensions/canvas`; merging runs the normal tests and package step.
 - [ ] Cover app-image base versions, not only extension packages.
 
 ### Development container

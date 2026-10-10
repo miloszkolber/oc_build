@@ -5,11 +5,8 @@
 - Simplification: removed the unused `snapshot()` helper (the panel is read-only)
   and the redundant `revenue-pulse` example; the showcase already covers every
   component. 27 tests pass and the packaged ZIP is 117 files.
-- Dependency monitoring added: `scripts/check-deps.mjs`, a weekly workflow that
-  opens one tracking issue on drift, a report-only step on the openchamber build,
-  and Dependabot. Verified locally — it reports `fflate` 0.8.2 -> 0.8.3 and
-  `mermaid` 11.17.2 -> 12.1.0 while `@json-render/*` and the SDK are current.
-  Mermaid is now pinned to an exact version so upgrades are deliberate.
+- Dependency updates handled by Dependabot (weekly npm pull requests for this
+  directory); Mermaid pinned to an exact version so upgrades are deliberate.
 
 ## 0.9.0
 
