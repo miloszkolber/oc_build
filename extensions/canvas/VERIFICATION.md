@@ -1,5 +1,16 @@
 # Canvas verification
 
+## 0.9.10
+
+- Simplification pass. Removed the redundant `showcase` example: the `gallery`
+  covers every component and `cost-explorer` covers the interactive tools, so
+  the build, the ZIP and the Canvas workflow now emit two examples instead of
+  three (ZIP 119 -> 118 files). Dropped the `renderer.jsx` re-export of
+  `initialMonths` in favour of importing it from `catalog.js`, and the unused
+  `CATALOG_VERSION` export. `Metric` now uses the shared `toneClass` helper.
+- 40 Bun tests pass (the removed example took its own test with it).
+- Production ZIP `openchamber-generative-canvas-0.9.10.zip`.
+
 ## 0.9.9
 
 - Vocabulary expanded from 29 to 39 components, driven by a review of four

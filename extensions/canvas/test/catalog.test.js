@@ -1,6 +1,6 @@
 import { describe, test, expect } from 'bun:test';
 import { parseArtifact, totalCost, catalog, components, componentsSummary, CONTAINERS } from '../src/catalog.js';
-import { costExplorer, showcase, gallery } from '../src/examples.js';
+import { costExplorer, gallery } from '../src/examples.js';
 const mutated = fn => { const value = structuredClone(costExplorer); fn(value); return value; };
 describe('untrusted canvas boundary', () => {
   test('example validates with our validator and json-render catalog', () => {
@@ -38,10 +38,6 @@ describe('untrusted canvas boundary', () => {
     expect(catalog.validate(parsed.spec).success).toBe(true);
     const used = new Set(Object.values(parsed.spec.elements).map(element => element.type));
     expect([...used].sort()).toEqual(Object.keys(components).sort());
-  });
-  test('showcase still validates against the catalog', () => {
-    const parsed = parseArtifact(showcase);
-    expect(catalog.validate(parsed.spec).success).toBe(true);
   });
   test('rejects mismatched heatmap rows and stacked series', () => {
     const heat = { catalog_version: '1', title: 'h', spec: { root: 'x', elements: { x: { type: 'Heatmap', props: { columns: ['a', 'b'], rows: [{ label: 'r', values: [1] }] } } } } };

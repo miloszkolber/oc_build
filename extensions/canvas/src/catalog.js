@@ -64,7 +64,7 @@ export function componentsSummary() {
   });
 }
 export const catalog = defineCatalog(schema, { components, actions: {} });
-export const CATALOG_VERSION = '1';
+const CATALOG_VERSION = '1';
 export const MAX_BYTES = 256 * 1024; // File API allows 2M characters; keep canvases small and fast.
 
 // Mermaid runs inside the panel. It renders with securityLevel 'strict', and

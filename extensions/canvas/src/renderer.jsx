@@ -1,6 +1,6 @@
 import React, { createContext, useContext, useEffect, useId, useRef, useState } from 'react';
 import { defineRegistry, JSONUIProvider, Renderer } from '@json-render/react';
-import { catalog, initialMonths, totalCost, errorMessage } from './catalog.js';
+import { catalog, totalCost, errorMessage } from './catalog.js';
 import { diagramThemeVariables, createColorResolver } from './mermaid-theme.js';
 
 const Controls = createContext(null);
@@ -252,7 +252,7 @@ const { registry } = defineRegistry(catalog, { components: {
   Heading: ({ props }) => <div className="dashboard-heading">{props.eyebrow && <p className="eyebrow">{props.eyebrow}</p>}<h1>{props.title}</h1>{props.subtitle && <p className="muted">{props.subtitle}</p>}</div>,
   Card: ({ props, children }) => <section className="card"><h2>{props.title}</h2>{props.description && <p className="muted">{props.description}</p>}{children}</section>,
   Text: ({ props }) => <p className={`plain-text${props.variant ? ` text-${props.variant}` : ''}`} style={props.align ? { textAlign: props.align } : undefined}>{props.text}</p>,
-  Metric: ({ props }) => <section className={`card metric-card tone-${props.tone ?? 'blue'}`}><p className="metric-label">{props.label}</p><div className="metric-line"><strong className="metric">{props.value}</strong>{props.change && <span className="trend-badge">{props.change}</span>}</div>{props.detail && <p className="muted">{props.detail}</p>}</section>,
+  Metric: ({ props }) => <section className={`card metric-card ${toneClass(props.tone ?? 'blue')}`}><p className="metric-label">{props.label}</p><div className="metric-line"><strong className="metric">{props.value}</strong>{props.change && <span className="trend-badge">{props.change}</span>}</div>{props.detail && <p className="muted">{props.detail}</p>}</section>,
   BarChart: ({ props }) => <Bars {...props} format={value => `${value.toLocaleString()}${props.unit ? ` ${props.unit}` : ''}`} />,
   LineChart, DonutChart, Diagram,
   Table,
@@ -276,4 +276,3 @@ const { registry } = defineRegistry(catalog, { components: {
 export function Canvas({ artifact, months, setMonths, theme = '' }) {
   return <Theme.Provider value={theme}><Controls.Provider value={{ months, setMonths }}><JSONUIProvider registry={registry}><Renderer spec={artifact.spec} registry={registry} /></JSONUIProvider></Controls.Provider></Theme.Provider>;
 }
-export { initialMonths };

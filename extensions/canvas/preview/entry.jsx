@@ -5,9 +5,9 @@ import React, { useMemo, useState } from 'react';
 import { createRoot } from 'react-dom/client';
 import { Canvas } from '../src/renderer.jsx';
 import { parseArtifact, componentsSummary } from '../src/catalog.js';
-import { gallery, showcase, costExplorer } from '../src/examples.js';
+import { gallery, costExplorer } from '../src/examples.js';
 
-const EXAMPLES = { Gallery: gallery, Showcase: showcase, 'Cost explorer': costExplorer };
+const EXAMPLES = { Gallery: gallery, 'Cost explorer': costExplorer };
 
 function Preview() {
   const [name, setName] = useState('Gallery');

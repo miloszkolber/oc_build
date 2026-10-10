@@ -97,11 +97,10 @@ Include exactly `catalog_version: "1"`, `title`, and
 `spec: { "root": "id", "elements": { ... } }`. Elements contain `type`, `props`
 and optional `children`.
 
-Build emits `dist/catalog.json`, `dist/examples/cost-explorer.canvas.json` and
-`dist/examples/showcase.canvas.json`. The showcase exercises every catalog-1
-component once with illustrative data — the fastest pattern reference for
-agents. Validate with `bun scripts/validate.mjs <file.canvas.json>`. Source of
-truth: `src/catalog.js`.
+Build emits `dist/catalog.json`, `dist/examples/cost-explorer.canvas.json`
+(interactive tools) and `dist/examples/gallery.canvas.json` (every component
+once). The gallery is the fastest pattern reference for agents. Validate with
+`bun scripts/validate.mjs <file.canvas.json>`. Source of truth: `src/catalog.js`.
 
 This table is the whole Canvas vocabulary, not a subset of json-render. The
 authoritative inventory is the generated `dist/catalog.json`, and the panel's
@@ -137,7 +136,7 @@ export its JSON elsewhere — the panel is a presentation surface, not storage.
 ## Build and install
 
 1. Run `bun install --frozen-lockfile`, `bun test`, then `bun run package` here.
-2. Install `dist/openchamber-generative-canvas-0.9.9.zip` through OpenChamber Extensions.
+2. Install `dist/openchamber-generative-canvas-0.9.10.zip` through OpenChamber Extensions.
 3. Review and approve the `/data/.db/openchamber/canvas/**` filesystem and `sessions` declarations.
 4. Reload the client to discover the updated Canvas entry. Canvas is panel-only;
    it declares no page surface.

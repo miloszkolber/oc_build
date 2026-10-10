@@ -2,9 +2,9 @@ import React, { useEffect, useRef, useState } from 'react';
 import { createRoot } from 'react-dom/client';
 import { connectHost } from '@openchamber/sdk';
 import { applyHostReady } from '@openchamber/sdk/ui';
-import { parseArtifact, errorMessage, componentsSummary, CONTAINERS } from './catalog.js';
+import { parseArtifact, errorMessage, componentsSummary, CONTAINERS, initialMonths } from './catalog.js';
 import { sessionFile } from './session.js';
-import { Canvas, initialMonths } from './renderer.jsx';
+import { Canvas } from './renderer.jsx';
 
 const host = connectHost();
 
