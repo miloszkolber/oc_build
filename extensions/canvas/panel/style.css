@@ -22,6 +22,22 @@
   --series-3: var(--warning);
   --series-4: var(--info);
   --series-5: color-mix(in srgb, var(--fg) 45%, transparent);
+  /* Mermaid categorical palette and surfaces, derived from the host tokens. */
+  --diagram-raised: color-mix(in srgb, var(--fg) 8%, var(--elevated));
+  --diagram-recessed: color-mix(in srgb, var(--fg) 4%, var(--bg));
+  --diagram-note: color-mix(in srgb, var(--warning) 22%, var(--elevated));
+  --diagram-1: color-mix(in srgb, var(--series-1) 26%, var(--elevated));
+  --diagram-2: color-mix(in srgb, var(--series-2) 26%, var(--elevated));
+  --diagram-3: color-mix(in srgb, var(--series-3) 28%, var(--elevated));
+  --diagram-4: color-mix(in srgb, var(--series-4) 26%, var(--elevated));
+  --diagram-5: color-mix(in srgb, var(--series-5) 26%, var(--elevated));
+  --diagram-6: color-mix(in srgb, var(--series-1) 16%, var(--series-2) 16%, var(--elevated));
+  --diagram-7: color-mix(in srgb, var(--series-2) 16%, var(--series-4) 16%, var(--elevated));
+  --diagram-8: color-mix(in srgb, var(--series-3) 18%, var(--series-1) 14%, var(--elevated));
+  --diagram-9: color-mix(in srgb, var(--series-4) 16%, var(--series-1) 16%, var(--elevated));
+  --diagram-10: color-mix(in srgb, var(--series-1) 20%, var(--series-5) 12%, var(--elevated));
+  --diagram-11: color-mix(in srgb, var(--series-2) 18%, var(--series-5) 12%, var(--elevated));
+  --diagram-12: color-mix(in srgb, var(--series-3) 16%, var(--series-4) 16%, var(--elevated));
   --card-line: color-mix(in srgb, var(--line) 60%, transparent);
   --hairline: color-mix(in srgb, var(--line) 40%, transparent);
   --subtle: color-mix(in srgb, var(--fg) 5%, transparent);

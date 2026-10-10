@@ -2,7 +2,7 @@ import React, { useEffect, useRef, useState } from 'react';
 import { createRoot } from 'react-dom/client';
 import { connectHost } from '@openchamber/sdk';
 import { applyHostReady } from '@openchamber/sdk/ui';
-import { parseArtifact, errorMessage } from './catalog.js';
+import { parseArtifact, errorMessage, componentsSummary, CONTAINERS } from './catalog.js';
 import { sessionFile } from './session.js';
 import { Canvas, initialMonths } from './renderer.jsx';
 
@@ -20,8 +20,9 @@ function agentPrompt(path) {
     '',
     'Format: { "catalog_version": "1", "title": "...", "spec": { "root": "id", "elements": { ... } } }',
     'Each element: { "type": "...", "props": { ... }, "children": ["id", ...] }.',
-    'Components: Stack, Grid (columns 1-4), Card, Heading, Text, Metric (label/value/change/detail/tone), BarChart, LineChart, DonutChart (title + data:[{label,value}]), Diagram (title + Mermaid code), Table (columns + rows), HorizonControl (initialMonths + options), CostChart (currency + providers:[{label,monthly,upfront}]).',
-    'Stack/Grid/Card may have children; all other components are leaves.',
+    'Components (? marks an optional prop):',
+    ...componentsSummary().map(line => `  ${line}`),
+    `${CONTAINERS.join(', ')} may have children; every other component is a leaf.`,
     'Use trusted component JSON only — never HTML, scripts, events or expressions.',
   ].join('\n');
 }

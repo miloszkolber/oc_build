@@ -1,5 +1,5 @@
 import { describe, test, expect } from 'bun:test';
-import { parseArtifact, totalCost, catalog, components } from '../src/catalog.js';
+import { parseArtifact, totalCost, catalog, components, componentsSummary, CONTAINERS } from '../src/catalog.js';
 import { costExplorer, showcase } from '../src/examples.js';
 const mutated = fn => { const value = structuredClone(costExplorer); fn(value); return value; };
 describe('untrusted canvas boundary', () => {
@@ -46,5 +46,24 @@ describe('untrusted canvas boundary', () => {
       const value = structuredClone(base); value.spec.elements.x.props.code = code;
       expect(() => parseArtifact(value)).toThrow();
     }
+  });
+  test('accepts diagram labels that merely contain "on...=" text', () => {
+    const value = { catalog_version: '1', title: 'd', spec: { root: 'x', elements: { x: { type: 'Diagram', props: { title: 'd', code: 'flowchart LR\n A[connection=fast]-->B' } } } } };
+    expect(parseArtifact(value).spec.elements.x.type).toBe('Diagram');
+  });
+  test('componentsSummary covers every component with derived props', () => {
+    const lines = componentsSummary();
+    expect(lines).toHaveLength(Object.keys(components).length);
+    for (const [name, component] of Object.entries(components)) {
+      const line = lines.find(candidate => candidate.startsWith(`${name}(`));
+      expect(line, name).toBeTruthy();
+      expect(line).toContain(component.description);
+    }
+    expect(lines.find(line => line.startsWith('LineChart('))).toContain('data');
+    expect(lines.find(line => line.startsWith('Heading('))).toContain('subtitle?');
+    expect(lines.find(line => line.startsWith('Diagram('))).toContain('gantt');
+  });
+  test('CONTAINERS lists exactly the slot components', () => {
+    expect([...CONTAINERS].sort()).toEqual(['Card', 'Grid', 'Stack']);
   });
 });

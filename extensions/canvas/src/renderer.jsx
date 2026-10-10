@@ -1,6 +1,7 @@
 import React, { createContext, useContext, useEffect, useId, useRef, useState } from 'react';
 import { defineRegistry, JSONUIProvider, Renderer } from '@json-render/react';
 import { catalog, initialMonths, totalCost, errorMessage } from './catalog.js';
+import { diagramThemeVariables, createColorResolver } from './mermaid-theme.js';
 
 const Controls = createContext(null);
 const Theme = createContext('');
@@ -11,51 +12,45 @@ function loadMermaid() {
   if (!mermaidPromise) mermaidPromise = import('mermaid').then(module => module.default);
   return mermaidPromise;
 }
-function token(name, fallback) {
-  if (typeof document === 'undefined') return fallback;
-  const value = getComputedStyle(document.documentElement).getPropertyValue(name).trim();
-  // A host that omits a token can leave the literal string "undefined" in place.
-  return !value || value === 'undefined' || value === 'null' ? fallback : value;
+function isDarkTheme(themeKey) {
+  const mode = String(themeKey).split('|')[0];
+  if (mode === 'dark') return true;
+  if (mode === 'light') return false;
+  return typeof window !== 'undefined' && window.matchMedia?.('(prefers-color-scheme: dark)').matches === true;
+}
+// Mermaid's own accTitle/accDescr, so the diagram is named and described for
+// assistive technology rather than only visually.
+const ACC_TITLE = /^[ \t]*accTitle[ \t]*:[ \t]*(.+)$/im;
+const ACC_DESCR = /^[ \t]*accDescr[ \t]*:[ \t]*(.+)$/im;
+function diagramAccessibility(code, fallback) {
+  return { title: code.match(ACC_TITLE)?.[1]?.trim() || fallback, description: code.match(ACC_DESCR)?.[1]?.trim() || '' };
 }
 function Diagram({ props }) {
   const host = useRef(null);
   const [error, setError] = useState('');
   const uid = useId().replace(/[^a-zA-Z0-9_-]/g, '');
   const themeKey = useContext(Theme);
+  const { title: label, description } = diagramAccessibility(props.code, props.title);
+  const descrId = `diagram-desc-${uid}`;
   useEffect(() => {
     let alive = true;
     setError('');
+    const resolve = createColorResolver();
     loadMermaid().then(async mermaid => {
       mermaid.initialize({
         startOnLoad: false,
         securityLevel: 'strict',
         theme: 'base',
-        fontFamily: token('--oc-font', 'sans-serif'),
-        themeVariables: {
-          background: token('--oc-elevated', '#ffffff'),
-          primaryColor: token('--oc-elevated', '#ffffff'),
-          primaryTextColor: token('--oc-fg', '#1f2430'),
-          primaryBorderColor: token('--oc-border', '#d9dde5'),
-          secondaryColor: token('--oc-muted-surface', '#f1f3f7'),
-          tertiaryColor: token('--oc-bg', '#ffffff'),
-          lineColor: token('--oc-muted', '#6b7280'),
-          textColor: token('--oc-fg', '#1f2430'),
-          mainBkg: token('--oc-elevated', '#ffffff'),
-          nodeBorder: token('--oc-border', '#d9dde5'),
-          clusterBkg: token('--oc-bg', '#ffffff'),
-          clusterBorder: token('--oc-border', '#d9dde5'),
-          edgeLabelBackground: token('--oc-elevated', '#ffffff'),
-          labelBackground: token('--oc-elevated', '#ffffff'),
-          fontSize: '13px',
-        },
+        themeVariables: diagramThemeVariables(resolve, isDarkTheme(themeKey)),
       });
       const { svg } = await mermaid.render(`canvas-diagram-${uid}`, props.code);
       if (!alive || !host.current) return;
       host.current.innerHTML = svg;
-    }).catch(failure => { if (alive) setError(`Diagram could not be rendered: ${errorMessage(failure)}`); });
+    }).catch(failure => { if (alive) setError(`Diagram could not be rendered: ${errorMessage(failure)}`); })
+      .finally(() => resolve.dispose?.());
     return () => { alive = false; };
   }, [props.code, uid, themeKey]);
-  return <section className="card diagram-card"><h2>{props.title}</h2>{error ? <p className="muted">{error}</p> : <div className="diagram-host" ref={host} role="img" aria-label={props.title} />}{props.caption && <p className="muted diagram-caption">{props.caption}</p>}</section>;
+  return <section className="card diagram-card"><h2>{props.title}</h2>{error ? <p className="muted">{error}</p> : <div className="diagram-host" ref={host} role="img" aria-label={label} aria-describedby={description ? descrId : undefined} />}{description && <span className="sr-only" id={descrId}>{description}</span>}{props.caption && <p className="muted diagram-caption">{props.caption}</p>}</section>;
 }
 function LineChart({ props }) {
   const maximum = Math.max(1, ...props.data.map(item => item.value));

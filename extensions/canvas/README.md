@@ -12,8 +12,9 @@ Styling is derived entirely from the host theme variables written by
 `--oc-*` status colours and the `--oc-*-text` aliases). Cards, tables, badges
 and controls use the same radius, borders and type scale as the rest of
 OpenChamber, so a canvas looks like part of the app rather than a dropped-in
-website. Empty states, notices and the actions menu use the SDK UI kit
-(`mountEmpty`, `mountBanner`, `mountMenu`).
+website. Mermaid diagrams are themed from the same tokens across their diagram
+types, so they too follow the host in light and dark. Empty states, notices and
+the actions menu use the SDK UI kit (`mountEmpty`, `mountBanner`, `mountMenu`).
 
 ## Use
 
@@ -111,7 +112,7 @@ ZIP artifact. No custom scanner is needed.
 | Metric | Value, optional detail/change and blue/green/amber accent |
 | BarChart, LineChart, DonutChart | Labeled bars, shaded trend and distribution |
 | Table | Searchable/sortable bounded data table |
-| Diagram | Mermaid diagram from DSL text (flowchart, sequence, state, ER, class, gantt, pie, …) |
+| Diagram | Mermaid diagram from DSL text: flowchart, sequence, class, state, ER, gantt, pie, quadrant, requirement, gitGraph, C4, mindmap, timeline, sankey, xychart, block, packet, kanban, architecture, radar, treemap, venn, ishikawa, wardley and more |
 | HorizonControl, CostChart | Shared horizon and deterministic upfront + monthly × months |
 
 Catalog 1 remains compatible with 0.1.0/0.2.0 components. Files written by
@@ -122,7 +123,7 @@ export its JSON elsewhere — the panel is a presentation surface, not storage.
 ## Build and install
 
 1. Run `bun install --frozen-lockfile`, `bun test`, then `bun run package` here.
-2. Install `dist/openchamber-generative-canvas-0.9.1.zip` through OpenChamber Extensions.
+2. Install `dist/openchamber-generative-canvas-0.9.4.zip` through OpenChamber Extensions.
 3. Review and approve the `/data/.db/openchamber/canvas/**` filesystem and `sessions` declarations.
 4. Reload the client to discover the updated Canvas entry. Canvas is panel-only;
    it declares no page surface.
