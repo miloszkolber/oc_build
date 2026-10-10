@@ -1,6 +1,6 @@
 {
   "name": "openchamber-generative-canvas",
-  "version": "0.9.4",
+  "version": "0.9.5",
   "private": true,
   "type": "module",
   "license": "MIT",
@@ -14,7 +14,7 @@
       "panel": {
         "id": "generative-canvas",
         "name": "Canvas",
-        "icon": "palette-line",
+        "icon": "palette",
         "entry": "panel/index.html"
       },
       "capabilities": [

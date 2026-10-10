@@ -1,5 +1,15 @@
 # Canvas verification
 
+## 0.9.5
+
+- Panel icon root cause: the app resolves an icon by looking up its own map with
+  the manifest string used **verbatim** (`Tk[t]` building `id="oc-${t}"`), and its
+  sprite keys carry **no** `-line`/`-fill` suffix (`palette`, `bar-chart-box`,
+  `pencil-ruler-2`). Every `*-line` name therefore missed and the rail fell back
+  to the same default glyph, which is why three different names looked identical.
+  The manifest now uses the bare key `palette`. `painting-ai` does not exist in
+  the app's sprite at all.
+
 ## 0.9.4
 
 - Panel icon: the app's bundled Remix Icon sprite has **no `painting-ai` symbol**
