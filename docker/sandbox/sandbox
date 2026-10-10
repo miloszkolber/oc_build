@@ -23,6 +23,16 @@ shift
 [ "${1:-}" = -- ] && shift
 [ "${#}" -ge 1 ] || usage
 
+# Dedicated rootless Docker endpoint. The host's rootful socket is never
+# mounted; containers the sandbox builds or runs stay inside this rootless
+# daemon. Mounted read-write because Docker needs to talk to it.
+runtime="/run/user/$(id -u)"
+socket="$runtime/docker.sock"
+docker_args=()
+if [ -S "$socket" ]; then
+    docker_args=(-v "$socket:$socket" -e "DOCKER_HOST=unix://$socket")
+fi
+
 run_id="$(date +%Y%m%dT%H%M%S)-$$"
 tmp="$runs/$run_id"
 mkdir -p "$cache" \
@@ -38,6 +48,7 @@ docker run --rm -i \
     -v /data/.db/openchamber:/data/.db/openchamber \
     -v "$cache":/cache \
     -v "$tmp":/tmp \
+    "${docker_args[@]}" \
     -e HOME=/tmp/home \
     -e TMPDIR=/tmp \
     -e XDG_CACHE_HOME=/tmp/xdg-cache \
