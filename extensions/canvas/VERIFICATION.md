@@ -1,5 +1,25 @@
 # Canvas verification
 
+## 0.9.7
+
+- Diagram rendering is serialized. Mermaid is a singleton with one global config
+  and one temporary DOM node per render, so two diagrams drawing at once could
+  make one measure a detached node ("svg element not in render tree"). A module
+  queue now runs initialize+render one at a time. Also confirmed `accTitle` and
+  `accDescr` must follow the diagram type line: putting `accTitle` first fails
+  with "No diagram type detected". The `Diagram` description now says so.
+- Cards no longer nest. A component rendered inside a card drops its own surface
+  (`.card .card`), which removed the card-in-card blocks and the doubled padding;
+  card spacing is one 12 px flex gap instead of stacked child margins.
+- The horizon control is styled as the app's segmented control (bordered pills, a
+  filled selected segment, visible keyboard focus) instead of a blue-tinted group.
+- Metric typography aligned to the app's Stats reference (muted 0.875rem label,
+  2rem value, muted 0.8125rem detail), and an odd last card spans the row when a
+  grid collapses at 640 px, removing the half-width orphan.
+- Preview canvas rewritten and validated; both diagrams render. Reviewed in MCP
+  Chromium at 560 px in light and dark.
+- 37 Bun tests pass; production ZIP `openchamber-generative-canvas-0.9.7.zip`.
+
 ## 0.9.6
 
 - Empty-state feedback applied. The request field's fade now blends into the

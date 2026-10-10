@@ -12,6 +12,29 @@ function loadMermaid() {
   if (!mermaidPromise) mermaidPromise = import('mermaid').then(module => module.default);
   return mermaidPromise;
 }
+// Mermaid is a singleton: one global config and one temporary DOM node per
+// render. Two diagrams drawing at once can make one measure a detached node
+// ("svg element not in render tree"), so initialize and render are serialized.
+let renderQueue = Promise.resolve();
+function renderDiagram(id, code, dark) {
+  const task = renderQueue.then(async () => {
+    const mermaid = await loadMermaid();
+    const resolve = createColorResolver();
+    try {
+      mermaid.initialize({
+        startOnLoad: false,
+        securityLevel: 'strict',
+        theme: 'base',
+        themeVariables: diagramThemeVariables(resolve, dark),
+      });
+      return await mermaid.render(id, code);
+    } finally {
+      resolve.dispose?.();
+    }
+  });
+  renderQueue = task.then(() => undefined, () => undefined);
+  return task;
+}
 function isDarkTheme(themeKey) {
   const mode = String(themeKey).split('|')[0];
   if (mode === 'dark') return true;
@@ -39,15 +62,7 @@ function Diagram({ props }) {
   useEffect(() => {
     let alive = true;
     setStatus('pending'); setError('');
-    const resolve = createColorResolver();
-    loadMermaid().then(async mermaid => {
-      mermaid.initialize({
-        startOnLoad: false,
-        securityLevel: 'strict',
-        theme: 'base',
-        themeVariables: diagramThemeVariables(resolve, isDarkTheme(themeKey)),
-      });
-      const { svg } = await mermaid.render(`canvas-diagram-${uid}`, props.code);
+    renderDiagram(`canvas-diagram-${uid}`, props.code, isDarkTheme(themeKey)).then(({ svg }) => {
       if (!alive || !host.current) return;
       host.current.innerHTML = svg;
       setStatus('ready');
@@ -55,7 +70,7 @@ function Diagram({ props }) {
       if (!alive) return;
       setError(`Diagram could not be rendered: ${errorMessage(failure)}`);
       setStatus('error');
-    }).finally(() => resolve.dispose?.());
+    });
     return () => { alive = false; };
   }, [props.code, uid, themeKey]);
   return <section className="card diagram-card"><h2>{props.title}</h2>{error

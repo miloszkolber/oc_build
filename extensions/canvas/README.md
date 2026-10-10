@@ -103,6 +103,12 @@ component once with illustrative data — the fastest pattern reference for
 agents. Validate with `bun scripts/validate.mjs <file.canvas.json>`. Source of
 truth: `src/catalog.js`.
 
+This table is the whole Canvas vocabulary, not a subset of json-render. The
+authoritative inventory is the generated `dist/catalog.json`, and the panel's
+request field lists the same set. json-render is schema-agnostic, so the
+playground's sample components and actions are not a Canvas requirement; Canvas
+defines display components only and no actions, which keeps canvases read-only.
+
 Dependencies are pinned exactly. Dependabot opens weekly update pull requests
 for `/extensions/canvas`; merging one runs the normal tests, package step and
 ZIP artifact. No custom scanner is needed.
@@ -125,7 +131,7 @@ export its JSON elsewhere — the panel is a presentation surface, not storage.
 ## Build and install
 
 1. Run `bun install --frozen-lockfile`, `bun test`, then `bun run package` here.
-2. Install `dist/openchamber-generative-canvas-0.9.6.zip` through OpenChamber Extensions.
+2. Install `dist/openchamber-generative-canvas-0.9.7.zip` through OpenChamber Extensions.
 3. Review and approve the `/data/.db/openchamber/canvas/**` filesystem and `sessions` declarations.
 4. Reload the client to discover the updated Canvas entry. Canvas is panel-only;
    it declares no page surface.
