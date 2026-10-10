@@ -75,7 +75,7 @@ search index).
 
 ### Development container
 
-**Status: In progress** — first slice built and verified in the `artful-yak` worktree
+**Status: In progress** — image, caches, launcher, rootless endpoint and cleanup verified on Core
 
 A build/test image agents use directly, so a task does not depend on whatever
 toolchain happens to be installed. Two tiers: permanent shared caches
@@ -85,10 +85,10 @@ stays separate and distroless.
 
 - [x] Toolchain image `openchamber-sandbox` (`docker/sandbox/`): Bun, Node/npm, pnpm, Go, Python/uv, Docker CLI + compose + buildx, git/make/gcc/ripgrep/jq.
 - [x] Shared cache directories wired and asserted in the image check; Go toolchain auto-download disabled, pnpm store pinned.
-- [x] Entry point `docker/sandbox/sandbox run -- <cmd>`; mounts `/repo`, `/home/core`, `/data/.db/openchamber`; scratch dir removed on exit.
-- [ ] Host deployment: `/usr/local/bin/sandbox` shim, Compose stack, cleanup timer for crash leftovers.
-- [ ] Dedicated rootless/BuildKit endpoint so the sandbox can build images without the host Docker socket.
-- [ ] Documented build/test/package entry points and CI parity for the same commands.
+- [x] Entry point `sandbox run -- <cmd>`; mounts `/repo`, `/home/core`, `/data/.db/openchamber`; scratch dir removed on exit; exit status propagates.
+- [x] Host deployment: `/usr/local/bin/sandbox` launcher, rootless Docker user daemon, `sandbox-clean.timer` for crash leftovers (host repo `docker/sandbox`).
+- [x] Dedicated rootless Docker endpoint: build and run verified inside the sandbox without the host rootful socket.
+- [ ] CI parity: `sandbox.yml` builds, checks and publishes the image, but it has not run (needs a `main` push).
 
 ### Design and visual tooling
 

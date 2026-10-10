@@ -6,7 +6,7 @@ installed on the host. The standalone browser image (`../browser`) stays
 separate and distroless; this image is deliberately not distroless because a
 dev image needs a shell and package managers.
 
-Source lives here in `oc_build`. Host deployment (Compose stack, rootless
+Source lives here in `oc_build`. Host deployment (launcher install, rootless
 Docker endpoint, cleanup timer) lives in the host repository under
 `docker/sandbox`.
 
@@ -60,9 +60,14 @@ directory, with `/repo`, `/home/core` and `/data/.db/openchamber` mounted at
 their host paths. The scratch directory is removed on exit, including on
 interrupt.
 
-For the first slice the wrapper is invoked from this directory. A host
-`/usr/local/bin/sandbox` shim, the Compose stack and the cleanup timer for
-crash leftovers are the next increment.
+The wrapper also mounts the **rootless** Docker socket
+(`/run/user/$(id -u)/docker.sock`) and sets `DOCKER_HOST` when it exists, so the
+sandbox can build and run images without ever touching the host's rootful
+socket. The image does not include the wrapper; the installed copy is
+`/usr/local/bin/sandbox`.
+
+Host deployment (launcher install, rootless daemon, cleanup timer) is in the
+host repository at `/home/core/docker/sandbox`.
 
 ## Build locally
 
@@ -73,4 +78,9 @@ docker run --rm -i --network none --entrypoint bash openchamber-sandbox:check \
 ```
 
 The build runs the same `check-image.sh` with `--network=none`, so a broken
-toolchain or cache wiring fails the build rather than a later run.
+toolchain or cache wiring fails the build rather than a later run. Content size
+is about 393 MB (`docker image inspect`/`docker save`); the uncompressed layer
+set is about 1.66 GB, dominated by the apt build tools and the Go toolchain.
+
+Publication: `.github/workflows/sandbox.yml` builds, checks and publishes
+`ghcr.io/<owner>/openchamber-sandbox` on `main` pushes touching this directory.
