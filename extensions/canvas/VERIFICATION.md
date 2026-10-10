@@ -1,5 +1,17 @@
 # Canvas verification
 
+## 0.9.4
+
+- Panel icon: the app's bundled Remix Icon sprite has **no `painting-ai` symbol**
+  (2343 symbols checked in the running app). Its ids drop the `-line`/`-fill`
+  suffix (`bar-chart-box-line` resolves as `oc-bar-chart-box`), so an icon the
+  sprite lacks cannot render. Chose `palette-line` (`oc-palette` is present) as
+  the closest available metaphor; other present options are `ai-generate-2-line`,
+  `sparkling-line`, `pencil-ruler-2-line` and `bar-chart-box-line`.
+- Worktree initialisation fixed separately on the host: `XDG_DATA_HOME` moved off
+  the container tmpfs to `/data/.db/openchamber/xdg-data` so the host OpenCode can
+  see the worktree directory (operator confirmed worktrees now come up).
+
 ## 0.9.3
 
 - Dependabot updates applied: `fflate` 0.8.3 and `mermaid` 12.1.0.
