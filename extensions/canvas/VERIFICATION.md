@@ -1,5 +1,16 @@
 # Canvas verification
 
+## 0.9.1
+
+- Simplification: removed the unused `snapshot()` helper (the panel is read-only)
+  and the redundant `revenue-pulse` example; the showcase already covers every
+  component. 27 tests pass and the packaged ZIP is 117 files.
+- Dependency monitoring added: `scripts/check-deps.mjs`, a weekly workflow that
+  opens one tracking issue on drift, a report-only step on the openchamber build,
+  and Dependabot. Verified locally — it reports `fflate` 0.8.2 -> 0.8.3 and
+  `mermaid` 11.17.2 -> 12.1.0 while `@json-render/*` and the SDK are current.
+  Mermaid is now pinned to an exact version so upgrades are deliberate.
+
 ## 0.9.0
 
 - Visual alignment with the app's own panels: cards are filled (`color-mix(fg 5.5%)`),
@@ -60,7 +71,7 @@ CRUD service, conversation scoping, UI-kit chrome, the showcase example,
 token-based styling, removal of all panel chrome, the Mermaid `Diagram`
 component and parent-canvas resolution for subagent sessions were each
 installed and verified in MCP Chromium. Details are preserved in the repository
-history and in `docs/EXPLORATION.md`.
+history and in `docs/ROADMAP.md`.
 
 
 - 28 Bun tests passed (schema/renderer boundaries, 256 KiB limit, session-file
@@ -96,4 +107,4 @@ CRUD service, conversation scoping, UI-kit chrome, the showcase example,
 token-based styling, removal of all panel chrome, the Mermaid `Diagram`
 component and parent-canvas resolution for subagent sessions were each
 installed and verified in MCP Chromium. Details are preserved in the repository
-history and in `docs/EXPLORATION.md`.
+history and in `docs/ROADMAP.md`.

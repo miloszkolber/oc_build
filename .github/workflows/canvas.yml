@@ -23,7 +23,6 @@ jobs:
       - run: bun test
       - run: bun run package
       - run: bun scripts/validate.mjs dist/examples/cost-explorer.canvas.json
-      - run: bun scripts/validate.mjs dist/examples/revenue-pulse.canvas.json
       - run: bun scripts/validate.mjs dist/examples/showcase.canvas.json
       - uses: actions/upload-artifact@v4
         with:

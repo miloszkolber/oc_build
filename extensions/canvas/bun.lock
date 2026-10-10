@@ -8,7 +8,7 @@
         "@json-render/core": "0.21.0",
         "@json-render/react": "0.21.0",
         "@openchamber/sdk": "2.2.0",
-        "mermaid": "11",
+        "mermaid": "11.17.2",
         "react": "19.3.0",
         "react-dom": "19.3.0",
         "zod": "4.6.5",

@@ -2,7 +2,7 @@ import { readFile, writeFile, readdir } from 'node:fs/promises';
 import { zipSync, unzipSync } from 'fflate';
 await import('./build.mjs');
 const { version } = JSON.parse(await readFile('dist/package.json', 'utf8'));
-const fixed = ['package.json', 'README.md', 'VERIFICATION.md', 'LICENSE', 'NOTICE', 'THIRD_PARTY_LICENSES', 'catalog.json', 'examples/cost-explorer.canvas.json', 'examples/revenue-pulse.canvas.json', 'examples/showcase.canvas.json'];
+const fixed = ['package.json', 'README.md', 'VERIFICATION.md', 'LICENSE', 'NOTICE', 'THIRD_PARTY_LICENSES', 'catalog.json', 'examples/cost-explorer.canvas.json', 'examples/showcase.canvas.json'];
 // The panel build is code-split: main.js plus lazy chunks for Mermaid.
 const panelDir = 'dist/panel';
 const panel = (await readdir(panelDir, { recursive: true, withFileTypes: true }))

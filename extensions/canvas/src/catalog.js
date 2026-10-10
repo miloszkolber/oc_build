@@ -80,12 +80,6 @@ export function initialMonths(artifact) {
   return Object.values(artifact.spec.elements).find(element => element.type === 'HorizonControl')?.props.initialMonths ?? 12;
 }
 
-export function snapshot(artifact, months) {
-  const copy = structuredClone(artifact);
-  for (const element of Object.values(copy.spec.elements)) if (element.type === 'HorizonControl') element.props.initialMonths = months;
-  return parseArtifact(copy);
-}
-
 export function totalCost(provider, months) { return provider.upfront + provider.monthly * months; }
 
 export function errorMessage(error) {

@@ -1,5 +1,5 @@
 import { describe, test, expect } from 'bun:test';
-import { parseArtifact, snapshot, totalCost, catalog, components } from '../src/catalog.js';
+import { parseArtifact, totalCost, catalog, components } from '../src/catalog.js';
 import { costExplorer, showcase } from '../src/examples.js';
 const mutated = fn => { const value = structuredClone(costExplorer); fn(value); return value; };
 describe('untrusted canvas boundary', () => {
@@ -32,12 +32,6 @@ describe('untrusted canvas boundary', () => {
     const value = { catalog_version: '1', title: 'deep', spec: { root: 'n0', elements: {} } };
     for (let i = 0; i < 18; i++) value.spec.elements[`n${i}`] = { type: 'Stack', props: {}, children: i < 17 ? [`n${i + 1}`] : [] };
     expect(() => parseArtifact(value)).toThrow('depth');
-  });
-  test('snapshot preserves source and current horizon', () => {
-    const value = snapshot(costExplorer, 36);
-    expect(value.spec.elements.horizon.props.initialMonths).toBe(36);
-    expect(costExplorer.spec.elements.horizon.props.initialMonths).toBe(12);
-    expect(totalCost(value.spec.elements.costs.props.providers[1], 36)).toBe(372);
   });
   test('showcase exercises every catalog component', () => {
     const parsed = parseArtifact(showcase);

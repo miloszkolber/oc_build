@@ -13,21 +13,6 @@ export const costExplorer = {
   } },
 };
 
-export const revenueDashboard = {
-  catalog_version: '1', title: 'Revenue pulse', spec: { root: 'root', elements: {
-    root: { type: 'Stack', props: {}, children: ['heading', 'metrics', 'charts', 'table'] },
-    heading: { type: 'Heading', props: { eyebrow: 'BUSINESS OVERVIEW · DEMO DATA', title: 'A clearer view of growth', subtitle: 'A six-month snapshot of recurring revenue, channel mix and plan performance.' } },
-    metrics: { type: 'Grid', props: { columns: 3 }, children: ['revenue', 'customers', 'retention'] },
-    revenue: { type: 'Metric', props: { label: 'Monthly revenue', value: '€24,800', change: '+18.6%', detail: 'vs. previous month', tone: 'blue' } },
-    customers: { type: 'Metric', props: { label: 'Active customers', value: '1,284', change: '+9.2%', detail: 'Across all plans', tone: 'green' } },
-    retention: { type: 'Metric', props: { label: 'Net retention', value: '108%', change: '+4 pts', detail: 'Trailing six months', tone: 'amber' } },
-    charts: { type: 'Grid', props: { columns: 2 }, children: ['trend', 'mix'] },
-    trend: { type: 'LineChart', props: { title: 'Recurring revenue', unit: 'EUR', data: [{ label: 'Apr', value: 14200 }, { label: 'May', value: 16100 }, { label: 'Jun', value: 15800 }, { label: 'Jul', value: 19200 }, { label: 'Aug', value: 20900 }, { label: 'Sep', value: 24800 }] } },
-    mix: { type: 'DonutChart', props: { title: 'Customers by plan', data: [{ label: 'Pro', value: 706 }, { label: 'Team', value: 385 }, { label: 'Enterprise', value: 193 }] } },
-    table: { type: 'Table', props: { title: 'Plan performance', columns: ['Plan', 'Customers', 'Revenue (€)', 'Retention'], rows: [['Pro', 706, 9800, '104%'], ['Team', 385, 9200, '110%'], ['Enterprise', 193, 5800, '116%']] } },
-  } },
-};
-
 // Kitchen-sink example: exercises every catalog-1 component once so agents can
 // copy any pattern. All data is illustrative.
 export const showcase = {

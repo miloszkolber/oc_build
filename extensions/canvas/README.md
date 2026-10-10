@@ -94,12 +94,16 @@ Include exactly `catalog_version: "1"`, `title`, and
 `spec: { "root": "id", "elements": { ... } }`. Elements contain `type`, `props`
 and optional `children`.
 
-Build emits `dist/catalog.json` and `dist/examples/cost-explorer.canvas.json`,
-`dist/examples/revenue-pulse.canvas.json` and
+Build emits `dist/catalog.json`, `dist/examples/cost-explorer.canvas.json` and
 `dist/examples/showcase.canvas.json`. The showcase exercises every catalog-1
 component once with illustrative data — the fastest pattern reference for
 agents. Validate with `bun scripts/validate.mjs <file.canvas.json>`. Source of
 truth: `src/catalog.js`.
+
+Dependencies are pinned exactly and monitored: `bun scripts/check-deps.mjs`
+reports newer npm releases (`--strict` fails on drift). A scheduled workflow
+opens one tracking issue on drift, a report-only step runs on every openchamber
+build, and Dependabot opens update pull requests.
 
 | Component | Purpose |
 | --- | --- |
@@ -119,7 +123,7 @@ export its JSON elsewhere — the panel is a presentation surface, not storage.
 ## Build and install
 
 1. Run `bun install --frozen-lockfile`, `bun test`, then `bun run package` here.
-2. Install `dist/openchamber-generative-canvas-0.9.0.zip` through OpenChamber Extensions.
+2. Install `dist/openchamber-generative-canvas-0.9.1.zip` through OpenChamber Extensions.
 3. Review and approve the `/data/.db/openchamber/canvas/**` filesystem and `sessions` declarations.
 4. Reload the client to discover the updated Canvas entry. Canvas is panel-only;
    it declares no page surface.
