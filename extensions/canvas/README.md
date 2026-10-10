@@ -24,11 +24,12 @@ Open Canvas from the rail. The panel is a read-only presentation: it renders
 the conversation's canvas and nothing else. There is no toolbar and no menu.
 Raw JSON is never shown, and the panel never writes the agent's file.
 
-An empty conversation shows the request the agent needs, as a read-only field:
-collapsed with a fade, expandable to a scrollable view, with a copy button and
-**Insert into composer** below. Nothing is sent automatically — copy it or
-insert it, then send it yourself. There are no toasts; a read failure appears
-as a floating notice that does not move the canvas.
+An empty conversation shows a sparkle icon and the request the agent needs, as a
+read-only field: collapsed with a fade, expandable to a scrollable view, with a
+copy button that briefly confirms **Copied** and a neutral **Insert into
+composer** button below. Nothing is sent automatically — copy it or insert it,
+then send it yourself. There are no toasts; a read failure appears as a
+floating notice that does not move the canvas.
 
 Interaction is local and transient: horizon controls, table search and sort,
 and diagram rendering. The panel never writes back, so a change made here never
@@ -124,7 +125,7 @@ export its JSON elsewhere — the panel is a presentation surface, not storage.
 ## Build and install
 
 1. Run `bun install --frozen-lockfile`, `bun test`, then `bun run package` here.
-2. Install `dist/openchamber-generative-canvas-0.9.5.zip` through OpenChamber Extensions.
+2. Install `dist/openchamber-generative-canvas-0.9.6.zip` through OpenChamber Extensions.
 3. Review and approve the `/data/.db/openchamber/canvas/**` filesystem and `sessions` declarations.
 4. Reload the client to discover the updated Canvas entry. Canvas is panel-only;
    it declares no page surface.

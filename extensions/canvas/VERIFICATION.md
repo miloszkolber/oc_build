@@ -1,5 +1,27 @@
 # Canvas verification
 
+## 0.9.6
+
+- Empty-state feedback applied. The request field's fade now blends into the
+  field's own fill (an opaque `--prompt-fill`) instead of the panel background.
+  The copy button shows a green "Copied" pill with its own background, and the
+  insert button keeps its label. A `sparkling-2-line` icon sits above the
+  empty-state text, drawn as inline SVG because the panel iframe cannot use the
+  app's icon sprite. Collapsing the expanded request resets its scroll to the
+  top.
+- The insert button uses the neutral secondary surface instead of a blue tint,
+  matching the app's buttons.
+- Merged `origin/main`, which fixes the panel icon: the app resolves the
+  manifest key verbatim against a suffix-less sprite, so the bare `palette` key
+  is required.
+- Verified in MCP Chromium with a harness that mounts the real `panel.jsx`
+  against a stubbed host: empty state in light and dark, the "Copied" state, and
+  the expand/scroll/collapse reset (scrollTop 120 → 0).
+- Preview canvas written to
+  `/data/.db/openchamber/canvas/ses_edcc27679ffer6jLb9pJBgVkjS.canvas.json`
+  (validated) so the conversation shows the result.
+- 37 Bun tests pass; production ZIP `openchamber-generative-canvas-0.9.6.zip`.
+
 ## 0.9.5
 
 - Panel icon uses the bare key `palette`. The app resolves an icon by looking up

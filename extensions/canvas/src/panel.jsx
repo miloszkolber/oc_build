@@ -28,18 +28,30 @@ function agentPrompt(path) {
 }
 
 const CopyIcon = () => <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><rect x="9" y="9" width="11" height="11" rx="2" /><path d="M5 15V5a2 2 0 0 1 2-2h10" /></svg>;
+const CheckIcon = () => <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M20 6 9 17l-5-5" /></svg>;
+// Remix Icon sparkling-2-line, drawn inline: the panel is an iframe and cannot
+// use the app's own icon sprite.
+const SparkleIcon = () => <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M17.0007 1.20825 18.3195 3.68108 20.7923 4.99992 18.3195 6.31876 17.0007 8.79159 15.6818 6.31876 13.209 4.99992 15.6818 3.68108 17.0007 1.20825ZM10.6673 9.33325 15.6673 11.9999 10.6673 14.6666 8.00065 19.6666 5.33398 14.6666.333984 11.9999 5.33398 9.33325 8.00065 4.33325 10.6673 9.33325ZM11.4173 11.9999 9.18905 10.8115 8.00065 8.58325 6.81224 10.8115 4.58398 11.9999 6.81224 13.1883 8.00065 15.4166 9.18905 13.1883 11.4173 11.9999ZM19.6673 16.3333 18.0007 13.2083 16.334 16.3333 13.209 17.9999 16.334 19.6666 18.0007 22.7916 19.6673 19.6666 22.7923 17.9999 19.6673 16.3333Z" /></svg>;
 
 function AgentPrompt({ text, onInsert, onCopy, copied }) {
   const [expanded, setExpanded] = useState(false);
+  const textRef = useRef(null);
+  const toggle = () => {
+    const next = !expanded;
+    // Collapsing must not keep the scrolled position, or the short field opens
+    // on the middle of the request.
+    if (!next && textRef.current) textRef.current.scrollTop = 0;
+    setExpanded(next);
+  };
   return <div className="prompt">
     <div className={`prompt-field${expanded ? ' expanded' : ''}`} role="group" aria-label="Request for the agent">
-      <pre className="prompt-text">{text}</pre>
+      <pre className="prompt-text" ref={textRef}>{text}</pre>
       {!expanded && <div className="prompt-fade" aria-hidden="true" />}
-      <button type="button" className="prompt-copy" aria-label="Copy request" title="Copy request" onClick={onCopy}><CopyIcon /></button>
+      <button type="button" className="prompt-copy" data-copied={copied || undefined} aria-label={copied ? 'Copied' : 'Copy request'} title={copied ? 'Copied' : 'Copy request'} onClick={onCopy}>{copied ? <><CheckIcon /><span>Copied</span></> : <CopyIcon />}</button>
     </div>
     <div className="prompt-actions">
-      <button type="button" className="prompt-toggle" aria-expanded={expanded} onClick={() => setExpanded(value => !value)}>{expanded ? 'Show less' : 'Show more'}</button>
-      <button type="button" className="prompt-insert" onClick={onInsert}>{copied ? 'Copied' : 'Insert into composer'}</button>
+      <button type="button" className="prompt-toggle" aria-expanded={expanded} onClick={toggle}>{expanded ? 'Show less' : 'Show more'}</button>
+      <button type="button" className="prompt-insert" onClick={onInsert}>Insert into composer</button>
     </div>
   </div>;
 }
@@ -178,6 +190,7 @@ function App() {
       {artifact
         ? <article className="canvas" aria-label="Canvas preview"><Canvas artifact={artifact} months={months} setMonths={setMonths} theme={theme} /></article>
         : <div className="empty">
+            {sessionId && <span className="empty-icon"><SparkleIcon /></span>}
             <h1 className="empty-title">{empty.title}</h1>
             <p className="empty-body">{empty.body}</p>
             {sessionId && error === '' && <AgentPrompt text={agentPrompt(promptPath())} onCopy={copyPrompt} onInsert={insertPrompt} copied={copied} />}
