@@ -1,5 +1,13 @@
 # Canvas verification
 
+## 0.9.3
+
+- Dependabot updates applied: `fflate` 0.8.3 and `mermaid` 12.1.0.
+- Mermaid 12 was render-checked before adoption, because no test renders a
+  diagram at runtime: an isolated build was served to MCP Chromium and both
+  showcase diagrams rendered in light and dark (dark node fill
+  `rgb(30, 33, 37)`). CI passing alone would not have proved this.
+
 ## 0.9.1
 
 - Simplification: removed the unused `snapshot()` helper (the panel is read-only)
