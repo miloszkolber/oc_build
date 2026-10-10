@@ -1,6 +1,6 @@
 import { describe, test, expect } from 'bun:test';
 import { parseArtifact, totalCost, catalog, components, componentsSummary, CONTAINERS } from '../src/catalog.js';
-import { costExplorer, showcase } from '../src/examples.js';
+import { costExplorer, showcase, gallery } from '../src/examples.js';
 const mutated = fn => { const value = structuredClone(costExplorer); fn(value); return value; };
 describe('untrusted canvas boundary', () => {
   test('example validates with our validator and json-render catalog', () => {
@@ -33,11 +33,21 @@ describe('untrusted canvas boundary', () => {
     for (let i = 0; i < 18; i++) value.spec.elements[`n${i}`] = { type: 'Stack', props: {}, children: i < 17 ? [`n${i + 1}`] : [] };
     expect(() => parseArtifact(value)).toThrow('depth');
   });
-  test('showcase exercises every catalog component', () => {
-    const parsed = parseArtifact(showcase);
+  test('gallery exercises every catalog component', () => {
+    const parsed = parseArtifact(gallery);
     expect(catalog.validate(parsed.spec).success).toBe(true);
     const used = new Set(Object.values(parsed.spec.elements).map(element => element.type));
     expect([...used].sort()).toEqual(Object.keys(components).sort());
+  });
+  test('showcase still validates against the catalog', () => {
+    const parsed = parseArtifact(showcase);
+    expect(catalog.validate(parsed.spec).success).toBe(true);
+  });
+  test('rejects mismatched heatmap rows and stacked series', () => {
+    const heat = { catalog_version: '1', title: 'h', spec: { root: 'x', elements: { x: { type: 'Heatmap', props: { columns: ['a', 'b'], rows: [{ label: 'r', values: [1] }] } } } } };
+    expect(() => parseArtifact(heat)).toThrow();
+    const stacked = { catalog_version: '1', title: 's', spec: { root: 'x', elements: { x: { type: 'StackedBarChart', props: { title: 't', categories: ['a', 'b'], series: [{ label: 'n', data: [1] }] } } } } };
+    expect(() => parseArtifact(stacked)).toThrow();
   });
   test('rejects diagram markup, front-matter config and directives', () => {
     const base = { catalog_version: '1', title: 'd', spec: { root: 'x', elements: { x: { type: 'Diagram', props: { title: 'd', code: 'flowchart LR\n A-->B' } } } } };

@@ -5,17 +5,40 @@ import { z } from 'zod';
 const text = z.string().max(240);
 const number = z.number().finite().min(0).max(1e9);
 const series = z.array(z.object({ label: text, value: number }).strict()).min(1).max(30);
+const tone = z.enum(['neutral', 'blue', 'green', 'amber', 'red']);
 export const components = {
+  // Layout
   Stack: { props: z.object({}).strict(), slots: ['default'], description: 'Vertical layout container' },
   Grid: { props: z.object({ columns: z.number().int().min(1).max(4).optional() }).strict(), slots: ['default'], description: 'Responsive dashboard grid that collapses in narrow panels' },
-  Heading: { props: z.object({ title: text, subtitle: text.optional(), eyebrow: text.optional() }).strict(), description: 'Dashboard heading with optional eyebrow and subtitle' },
   Card: { props: z.object({ title: text, description: text.optional() }).strict(), slots: ['default'], description: 'Titled section that groups nested blocks' },
+  Divider: { props: z.object({ label: text.optional() }).strict(), description: 'Horizontal rule, optionally labelled' },
+  // Content
+  Heading: { props: z.object({ title: text, subtitle: text.optional(), eyebrow: text.optional() }).strict(), description: 'Dashboard heading with optional eyebrow and subtitle' },
   Text: { props: z.object({ text: z.string().max(4000) }).strict(), description: 'Escaped plain text, never HTML' },
-  Metric: { props: z.object({ label: text, value: text, detail: text.optional(), change: text.optional(), tone: z.enum(['blue', 'green', 'amber']).optional() }).strict(), description: 'Summary value with optional change, detail and blue/green/amber accent' },
+  List: { props: z.object({ title: text.optional(), ordered: z.boolean().optional(), items: z.array(text).min(1).max(50) }).strict(), description: 'Bulleted or numbered list; items is a string array' },
+  KeyValue: { props: z.object({ title: text.optional(), items: z.array(z.object({ label: text, value: text, tone: tone.optional() }).strict()).min(1).max(40) }).strict(), description: 'Label/value pairs; items are [{ label, value, tone? }]' },
+  Badge: { props: z.object({ label: text, tone: tone.optional() }).strict(), description: 'Inline status pill' },
+  Callout: { props: z.object({ tone: tone.optional(), title: text.optional(), text: z.string().max(2000) }).strict(), description: 'Tone-coloured note with an optional title' },
+  CodeBlock: { props: z.object({ title: text.optional(), language: text.optional(), code: z.string().max(6000) }).strict(), description: 'Monospace, escaped code or log text' },
+  // Data and status
+  Metric: { props: z.object({ label: text, value: text, detail: text.optional(), change: text.optional(), tone: tone.optional() }).strict(), description: 'Summary value with optional change, detail and tone' },
+  Progress: { props: z.object({ title: text.optional(), value: number, max: number, unit: text.optional(), tone: tone.optional() }).strict(), description: 'Single share/progress bar for value against max' },
+  StackedBar: { props: z.object({ title: text.optional(), unit: text.optional(), segments: z.array(z.object({ label: text, value: number, tone: tone.optional() }).strict()).min(1).max(12) }).strict(), description: 'Multi-segment share bar with legend; segments are [{ label, value, tone? }]' },
+  Gauge: { props: z.object({ title: text.optional(), value: number, max: number, unit: text.optional(), tone: tone.optional() }).strict(), description: 'Radial gauge for one value against a maximum' },
+  Sparkline: { props: z.object({ title: text.optional(), unit: text.optional(), tone: tone.optional(), data: series }).strict(), description: 'Compact trend line; data is [{ label, value }]' },
+  Heatmap: { props: z.object({ title: text.optional(), columns: z.array(text).min(1).max(16), rows: z.array(z.object({ label: text, values: z.array(number).min(1).max(16) }).strict()).min(1).max(30) }).strict(), description: 'Matrix of intensity cells; each row values length must equal columns length' },
+  // Charts
+  BarChart: { props: z.object({ title: text, unit: text.optional(), data: series }).strict(), description: 'Nonnegative labeled bar chart; data is [{ label, value }]' },
   LineChart: { props: z.object({ title: text, unit: text.optional(), data: series }).strict(), description: 'Trend line with shaded area; data is [{ label, value }]' },
   DonutChart: { props: z.object({ title: text, data: series }).strict(), description: 'Distribution ring with legend; data is [{ label, value }]' },
-  BarChart: { props: z.object({ title: text, unit: text.optional(), data: series }).strict(), description: 'Nonnegative labeled bar chart; data is [{ label, value }]' },
+  StackedBarChart: { props: z.object({ title: text, unit: text.optional(), categories: z.array(text).min(1).max(12), series: z.array(z.object({ label: text, data: z.array(number).min(1).max(12) }).strict()).min(1).max(8) }).strict(), description: 'Stacked bars over categories; each series data length must equal categories length' },
+  ScatterChart: { props: z.object({ title: text, xUnit: text.optional(), yUnit: text.optional(), points: z.array(z.object({ x: number, y: number, label: text.optional() }).strict()).min(1).max(200) }).strict(), description: 'X/Y scatter plot; points are [{ x, y, label? }]' },
+  // Collections
   Table: { props: z.object({ title: text, columns: z.array(text).min(1).max(12), rows: z.array(z.array(z.union([text, z.number().finite().min(-1e12).max(1e12), z.boolean(), z.null()])).max(12)).max(200) }).strict(), description: 'Searchable, sortable table; rows is an array of cell arrays' },
+  Checklist: { props: z.object({ title: text.optional(), items: z.array(z.object({ label: text, done: z.boolean() }).strict()).min(1).max(50) }).strict(), description: 'Task list with done/pending state; items are [{ label, done }]' },
+  Timeline: { props: z.object({ title: text.optional(), items: z.array(z.object({ time: text.optional(), title: text, detail: text.optional(), tone: tone.optional() }).strict()).min(1).max(50) }).strict(), description: 'Chronological events; items are [{ time?, title, detail?, tone? }]' },
+  Steps: { props: z.object({ title: text.optional(), items: z.array(z.object({ label: text, detail: text.optional(), state: z.enum(['todo', 'current', 'done']) }).strict()).min(1).max(30) }).strict(), description: 'Numbered steps with todo/current/done state' },
+  // Diagram and quick tools
   Diagram: { props: z.object({ title: text, code: z.string().trim().min(1).max(8000), caption: text.optional() }).strict(), description: 'Mermaid diagram from DSL text; supports flowchart, sequence, class, state, ER, gantt, pie, quadrant, requirement, gitGraph, C4, mindmap, timeline, sankey, xychart, block, packet, kanban, architecture, radar, treemap, venn, ishikawa, wardley and more. It adopts the host theme automatically and reads accTitle/accDescr placed after the diagram type line' },
   HorizonControl: { props: z.object({ label: text, initialMonths: z.number().int().min(1).max(120), options: z.array(z.number().int().min(1).max(120)).min(1).max(12) }).strict(), description: 'Shared planning horizon control; at most one per canvas' },
   CostChart: { props: z.object({ title: text, currency: z.enum(['USD', 'EUR', 'GBP', 'PLN']), providers: z.array(z.object({ label: text, monthly: number, upfront: number }).strict()).min(1).max(20) }).strict(), description: 'Deterministic cost bars (upfront + monthly × shared months); providers are [{ label, monthly, upfront }]' },
@@ -64,6 +87,8 @@ export function parseArtifact(input) {
     element.children = children;
     if (children.length && !['Stack', 'Grid', 'Card'].includes(element.type)) throw new Error(`${key}: only Stack, Grid and Card can contain children`);
     if (element.type === 'Table' && element.props.rows.some(row => row.length !== element.props.columns.length)) throw new Error(`${key}: row width must match columns`);
+    if (element.type === 'Heatmap' && element.props.rows.some(row => row.values.length !== element.props.columns.length)) throw new Error(`${key}: heatmap row width must match columns`);
+    if (element.type === 'StackedBarChart' && element.props.series.some(entry => entry.data.length !== element.props.categories.length)) throw new Error(`${key}: stacked series length must match categories`);
     if (element.type === 'Diagram') {
       if (element.props.code.trimStart().startsWith('---')) throw new Error(`${key}: diagram front-matter config is not allowed`);
       if (DISALLOWED_DIAGRAM.test(element.props.code)) throw new Error(`${key}: diagram contains disallowed markup or directives`);

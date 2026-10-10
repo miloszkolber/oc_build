@@ -113,15 +113,21 @@ Dependencies are pinned exactly. Dependabot opens weekly update pull requests
 for `/extensions/canvas`; merging one runs the normal tests, package step and
 ZIP artifact. No custom scanner is needed.
 
-| Component | Purpose |
+| Group | Components |
 | --- | --- |
-| Stack, Grid, Card | Vertical layout, responsive 1–4-column grids and sections |
-| Heading, Text | Dashboard hierarchy and escaped plain text |
-| Metric | Value, optional detail/change and blue/green/amber accent |
-| BarChart, LineChart, DonutChart | Labeled bars, shaded trend and distribution |
-| Table | Searchable/sortable bounded data table |
-| Diagram | Mermaid diagram from DSL text: flowchart, sequence, class, state, ER, gantt, pie, quadrant, requirement, gitGraph, C4, mindmap, timeline, sankey, xychart, block, packet, kanban, architecture, radar, treemap, venn, ishikawa, wardley and more |
-| HorizonControl, CostChart | Shared horizon and deterministic upfront + monthly × months |
+| Layout | Stack, Grid, Card, Divider |
+| Content | Heading, Text, List, KeyValue, Badge, Callout, CodeBlock |
+| Data and status | Metric, Progress, StackedBar, Gauge, Sparkline, Heatmap |
+| Charts | BarChart, LineChart, DonutChart, StackedBarChart, ScatterChart |
+| Collections | Table, Checklist, Timeline, Steps |
+| Diagram and quick tools | Diagram, HorizonControl, CostChart |
+
+`Diagram` renders Mermaid DSL: flowchart, sequence, class, state, ER, gantt,
+pie, quadrant, requirement, gitGraph, C4, mindmap, timeline, sankey, xychart,
+block, packet, kanban, architecture, radar, treemap, venn, ishikawa, wardley and
+more. `HorizonControl` and `CostChart` share a planning horizon and compute
+upfront + monthly × months. Run `bun run preview` to serve a live gallery of
+every component (dark and light) for review.
 
 Catalog 1 remains compatible with 0.1.0/0.2.0 components. Files written by
 older global Canvas versions stay on disk but are no longer displayed; do not
@@ -131,7 +137,7 @@ export its JSON elsewhere — the panel is a presentation surface, not storage.
 ## Build and install
 
 1. Run `bun install --frozen-lockfile`, `bun test`, then `bun run package` here.
-2. Install `dist/openchamber-generative-canvas-0.9.7.zip` through OpenChamber Extensions.
+2. Install `dist/openchamber-generative-canvas-0.9.8.zip` through OpenChamber Extensions.
 3. Review and approve the `/data/.db/openchamber/canvas/**` filesystem and `sessions` declarations.
 4. Reload the client to discover the updated Canvas entry. Canvas is panel-only;
    it declares no page surface.

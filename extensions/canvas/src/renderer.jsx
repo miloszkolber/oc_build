@@ -113,6 +113,77 @@ function Table({ props }) {
     <tbody>{rows.map((row, index) => <tr key={index}>{row.map((cell, column) => <td key={column}>{String(cell ?? '—')}</td>)}</tr>)}</tbody>
   </table></div><p className="muted table-count">{rows.length} of {props.rows.length} rows{rows.length === 0 ? ' · No matching rows' : ''}</p></section>;
 }
+// Display helpers shared by the read-only components.
+const TONE_COLORS = { neutral: 'var(--muted)', blue: 'var(--series-1)', green: 'var(--series-2)', amber: 'var(--series-3)', red: 'var(--oc-error, var(--series-5))' };
+const toneColor = (value, index) => TONE_COLORS[value] ?? colors[index % colors.length];
+const toneClass = value => `tone-${value ?? 'neutral'}`;
+const Title = ({ children }) => children ? <h2>{children}</h2> : null;
+
+function Divider({ props }) {
+  return <div className="divider" data-labeled={Boolean(props.label)} role="separator">{props.label && <span>{props.label}</span>}</div>;
+}
+function List({ props }) {
+  const Tag = props.ordered ? 'ol' : 'ul';
+  return <section className="card"><Title>{props.title}</Title><Tag className="list">{props.items.map((item, index) => <li key={index}>{item}</li>)}</Tag></section>;
+}
+function KeyValue({ props }) {
+  return <section className="card"><Title>{props.title}</Title><dl className="kv">{props.items.map((item, index) => <div key={index} className={toneClass(item.tone)}><dt>{item.label}</dt><dd>{item.value}</dd></div>)}</dl></section>;
+}
+function Badge({ props }) {
+  return <span className={`badge ${toneClass(props.tone)}`}>{props.label}</span>;
+}
+function Callout({ props }) {
+  return <section className={`callout ${toneClass(props.tone ?? 'blue')}`} role="note">{props.title && <strong>{props.title}</strong>}<p>{props.text}</p></section>;
+}
+function CodeBlock({ props }) {
+  return <section className="card"><Title>{props.title}</Title>{props.language && <span className="chart-label">{props.language}</span>}<pre className="code-block">{props.code}</pre></section>;
+}
+function Progress({ props }) {
+  const percent = props.max ? Math.min(100, Math.round(props.value / props.max * 100)) : 0;
+  return <section className={`card progress-card ${toneClass(props.tone ?? 'blue')}`}><div className="progress-head"><span>{props.title ?? 'Progress'}</span><strong>{props.value.toLocaleString()}{props.unit ? ` ${props.unit}` : ''} · {percent}%</strong></div><div className="progress-track" role="progressbar" aria-valuenow={props.value} aria-valuemin="0" aria-valuemax={props.max} aria-label={props.title ?? 'Progress'}><span style={{ width: `${percent}%` }} /></div></section>;
+}
+function StackedBar({ props }) {
+  const total = props.segments.reduce((sum, segment) => sum + segment.value, 0);
+  let offset = 0;
+  const stops = props.segments.map((segment, index) => { const start = offset; offset += total ? segment.value / total * 100 : 0; return `${toneColor(segment.tone, index)} ${start}% ${offset}%`; }).join(', ');
+  return <section className="card"><div className="section-heading"><h2>{props.title ?? 'Composition'}</h2><span className="chart-label">{props.unit ?? 'SHARE'}</span></div><div className="stacked-bar" style={{ background: total ? `linear-gradient(90deg, ${stops})` : 'var(--line)' }} aria-hidden="true" /><dl className="legend">{props.segments.map((segment, index) => <div key={index}><dt><i style={{ background: toneColor(segment.tone, index) }} />{segment.label}</dt><dd>{total ? Math.round(segment.value / total * 100) : 0}% <span>{segment.value.toLocaleString()}</span></dd></div>)}</dl></section>;
+}
+function Gauge({ props }) {
+  const ratio = props.max ? Math.max(0, Math.min(1, props.value / props.max)) : 0;
+  const radius = 44, circumference = 2 * Math.PI * radius;
+  return <section className={`card gauge-card ${toneClass(props.tone ?? 'blue')}`}><Title>{props.title}</Title><div className="gauge"><svg viewBox="0 0 120 120" role="img" aria-label={`${props.title ?? 'Gauge'}: ${props.value} of ${props.max}`}><circle className="gauge-track" cx="60" cy="60" r={radius} /><circle className="gauge-ring" cx="60" cy="60" r={radius} strokeDasharray={`${(circumference * ratio).toFixed(1)} ${circumference.toFixed(1)}`} transform="rotate(-90 60 60)" /></svg><div className="gauge-center"><strong>{props.value.toLocaleString()}</strong>{props.unit && <span>{props.unit}</span>}</div></div></section>;
+}
+function Sparkline({ props }) {
+  const maximum = Math.max(1, ...props.data.map(item => item.value));
+  const line = props.data.map((item, index) => `${(index / Math.max(1, props.data.length - 1) * 100).toFixed(2)},${(30 - item.value / maximum * 26).toFixed(2)}`).join(' ');
+  return <section className={`card ${toneClass(props.tone ?? 'blue')}`}><Title>{props.title}</Title><svg className="sparkline" viewBox="0 0 100 32" preserveAspectRatio="none" role="img" aria-label={props.title ?? 'Trend'}><polyline points={line} vectorEffect="non-scaling-stroke" /></svg><div className="spark-meta"><span>{props.data[0].label}</span><span>{props.data.at(-1).label}</span></div></section>;
+}
+function Heatmap({ props }) {
+  const maximum = Math.max(1, ...props.rows.flatMap(row => row.values));
+  return <section className="card"><Title>{props.title}</Title><div className="heat" style={{ gridTemplateColumns: `auto repeat(${props.columns.length}, minmax(0, 1fr))` }}><span />{props.columns.map((column, index) => <span className="heat-col" key={index}>{column}</span>)}{props.rows.map((row, rowIndex) => <React.Fragment key={rowIndex}><span className="heat-label">{row.label}</span>{row.values.map((value, cellIndex) => <span className="heat-cell" key={cellIndex} title={`${row.label} · ${props.columns[cellIndex]}: ${value}`} style={{ opacity: 0.15 + 0.85 * (value / maximum) }} />)}</React.Fragment>)}</div></section>;
+}
+function StackedBarChart({ props }) {
+  const totals = props.categories.map((_, index) => props.series.reduce((sum, entry) => sum + (entry.data[index] ?? 0), 0));
+  const maximum = Math.max(1, ...totals);
+  return <section className="card"><div className="section-heading"><h2>{props.title}</h2>{props.unit && <span className="chart-label">{props.unit}</span>}</div><div className="stack-chart">{props.categories.map((category, index) => <div className="stack-col" key={index}><div className="stack-col-bars">{props.series.map((entry, seriesIndex) => <span key={seriesIndex} style={{ height: `${(entry.data[index] ?? 0) / maximum * 100}%`, background: colors[seriesIndex % colors.length] }} title={`${entry.label}: ${entry.data[index]}`} />)}</div><span className="axis-x">{category}</span></div>)}</div><dl className="legend">{props.series.map((entry, index) => <div key={index}><dt><i style={{ background: colors[index % colors.length] }} />{entry.label}</dt><dd>{entry.data.reduce((sum, value) => sum + value, 0).toLocaleString()}</dd></div>)}</dl></section>;
+}
+function ScatterChart({ props }) {
+  const xs = props.points.map(point => point.x), ys = props.points.map(point => point.y);
+  const xMin = Math.min(...xs), xMax = Math.max(...xs), yMin = Math.min(...ys), yMax = Math.max(...ys);
+  const px = value => 30 + (xMax === xMin ? 0.5 : (value - xMin) / (xMax - xMin)) * 520;
+  const py = value => 160 - (yMax === yMin ? 0.5 : (value - yMin) / (yMax - yMin)) * 130;
+  return <section className="card chart-card"><div className="section-heading"><h2>{props.title}</h2><span className="chart-label">{props.yUnit ?? 'SCATTER'}</span></div><svg className="scatter" viewBox="0 0 580 180" role="img" aria-label={props.title}><desc>{props.points.map(point => `${point.label ? `${point.label}: ` : ''}${point.x}, ${point.y}`).join('; ')}</desc>{[24, 69, 114, 160].map(y => <line key={y} x1="30" x2="560" y1={y} y2={y} className="chart-grid" />)}{props.points.map((point, index) => <circle key={index} cx={px(point.x)} cy={py(point.y)} r="4" fill={colors[0]}><title>{`${point.label ? `${point.label}: ` : ''}${point.x}, ${point.y}`}</title></circle>)}</svg><div className="axis-labels"><span>{`${props.xUnit ? `${props.xUnit} ` : ''}${xMin}`}</span><span>{xMax}</span></div></section>;
+}
+function Checklist({ props }) {
+  return <section className="card"><Title>{props.title}</Title><ul className="checklist">{props.items.map((item, index) => <li key={index} data-done={item.done || undefined}><span className="check-box" aria-hidden="true">{item.done ? '✓' : ''}</span><span>{item.label}</span><span className="sr-only">{item.done ? ' (done)' : ' (pending)'}</span></li>)}</ul></section>;
+}
+function Timeline({ props }) {
+  return <section className="card"><Title>{props.title}</Title><ol className="timeline">{props.items.map((item, index) => <li key={index} className={toneClass(item.tone)}><span className="tl-dot" aria-hidden="true" /><div className="tl-body">{item.time && <span className="tl-time">{item.time}</span>}<strong>{item.title}</strong>{item.detail && <p className="muted">{item.detail}</p>}</div></li>)}</ol></section>;
+}
+function Steps({ props }) {
+  return <section className="card"><Title>{props.title}</Title><ol className="steps">{props.items.map((item, index) => <li key={index} data-state={item.state}><span className="step-index" aria-hidden="true">{item.state === 'done' ? '✓' : index + 1}</span><div><strong>{item.label}</strong>{item.detail && <p className="muted">{item.detail}</p>}</div></li>)}</ol></section>;
+}
+
 const { registry } = defineRegistry(catalog, { components: {
   Stack: ({ children }) => <div className="stack">{children}</div>,
   Grid: ({ props, children }) => <div className={`dashboard-grid cols-${props.columns ?? 2}`} style={{ '--columns': props.columns ?? 2 }}>{children}</div>,
@@ -123,6 +194,9 @@ const { registry } = defineRegistry(catalog, { components: {
   BarChart: ({ props }) => <Bars {...props} format={value => `${value.toLocaleString()}${props.unit ? ` ${props.unit}` : ''}`} />,
   LineChart, DonutChart, Diagram,
   Table,
+  Divider, List, KeyValue, Badge, Callout, CodeBlock,
+  Progress, StackedBar, Gauge, Sparkline, Heatmap,
+  StackedBarChart, ScatterChart, Checklist, Timeline, Steps,
   HorizonControl: ({ props }) => {
     const { months, setMonths } = useContext(Controls);
     return <fieldset className="horizon"><legend>{props.label}</legend>{props.options.map(option => <label key={option}><input name="horizon" type="radio" checked={months === option} onChange={() => setMonths(option)} />{option} months</label>)}</fieldset>;

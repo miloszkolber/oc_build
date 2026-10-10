@@ -1,0 +1,28 @@
+<!doctype html>
+<html lang="en" data-theme="light">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Canvas catalog preview</title>
+<link rel="stylesheet" href="./style.css" />
+<style>
+  :root { --oc-bg:#ffffff; --oc-fg:#242a36; --oc-elevated:#ffffff; --oc-muted:#738096; --oc-muted-surface:#f1f3f7; --oc-border:#dde2eb; --oc-hover:#eef1f7; --oc-active:#e3e8f2; --oc-selection:#eef1f7; --oc-selection-fg:#1c2230; --oc-subtle:#f4f6fa; --oc-primary:#3b6ef0; --oc-primary-text:#2b57c8; --oc-success:#2f9e7a; --oc-success-text:#1f7a5d; --oc-warning:#b8860b; --oc-warning-text:#8a6408; --oc-info:#2f7fb8; --oc-radius:9px; }
+  :root[data-theme="dark"] { --oc-bg:#151719; --oc-fg:#e3e5ea; --oc-elevated:#1d2023; --oc-muted:#949aa6; --oc-muted-surface:#24272c; --oc-border:#2f3238; --oc-hover:#24272c; --oc-active:#2b2f35; --oc-selection:#2f343b; --oc-selection-fg:#f2f4f7; --oc-subtle:#20242a; --oc-primary:#6f9bff; --oc-primary-text:#9db9ff; --oc-success:#4bbd97; --oc-success-text:#7fd4b6; --oc-warning:#d8a53a; --oc-warning-text:#e7c374; --oc-info:#5aa6d8; --oc-radius:9px; }
+  html { font-size: 0.875rem; line-height: 1.45; }
+  html, body, #app { height: 100%; margin: 0; }
+  #app { display: flex; min-width: 0; }
+  .nav { flex: 0 0 250px; height: 100%; overflow: auto; padding: 14px; display: flex; flex-direction: column; gap: 10px; background: var(--elevated); border-right: 1px solid var(--line); }
+  .nav h1 { font-size: 1rem; margin: 0; }
+  .nav select, .nav button { height: 32px; padding: 0 10px; border: 1px solid var(--line); border-radius: var(--radius); background: var(--elevated); color: var(--fg); font: inherit; cursor: pointer; }
+  .nav button:hover, .nav select:hover { background-image: linear-gradient(var(--hover), var(--hover)); }
+  .nav-count { margin: 0; font-size: .8125rem; color: var(--muted); }
+  .nav-list { margin: 0; padding-left: 1.2rem; display: flex; flex-direction: column; gap: 4px; font-size: .8125rem; color: var(--muted); font-family: var(--mono); }
+  main { flex: 1; min-width: 0; height: 100%; }
+  .canvas { height: 100%; overflow: auto; padding: 16px; }
+</style>
+</head>
+<body>
+<div id="app"></div>
+<script type="module" src="./app.js"></script>
+</body>
+</html>

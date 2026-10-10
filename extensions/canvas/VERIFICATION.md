@@ -1,5 +1,29 @@
 # Canvas verification
 
+## 0.9.8
+
+- Vocabulary expanded from 13 to 29 read-only display components: Divider, List,
+  KeyValue, Badge, Callout, CodeBlock, Progress, StackedBar, Gauge, Sparkline,
+  Heatmap, StackedBarChart, ScatterChart, Checklist, Timeline and Steps, plus the
+  original layout/text/status/chart/collection components. `Metric` and the new
+  components share one `tone` enum (neutral/blue/green/amber/red). No actions and
+  no inputs, so canvases stay read-only.
+- Body validators added: a Heatmap row length must equal its columns, and a
+  StackedBarChart series length must equal its categories.
+- A `gallery` example exercises every component once and is emitted to
+  `dist/examples/gallery.canvas.json`; the coverage test now asserts it, and a
+  renderer test renders it.
+- Added `bun run preview`: a served page (`preview/`) that renders the real
+  Canvas with host-like tokens, a light/dark toggle and a component index, so a
+  reviewer can inspect every component and propose changes.
+- Fixed two rendering defects found in the preview: the sparkline stretched to
+  full width with a scaled stroke (now a fixed 40 px track with
+  non-scaling stroke), and inline Badges stretched across grid cells (now
+  `justify-self:start`). Cards in a grid are top-aligned so a short card no
+  longer stretches to a tall neighbour's height.
+- 40 Bun tests pass; production ZIP `openchamber-generative-canvas-0.9.8.zip`.
+  Reviewed in MCP Chromium at 1100 px in light and dark.
+
 ## 0.9.7
 
 - Diagram rendering is serialized. Mermaid is a singleton with one global config

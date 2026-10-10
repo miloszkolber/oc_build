@@ -3,7 +3,14 @@ import React from 'react';
 import { renderToStaticMarkup } from 'react-dom/server';
 import { Canvas } from '../src/renderer.jsx';
 import { parseArtifact } from '../src/catalog.js';
-import { costExplorer } from '../src/examples.js';
+import { costExplorer, gallery } from '../src/examples.js';
+test('gallery renders every component without crashing', () => {
+  const html = renderToStaticMarkup(<Canvas artifact={parseArtifact(gallery)} months={12} setMonths={() => {}} />);
+  expect(html).toContain('gauge-ring');
+  expect(html).toContain('checklist');
+  expect(html).toContain('progress-track');
+  expect(html).toContain('timeline');
+});
 test('real registry renders deterministic 36-month chart and controls', () => {
   const html = renderToStaticMarkup(<Canvas artifact={parseArtifact(costExplorer)} months={36} setMonths={() => {}} />);
   expect(html).toContain('36 months');
