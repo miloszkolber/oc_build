@@ -74,6 +74,10 @@ describe('untrusted canvas boundary', () => {
     expect(lines.find(line => line.startsWith('Diagram('))).toContain('gantt');
   });
   test('CONTAINERS lists exactly the slot components', () => {
-    expect([...CONTAINERS].sort()).toEqual(['Card', 'Grid', 'Stack']);
+    expect([...CONTAINERS].sort()).toEqual(['Card', 'Disclosure', 'Grid', 'Row', 'Stack']);
+  });
+  test('rejects a table footer wider than the columns', () => {
+    const value = { catalog_version: '1', title: 't', spec: { root: 'x', elements: { x: { type: 'Table', props: { title: 't', columns: ['a', 'b'], rows: [['1', '2']], footer: ['1', '2', '3'] } } } } };
+    expect(() => parseArtifact(value)).toThrow();
   });
 });

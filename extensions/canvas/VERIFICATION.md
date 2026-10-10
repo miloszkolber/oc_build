@@ -1,5 +1,25 @@
 # Canvas verification
 
+## 0.9.9
+
+- Vocabulary expanded from 29 to 39 components, driven by a review of four
+  agent-UI vocabularies: Adaptive Cards (TextBlock/RichTextBlock, FactSet,
+  ColumnSet, Table, actions), A2UI (Row, Column, List, Text, Image, Icon,
+  Divider, Card, Tabs, Modal, inputs), Open Intelligent UI (CopilotKit + AG-UI;
+  agent picks text, a native component or a custom UI, plus a template library)
+  and MCP Apps (protocol only: `ui://` resources bound to tools; kept separate,
+  as the README already defers it).
+- Added Row, Disclosure, Tabs, Icon, RichText, Choice, Person, Diff, Rating and
+  Tree. Row and Disclosure are new default-slot containers, so the parser now
+  derives allowed parents from `CONTAINERS` instead of a hardcoded list. The
+  Icon set inlines eight Remix outlines. Text gained `variant`/`align`; Table
+  gained per-column `align` and an optional `footer` totals row (validated to
+  match the column count). All remain read-only: no actions, no inputs.
+- The gallery example now covers all 39 components; 41 Bun tests pass. Shipped
+  as `examples/gallery.canvas.json`; the served `bun run preview` page shows the
+  full gallery in light and dark.
+- Production ZIP `openchamber-generative-canvas-0.9.9.zip`.
+
 ## 0.9.8
 
 - Vocabulary expanded from 13 to 29 read-only display components: Divider, List,

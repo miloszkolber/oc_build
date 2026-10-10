@@ -115,9 +115,9 @@ ZIP artifact. No custom scanner is needed.
 
 | Group | Components |
 | --- | --- |
-| Layout | Stack, Grid, Card, Divider |
-| Content | Heading, Text, List, KeyValue, Badge, Callout, CodeBlock |
-| Data and status | Metric, Progress, StackedBar, Gauge, Sparkline, Heatmap |
+| Layout | Stack, Grid, Row, Card, Tabs, Disclosure, Divider |
+| Content | Heading, Text, RichText, List, KeyValue, Badge, Choice, Person, Icon, Callout, CodeBlock, Diff |
+| Data and status | Metric, Progress, StackedBar, Gauge, Sparkline, Heatmap, Rating, Tree |
 | Charts | BarChart, LineChart, DonutChart, StackedBarChart, ScatterChart |
 | Collections | Table, Checklist, Timeline, Steps |
 | Diagram and quick tools | Diagram, HorizonControl, CostChart |
@@ -137,7 +137,7 @@ export its JSON elsewhere — the panel is a presentation surface, not storage.
 ## Build and install
 
 1. Run `bun install --frozen-lockfile`, `bun test`, then `bun run package` here.
-2. Install `dist/openchamber-generative-canvas-0.9.8.zip` through OpenChamber Extensions.
+2. Install `dist/openchamber-generative-canvas-0.9.9.zip` through OpenChamber Extensions.
 3. Review and approve the `/data/.db/openchamber/canvas/**` filesystem and `sessions` declarations.
 4. Reload the client to discover the updated Canvas entry. Canvas is panel-only;
    it declares no page surface.

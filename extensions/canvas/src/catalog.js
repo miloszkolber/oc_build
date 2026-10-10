@@ -6,20 +6,29 @@ const text = z.string().max(240);
 const number = z.number().finite().min(0).max(1e9);
 const series = z.array(z.object({ label: text, value: number }).strict()).min(1).max(30);
 const tone = z.enum(['neutral', 'blue', 'green', 'amber', 'red']);
+const treeNode = z.lazy(() => z.object({ label: text, detail: text.optional(), children: z.array(treeNode).max(20).optional() }).strict());
 export const components = {
   // Layout
   Stack: { props: z.object({}).strict(), slots: ['default'], description: 'Vertical layout container' },
   Grid: { props: z.object({ columns: z.number().int().min(1).max(4).optional() }).strict(), slots: ['default'], description: 'Responsive dashboard grid that collapses in narrow panels' },
+  Row: { props: z.object({ wrap: z.boolean().optional() }).strict(), slots: ['default'], description: 'Horizontal layout container; wraps unless wrap is false' },
   Card: { props: z.object({ title: text, description: text.optional() }).strict(), slots: ['default'], description: 'Titled section that groups nested blocks' },
+  Disclosure: { props: z.object({ summary: text, open: z.boolean().optional() }).strict(), slots: ['default'], description: 'Collapsible section that expands locally' },
+  Tabs: { props: z.object({ tabs: z.array(z.object({ label: text, body: z.string().max(2000) }).strict()).min(1).max(8) }).strict(), description: 'Locally switched tab panels; tabs are [{ label, body }]' },
   Divider: { props: z.object({ label: text.optional() }).strict(), description: 'Horizontal rule, optionally labelled' },
   // Content
   Heading: { props: z.object({ title: text, subtitle: text.optional(), eyebrow: text.optional() }).strict(), description: 'Dashboard heading with optional eyebrow and subtitle' },
-  Text: { props: z.object({ text: z.string().max(4000) }).strict(), description: 'Escaped plain text, never HTML' },
+  Text: { props: z.object({ text: z.string().max(4000), variant: z.enum(['body', 'lead', 'caption', 'muted', 'label']).optional(), align: z.enum(['left', 'center', 'right']).optional() }).strict(), description: 'Escaped plain text with optional variant and alignment' },
+  RichText: { props: z.object({ runs: z.array(z.object({ text: text, style: z.enum(['plain', 'bold', 'italic', 'code', 'muted']).optional() }).strict()).min(1).max(80) }).strict(), description: 'Inline text with per-run emphasis; runs are [{ text, style? }]' },
   List: { props: z.object({ title: text.optional(), ordered: z.boolean().optional(), items: z.array(text).min(1).max(50) }).strict(), description: 'Bulleted or numbered list; items is a string array' },
   KeyValue: { props: z.object({ title: text.optional(), items: z.array(z.object({ label: text, value: text, tone: tone.optional() }).strict()).min(1).max(40) }).strict(), description: 'Label/value pairs; items are [{ label, value, tone? }]' },
   Badge: { props: z.object({ label: text, tone: tone.optional() }).strict(), description: 'Inline status pill' },
+  Choice: { props: z.object({ label: text.optional(), mode: z.enum(['single', 'multiple']).optional(), options: z.array(z.object({ label: text, selected: z.boolean().optional() }).strict()).min(1).max(20) }).strict(), description: 'Read-only choice chips; options are [{ label, selected? }]' },
+  Person: { props: z.object({ name: text, role: text.optional(), initials: text.optional(), tone: tone.optional() }).strict(), description: 'Identity chip with initials, name and role' },
   Callout: { props: z.object({ tone: tone.optional(), title: text.optional(), text: z.string().max(2000) }).strict(), description: 'Tone-coloured note with an optional title' },
+  Icon: { props: z.object({ name: z.enum(['check', 'close', 'info', 'warning', 'clock', 'search', 'star', 'sparkle']), tone: tone.optional(), size: z.number().int().min(12).max(64).optional() }).strict(), description: 'Single inline icon by name' },
   CodeBlock: { props: z.object({ title: text.optional(), language: text.optional(), code: z.string().max(6000) }).strict(), description: 'Monospace, escaped code or log text' },
+  Diff: { props: z.object({ title: text.optional(), before: z.array(text).min(1).max(40), after: z.array(text).min(1).max(40) }).strict(), description: 'Aligned before/after lines' },
   // Data and status
   Metric: { props: z.object({ label: text, value: text, detail: text.optional(), change: text.optional(), tone: tone.optional() }).strict(), description: 'Summary value with optional change, detail and tone' },
   Progress: { props: z.object({ title: text.optional(), value: number, max: number, unit: text.optional(), tone: tone.optional() }).strict(), description: 'Single share/progress bar for value against max' },
@@ -27,6 +36,8 @@ export const components = {
   Gauge: { props: z.object({ title: text.optional(), value: number, max: number, unit: text.optional(), tone: tone.optional() }).strict(), description: 'Radial gauge for one value against a maximum' },
   Sparkline: { props: z.object({ title: text.optional(), unit: text.optional(), tone: tone.optional(), data: series }).strict(), description: 'Compact trend line; data is [{ label, value }]' },
   Heatmap: { props: z.object({ title: text.optional(), columns: z.array(text).min(1).max(16), rows: z.array(z.object({ label: text, values: z.array(number).min(1).max(16) }).strict()).min(1).max(30) }).strict(), description: 'Matrix of intensity cells; each row values length must equal columns length' },
+  Rating: { props: z.object({ label: text.optional(), value: number, max: z.number().int().min(1).max(10) }).strict(), description: 'Read-only star rating; value out of max' },
+  Tree: { props: z.object({ title: text.optional(), nodes: z.array(treeNode).min(1).max(20) }).strict(), description: 'Hierarchical list; nodes are [{ label, detail?, children? }]' },
   // Charts
   BarChart: { props: z.object({ title: text, unit: text.optional(), data: series }).strict(), description: 'Nonnegative labeled bar chart; data is [{ label, value }]' },
   LineChart: { props: z.object({ title: text, unit: text.optional(), data: series }).strict(), description: 'Trend line with shaded area; data is [{ label, value }]' },
@@ -34,7 +45,7 @@ export const components = {
   StackedBarChart: { props: z.object({ title: text, unit: text.optional(), categories: z.array(text).min(1).max(12), series: z.array(z.object({ label: text, data: z.array(number).min(1).max(12) }).strict()).min(1).max(8) }).strict(), description: 'Stacked bars over categories; each series data length must equal categories length' },
   ScatterChart: { props: z.object({ title: text, xUnit: text.optional(), yUnit: text.optional(), points: z.array(z.object({ x: number, y: number, label: text.optional() }).strict()).min(1).max(200) }).strict(), description: 'X/Y scatter plot; points are [{ x, y, label? }]' },
   // Collections
-  Table: { props: z.object({ title: text, columns: z.array(text).min(1).max(12), rows: z.array(z.array(z.union([text, z.number().finite().min(-1e12).max(1e12), z.boolean(), z.null()])).max(12)).max(200) }).strict(), description: 'Searchable, sortable table; rows is an array of cell arrays' },
+  Table: { props: z.object({ title: text, columns: z.array(text).min(1).max(12), rows: z.array(z.array(z.union([text, z.number().finite().min(-1e12).max(1e12), z.boolean(), z.null()])).max(12)).max(200), align: z.array(z.enum(['left', 'right'])).max(12).optional(), footer: z.array(z.union([text, z.number().finite().min(-1e12).max(1e12), z.boolean(), z.null()])).max(12).optional() }).strict(), description: 'Searchable, sortable table; rows is an array of cell arrays, align sets per-column alignment, footer is an optional totals row' },
   Checklist: { props: z.object({ title: text.optional(), items: z.array(z.object({ label: text, done: z.boolean() }).strict()).min(1).max(50) }).strict(), description: 'Task list with done/pending state; items are [{ label, done }]' },
   Timeline: { props: z.object({ title: text.optional(), items: z.array(z.object({ time: text.optional(), title: text, detail: text.optional(), tone: tone.optional() }).strict()).min(1).max(50) }).strict(), description: 'Chronological events; items are [{ time?, title, detail?, tone? }]' },
   Steps: { props: z.object({ title: text.optional(), items: z.array(z.object({ label: text, detail: text.optional(), state: z.enum(['todo', 'current', 'done']) }).strict()).min(1).max(30) }).strict(), description: 'Numbered steps with todo/current/done state' },
@@ -85,8 +96,9 @@ export function parseArtifact(input) {
   for (const [key, element] of entries) {
     const children = element.children ?? [];
     element.children = children;
-    if (children.length && !['Stack', 'Grid', 'Card'].includes(element.type)) throw new Error(`${key}: only Stack, Grid and Card can contain children`);
+    if (children.length && !CONTAINERS.includes(element.type)) throw new Error(`${key}: only ${CONTAINERS.join(', ')} can contain children`);
     if (element.type === 'Table' && element.props.rows.some(row => row.length !== element.props.columns.length)) throw new Error(`${key}: row width must match columns`);
+    if (element.type === 'Table' && element.props.footer && element.props.footer.length !== element.props.columns.length) throw new Error(`${key}: footer width must match columns`);
     if (element.type === 'Heatmap' && element.props.rows.some(row => row.values.length !== element.props.columns.length)) throw new Error(`${key}: heatmap row width must match columns`);
     if (element.type === 'StackedBarChart' && element.props.series.some(entry => entry.data.length !== element.props.categories.length)) throw new Error(`${key}: stacked series length must match categories`);
     if (element.type === 'Diagram') {
