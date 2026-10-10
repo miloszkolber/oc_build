@@ -50,10 +50,12 @@ search index).
 
 - [x] One canvas per conversation, read from `/data/.db/openchamber/canvas/<session-id>.canvas.json`.
 - [x] Read-only panel: no JSON exposure, no toolbar, no writing; the agent owns the file.
-- [x] Catalog-1 components: layout cards, headings, text, metrics, bar/line/donut charts, table, Mermaid `Diagram`, horizon + cost tools.
+- [x] Catalog-1 vocabulary of 39 components across layout, content, data/status, charts, collections and diagram/quick tools, with the agent contract generated from `src/catalog.js`.
+- [x] Mermaid `Diagram` covers 20 diagram families, themed from host tokens in light and dark.
 - [x] Subagent sessions show the top-level conversation's canvas.
 - [x] Empty state offers a copyable/insertable agent request.
 - [x] Visuals aligned with the app's own panels; type at the app's 14 px base.
+- [x] `bun run preview` serves a live gallery of every component for review.
 - [x] No extension service or extra process; approved `filesystem` + `sessions` only.
 - [ ] Confirm the panel in the native desktop client (operator).
 
@@ -70,7 +72,8 @@ search index).
 **Status: Done**
 
 - [x] Exact pins for extension dependencies (Mermaid pinned so upgrades are deliberate).
-- [x] Dependabot pull requests for `/extensions/canvas`; merging runs the normal tests and package step.
+- [x] Dependabot pull requests for `/extensions/canvas` and `/docker/browser`; merging runs the normal tests and package step.
+- [x] Dependabot keeps the SHA-pinned GitHub Actions current.
 - [ ] Cover app-image base versions, not only extension packages.
 
 ### Development container
