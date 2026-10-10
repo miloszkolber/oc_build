@@ -75,15 +75,20 @@ search index).
 
 ### Development container
 
-**Status: Next**
+**Status: In progress** — first slice built and verified in the `artful-yak` worktree
 
-A build/test image agents can use directly, so a task does not depend on whatever
-toolchain happens to be installed.
+A build/test image agents use directly, so a task does not depend on whatever
+toolchain happens to be installed. Two tiers: permanent shared caches
+(`/data/.db/openchamber/sandbox/cache`) downloaded once, and an ephemeral
+per-run scratch directory that the wrapper removes on exit. The browser image
+stays separate and distroless.
 
-- [ ] Base image plus the toolchains the build needs (Node/Bun, Docker CLI, Git, ripgrep).
-- [ ] Workspace mount and cache directories that survive runs.
-- [ ] Documented entry points for build, test and package.
-- [ ] CI parity: the same commands pass locally and in Actions.
+- [x] Toolchain image `openchamber-sandbox` (`docker/sandbox/`): Bun, Node/npm, pnpm, Go, Python/uv, Docker CLI + compose + buildx, git/make/gcc/ripgrep/jq.
+- [x] Shared cache directories wired and asserted in the image check; Go toolchain auto-download disabled, pnpm store pinned.
+- [x] Entry point `docker/sandbox/sandbox run -- <cmd>`; mounts `/repo`, `/home/core`, `/data/.db/openchamber`; scratch dir removed on exit.
+- [ ] Host deployment: `/usr/local/bin/sandbox` shim, Compose stack, cleanup timer for crash leftovers.
+- [ ] Dedicated rootless/BuildKit endpoint so the sandbox can build images without the host Docker socket.
+- [ ] Documented build/test/package entry points and CI parity for the same commands.
 
 ### Design and visual tooling
 
