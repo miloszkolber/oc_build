@@ -2,6 +2,13 @@
 
 ## 0.9.5
 
+- Panel icon uses the bare key `palette`. The app resolves an icon by looking up
+  its own map with the manifest string used **verbatim** (`id="oc-<key>"`), and
+  its sprite keys carry **no** `-line`/`-fill` suffix (`palette`,
+  `bar-chart-box`, `pencil-ruler-2`). Every `*-line` name therefore missed and
+  the rail fell back to the same default glyph, which is why three different
+  names looked identical. `painting-ai` does not exist in the app's sprite at
+  all.
 - UI polish pass against the app's own control metrics (read from the SDK UI
   kit CSS) and the host root scale. Harness reproduced `applyHostReady`'s
   `font-size: 0.875rem` so the review matched the real panel.
@@ -59,6 +66,9 @@
   handlers are still blocked. Front-matter and `%%{init}%%` remain rejected.
 - `Diagram` honours Mermaid `accTitle`/`accDescr` for its accessible name and
   description.
+- Worktree initialisation fixed separately on the host: `XDG_DATA_HOME` moved off
+  the container tmpfs to `/data/.db/openchamber/xdg-data` so the host OpenCode can
+  see the worktree directory (operator confirmed worktrees now come up).
 - 36 Bun tests pass, and the production ZIP
   `openchamber-generative-canvas-0.9.4.zip` builds (118 files). Checks are MCP
   Chromium, not native desktop acceptance.

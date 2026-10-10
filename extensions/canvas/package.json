@@ -14,7 +14,7 @@
       "panel": {
         "id": "generative-canvas",
         "name": "Canvas",
-        "icon": "painting-ai-line",
+        "icon": "palette",
         "entry": "panel/index.html"
       },
       "capabilities": [
