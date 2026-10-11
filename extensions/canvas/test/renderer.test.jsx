@@ -35,6 +35,35 @@ test('line chart scales uniformly and the diagram announces a loading state', ()
   expect(html).toContain('Rendering diagram…');
   expect(html).toContain('aria-busy="true"');
 });
+test('multi-series charts pair every series with a non-color pattern', () => {
+  const artifact = parseArtifact({ catalog_version: '1', title: 'series', spec: { root: 'r', elements: {
+    r: { type: 'Stack', props: {}, children: ['bars', 'comp', 'stack', 'donut'] },
+    bars: { type: 'BarChart', props: { title: 'Bars', data: [{ label: 'a', value: 2 }, { label: 'b', value: 1 }, { label: 'c', value: 3 }] } },
+    comp: { type: 'StackedBar', props: { title: 'Composition', segments: [{ label: 'x', value: 1 }, { label: 'y', value: 2 }] } },
+    stack: { type: 'StackedBarChart', props: { title: 'Stacked', categories: ['Q1'], series: [{ label: 'New', data: [3] }, { label: 'Churn', data: [1] }] } },
+    donut: { type: 'DonutChart', props: { title: 'Donut', data: [{ label: 'p', value: 2 }, { label: 'q', value: 1 }, { label: 'r', value: 1 }] } },
+  } } });
+  const html = renderToStaticMarkup(<Canvas artifact={artifact} months={12} setMonths={() => {}} />);
+  expect(html).toContain('bar-fill pat-2');
+  expect(html).toContain('series-dot pat-3');
+  expect(html).toContain('stacked-seg pat-2');
+  expect(html).toContain('stack-seg pat-2');
+  expect(html).toContain('series-pattern');
+  expect(html).toContain('donut-track');
+  expect(html).toContain('Donut: p 50%, q 25%, r 25%');
+  expect(html).not.toContain('conic-gradient');
+});
+test('single-series charts stay solid', () => {
+  const artifact = parseArtifact({ catalog_version: '1', title: 'single', spec: { root: 'r', elements: {
+    r: { type: 'Stack', props: {}, children: ['line', 'progress', 'spark'] },
+    line: { type: 'LineChart', props: { title: 'Trend', data: [{ label: 'a', value: 1 }, { label: 'b', value: 2 }] } },
+    progress: { type: 'Progress', props: { title: 'Progress', value: 5, max: 10 } },
+    spark: { type: 'Sparkline', props: { title: 'Spark', data: [{ label: 'a', value: 1 }, { label: 'b', value: 2 }] } },
+  } } });
+  const html = renderToStaticMarkup(<Canvas artifact={artifact} months={12} setMonths={() => {}} />);
+  expect(html).not.toContain('pat-');
+  expect(html).toContain('line-chart');
+});
 test('plain text never becomes executable markup', () => {
   const value = parseArtifact({ catalog_version: '1', title: 'untrusted', spec: { root: 'text', elements: { text: { type: 'Text', props: { text: '<img src=x onerror=alert(1)>' } } } } });
   const html = renderToStaticMarkup(<Canvas artifact={value} months={12} setMonths={() => {}} />);

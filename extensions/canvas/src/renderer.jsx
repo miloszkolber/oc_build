@@ -48,6 +48,35 @@ const ACC_DESCR = /^[ \t]*accDescr[ \t]*:[ \t]*(.+)$/im;
 function diagramAccessibility(code, fallback) {
   return { title: code.match(ACC_TITLE)?.[1]?.trim() || fallback, description: code.match(ACC_DESCR)?.[1]?.trim() || '' };
 }
+// Mermaid appends a temporary node to the document and measures it. While the
+// guest document is not rendered (collapsed panel, hidden tab, conversation
+// switch) that node has no layout box and Mermaid rejects with "svg element not
+// in render tree". Render attempts therefore wait for a rendered document, and a
+// measurement failure is retried once instead of being stored as terminal state.
+function documentIsRendered() {
+  if (typeof document === 'undefined') return true;
+  if (document.visibilityState === 'hidden') return false;
+  return Boolean(document.body?.getClientRects().length);
+}
+function whenDocumentRendered(callback) {
+  if (documentIsRendered()) { callback(); return () => {}; }
+  let frame = 0;
+  let done = false;
+  const stop = () => {
+    if (done) return;
+    done = true;
+    cancelAnimationFrame(frame);
+    document.removeEventListener('visibilitychange', check);
+    window.removeEventListener('resize', check);
+  };
+  const check = () => { if (!documentIsRendered()) return; stop(); callback(); };
+  document.addEventListener('visibilitychange', check);
+  window.addEventListener('resize', check);
+  const poll = () => { if (done) return; frame = requestAnimationFrame(poll); check(); };
+  frame = requestAnimationFrame(poll);
+  return stop;
+}
+const TRANSIENT_DIAGRAM_ERROR = /not in render tree/i;
 function Diagram({ props }) {
   // Mermaid is loaded and rendered asynchronously. The host stays empty in the
   // React tree (Mermaid writes into it), so the loading and error messages are
@@ -61,17 +90,26 @@ function Diagram({ props }) {
   const descrId = `diagram-desc-${uid}`;
   useEffect(() => {
     let alive = true;
+    let cancelWait = null;
     setStatus('pending'); setError('');
-    renderDiagram(`canvas-diagram-${uid}`, props.code, isDarkTheme(themeKey)).then(({ svg }) => {
+    const run = retries => {
       if (!alive || !host.current) return;
-      host.current.innerHTML = svg;
-      setStatus('ready');
-    }).catch(failure => {
-      if (!alive) return;
-      setError(`Diagram could not be rendered: ${errorMessage(failure)}`);
-      setStatus('error');
-    });
-    return () => { alive = false; };
+      cancelWait = whenDocumentRendered(() => {
+        cancelWait = null;
+        renderDiagram(`canvas-diagram-${uid}`, props.code, isDarkTheme(themeKey)).then(({ svg }) => {
+          if (!alive || !host.current) return;
+          host.current.innerHTML = svg;
+          setStatus('ready');
+        }).catch(failure => {
+          if (!alive) return;
+          if (retries < 1 && TRANSIENT_DIAGRAM_ERROR.test(errorMessage(failure))) { run(retries + 1); return; }
+          setError(`Diagram could not be rendered. ${errorMessage(failure)}`);
+          setStatus('error');
+        });
+      });
+    };
+    run(0);
+    return () => { alive = false; cancelWait?.(); };
   }, [props.code, uid, themeKey]);
   return <section className="card diagram-card"><h2>{props.title}</h2>{error
     ? <p className="muted">{error}</p>
@@ -90,14 +128,36 @@ function LineChart({ props }) {
 }
 function DonutChart({ props }) {
   const total = props.data.reduce((sum, item) => sum + item.value, 0);
+  const uid = useId().replace(/[^a-zA-Z0-9_-]/g, '');
+  const radius = 50;
+  const circumference = 2 * Math.PI * radius;
+  // A 2px gap between slices separates neighbours without another color.
   let offset = 0;
-  const gradient = props.data.map((item, index) => { const start = offset; offset += total ? item.value / total * 100 : 0; return `${colors[index % colors.length]} ${start}% ${offset}%`; }).join(', ');
-  return <section className="card chart-card"><h2>{props.title}</h2><div className="distribution"><div className="donut" aria-hidden="true" style={{ background: total ? `conic-gradient(${gradient})` : 'var(--line)' }}><div><strong>{total.toLocaleString()}</strong><span>Total</span></div></div><dl className="legend">{props.data.map((item, index) => <div key={index}><dt><i style={{ background: colors[index % colors.length] }} />{item.label}</dt><dd>{total ? Math.round(item.value / total * 100) : 0}% <span>{item.value.toLocaleString()}</span></dd></div>)}</dl></div></section>;
+  const slices = props.data.map((item, index) => {
+    const length = Math.max(0, (total ? item.value / total * circumference : 0) - 2);
+    const slice = { index, length, start: offset };
+    offset += length + 2;
+    return slice;
+  });
+  const share = item => (total ? Math.round(item.value / total * 100) : 0);
+  return <section className="card"><h2>{props.title}</h2><div className="distribution">
+    <svg className="donut" viewBox="0 0 120 120" role="img" aria-label={`${props.title}: ${props.data.map(item => `${item.label} ${share(item)}%`).join(', ')}`}>
+      <defs><PatternDefs id={`donut-${uid}`} /></defs>
+      <circle className="donut-track" cx="60" cy="60" r={radius} />
+      <g transform="rotate(-90 60 60)">
+        {slices.map(slice => <circle key={slice.index} className="donut-seg" cx="60" cy="60" r={radius} style={{ stroke: colors[slice.index % colors.length] }} strokeDasharray={`${slice.length} ${circumference - slice.length}`} strokeDashoffset={-slice.start} />)}
+        {slices.filter(slice => patternOf(slice.index) > 1).map(slice => <circle key={`pattern-${slice.index}`} className="donut-seg" cx="60" cy="60" r={radius} stroke={`url(#donut-${uid}-p${patternOf(slice.index)})`} strokeDasharray={`${slice.length} ${circumference - slice.length}`} strokeDashoffset={-slice.start} />)}
+      </g>
+      <text className="donut-total" x="60" y="57">{total.toLocaleString()}</text>
+      <text className="donut-label" x="60" y="72">Total</text>
+    </svg>
+    <dl className="legend">{props.data.map((item, index) => <div key={index}><dt><i className={`pat-${patternOf(index)}`} style={{ backgroundColor: colors[index % colors.length] }} />{item.label}</dt><dd>{share(item)}% <span>{item.value.toLocaleString()}</span></dd></div>)}</dl>
+  </div></section>;
 }
 function Bars({ title, data, format }) {
   const maximum = Math.max(1, ...data.map(item => item.value));
   return <section className="card"><h2>{title}</h2><dl className="bars">{data.map((item, index) => <div className="bar-row" key={index}>
-    <dt><i className="series-dot" style={{ background: colors[index % colors.length] }} />{item.label}</dt><dd><span className="bar-track" aria-hidden="true"><span style={{ width: `${item.value / maximum * 100}%`, background: colors[index % colors.length] }} /></span><strong>{format(item.value)}</strong></dd>
+    <dt><i className={`series-dot pat-${patternOf(index)}`} style={{ backgroundColor: colors[index % colors.length] }} />{item.label}</dt><dd><span className="bar-track" aria-hidden="true"><span className={`bar-fill pat-${patternOf(index)}`} style={{ width: `${item.value / maximum * 100}%`, backgroundColor: colors[index % colors.length] }} /></span><strong>{format(item.value)}</strong></dd>
   </div>)}</dl></section>;
 }
 function Table({ props }) {
@@ -119,6 +179,19 @@ function Table({ props }) {
 const TONE_COLORS = { neutral: 'var(--muted)', blue: 'var(--series-1)', green: 'var(--series-2)', amber: 'var(--series-3)', red: 'var(--oc-error, var(--series-5))' };
 const toneColor = (value, index) => TONE_COLORS[value] ?? colors[index % colors.length];
 const toneClass = value => `tone-${value ?? 'neutral'}`;
+// Series carry a pattern as well as a fill, so adjacent steps of the single-hue
+// ramp stay separable without relying on color alone. Pattern 1 stays solid.
+const patternOf = index => (index % 5) + 1;
+const PATTERNS = [
+  null,
+  <path key="diagonal" d="M-1 5L5-1M0 8L8 0" />,
+  <g key="dots"><circle cx="2" cy="2" r="1.05" /><circle cx="6" cy="6" r="1.05" /></g>,
+  <g key="cross"><path d="M-1 5L5-1M0 8L8 0" /><path d="M-1 3L5 9M0 0L8 8" /></g>,
+  <g key="grid"><path d="M0 3.5H8M3.5 0V8" /></g>,
+];
+function PatternDefs({ id }) {
+  return <>{PATTERNS.map((shape, index) => shape && <pattern key={index} id={`${id}-p${index + 1}`} className="series-pattern" width="8" height="8" patternUnits="userSpaceOnUse">{shape}</pattern>)}</>;
+}
 const Title = ({ children }) => children ? <h2>{children}</h2> : null;
 
 function Divider({ props }) {
@@ -146,9 +219,12 @@ function Progress({ props }) {
 }
 function StackedBar({ props }) {
   const total = props.segments.reduce((sum, segment) => sum + segment.value, 0);
-  let offset = 0;
-  const stops = props.segments.map((segment, index) => { const start = offset; offset += total ? segment.value / total * 100 : 0; return `${toneColor(segment.tone, index)} ${start}% ${offset}%`; }).join(', ');
-  return <section className="card"><div className="section-heading"><h2>{props.title ?? 'Composition'}</h2><span className="chart-label">{props.unit ?? 'SHARE'}</span></div><div className="stacked-bar" style={{ background: total ? `linear-gradient(90deg, ${stops})` : 'var(--line)' }} aria-hidden="true" /><dl className="legend">{props.segments.map((segment, index) => <div key={index}><dt><i style={{ background: toneColor(segment.tone, index) }} />{segment.label}</dt><dd>{total ? Math.round(segment.value / total * 100) : 0}% <span>{segment.value.toLocaleString()}</span></dd></div>)}</dl></section>;
+  const share = segment => (total ? Math.round(segment.value / total * 100) : 0);
+  return <section className="card"><div className="section-heading"><h2>{props.title ?? 'Composition'}</h2><span className="chart-label">{props.unit ?? 'SHARE'}</span></div>
+    <div className="stacked-bar" role="img" aria-label={`${props.title ?? 'Composition'}: ${props.segments.map(segment => `${segment.label} ${share(segment)}%`).join(', ')}`}>
+      {props.segments.map((segment, index) => <span key={index} className={`stacked-seg pat-${patternOf(index)}`} style={{ width: total ? `${segment.value / total * 100}%` : '0%', backgroundColor: toneColor(segment.tone, index) }} />)}
+    </div>
+    <dl className="legend">{props.segments.map((segment, index) => <div key={index}><dt><i className={`pat-${patternOf(index)}`} style={{ backgroundColor: toneColor(segment.tone, index) }} />{segment.label}</dt><dd>{share(segment)}% <span>{segment.value.toLocaleString()}</span></dd></div>)}</dl></section>;
 }
 function Gauge({ props }) {
   const ratio = props.max ? Math.max(0, Math.min(1, props.value / props.max)) : 0;
@@ -167,7 +243,7 @@ function Heatmap({ props }) {
 function StackedBarChart({ props }) {
   const totals = props.categories.map((_, index) => props.series.reduce((sum, entry) => sum + (entry.data[index] ?? 0), 0));
   const maximum = Math.max(1, ...totals);
-  return <section className="card"><div className="section-heading"><h2>{props.title}</h2>{props.unit && <span className="chart-label">{props.unit}</span>}</div><div className="stack-chart">{props.categories.map((category, index) => <div className="stack-col" key={index}><div className="stack-col-bars">{props.series.map((entry, seriesIndex) => <span key={seriesIndex} style={{ height: `${(entry.data[index] ?? 0) / maximum * 100}%`, background: colors[seriesIndex % colors.length] }} title={`${entry.label}: ${entry.data[index]}`} />)}</div><span className="axis-x">{category}</span></div>)}</div><dl className="legend">{props.series.map((entry, index) => <div key={index}><dt><i style={{ background: colors[index % colors.length] }} />{entry.label}</dt><dd>{entry.data.reduce((sum, value) => sum + value, 0).toLocaleString()}</dd></div>)}</dl></section>;
+  return <section className="card"><div className="section-heading"><h2>{props.title}</h2>{props.unit && <span className="chart-label">{props.unit}</span>}</div><div className="stack-chart">{props.categories.map((category, index) => <div className="stack-col" key={index}><div className="stack-col-bars">{props.series.map((entry, seriesIndex) => <span key={seriesIndex} className={`stack-seg pat-${patternOf(seriesIndex)}`} style={{ height: `${(entry.data[index] ?? 0) / maximum * 100}%`, backgroundColor: colors[seriesIndex % colors.length] }} title={`${entry.label}: ${entry.data[index]}`} />)}</div><span className="axis-x">{category}</span></div>)}</div><dl className="legend">{props.series.map((entry, index) => <div key={index}><dt><i className={`pat-${patternOf(index)}`} style={{ backgroundColor: colors[index % colors.length] }} />{entry.label}</dt><dd>{entry.data.reduce((sum, value) => sum + value, 0).toLocaleString()}</dd></div>)}</dl></section>;
 }
 function ScatterChart({ props }) {
   const xs = props.points.map(point => point.x), ys = props.points.map(point => point.y);

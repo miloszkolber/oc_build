@@ -1,5 +1,30 @@
 # Canvas verification
 
+## 0.9.13
+
+- **Diagram resilience.** `Diagram` now waits for a rendered document before
+  starting a render and retries once when Mermaid reports a render-tree failure.
+  Reproduced the reviewer failure first (artifact from 0.9.9, render attempted
+  while the guest document was not rendered → `svg element not in render tree`,
+  latched permanently). After the fix the same sequence defers both diagrams with
+  no error and renders 2/2 once the document renders, with no user action.
+- **Redundant series encoding.** Bars, composition segments, stacked columns and
+  legend chips carry `pat-1`…`pat-5` (solid, diagonal, dots, crosshatch, grid)
+  drawn from the page surface, so pattern ink contrasts on light and dark fills.
+  `DonutChart` moved from a `conic-gradient` to an SVG ring with per-slice pattern
+  fills and 2px slice separation; totals, shares and the legend are unchanged.
+  Single-series charts (line, progress, sparkline) stay solid.
+- **Scroll stability.** `.canvas`, `.table-scroll`, `.diagram-host` and
+  `.code-block` hide scrollbars instead of reserving an 8px gutter; measured
+  `offsetWidth - clientWidth = 0` while the canvas is still scrollable.
+- **Focus ownership.** The table filter input no longer paints its own
+  `:focus-visible` ring; the wrapper owns the single indicator.
+- **Preview parity.** The preview's `--oc-font: Arial, sans-serif` pin is removed
+  so preview and panel resolve one token chain.
+- 42 tests pass (two new: multi-series patterns, single-series solidity). Both
+  examples validate. Preview: 2/2 diagrams render, 0 errors.
+- Production ZIP `openchamber-generative-canvas-0.9.13.zip`.
+
 ## 0.9.12
 
 - Layout-shift pass on state changes, requested explicitly: interactive states
