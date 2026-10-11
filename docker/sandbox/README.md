@@ -88,6 +88,10 @@ because it names that deployment's compose file and service:
 alias sandbox='docker compose -f <deployment compose> run --rm -w "$PWD" openchamber-sandbox'
 ```
 
+A deployment that wants the working directory guarded, or flags such as
+`--publish` passed through, wraps the same Compose command in a small shell
+function instead of a bare alias. Ports stay on host loopback either way.
+
 Behaviour worth knowing:
 
 - All configured roots are mounted read-write at their host paths.
