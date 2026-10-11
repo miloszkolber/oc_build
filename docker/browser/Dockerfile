@@ -3,8 +3,30 @@ FROM mirror.gcr.io/oven/bun:1.4.2 AS bun-runtime
 FROM mirror.gcr.io/library/debian:bookworm-slim AS build
 ARG OPENCHAMBER_SOURCE_REVISION=unknown
 RUN apt-get update \
-    && apt-get install --no-install-recommends -y ca-certificates chromium fonts-liberation \
+    && apt-get install --no-install-recommends -y ca-certificates chromium fonts-liberation fonts-inter fonts-jetbrains-mono fonts-noto-color-emoji \
     && rm -rf /var/lib/apt/lists/*
+# Bind the headless browser's default families to proportional faces: pages and
+# UI stacks that only name generic or modern UI families (system-ui,
+# ui-sans-serif, Segoe UI, Roboto...) got a monospace fallback on the minimal
+# Liberation-only set. local.conf is Debian's documented customization slot and
+# is loaded through conf.d/51-local.conf.
+RUN cat > /etc/fonts/local.conf <<'EOF'
+<?xml version="1.0"?>
+<!DOCTYPE fontconfig SYSTEM "fonts.dtd">
+<!-- Keep in sync with the browser font list in browser-build.json below. -->
+<fontconfig>
+  <alias><family>sans-serif</family><prefer><family>Inter</family><family>Liberation Sans</family></prefer></alias>
+  <alias><family>serif</family><prefer><family>Liberation Serif</family></prefer></alias>
+  <alias><family>monospace</family><prefer><family>JetBrains Mono</family><family>Liberation Mono</family></prefer></alias>
+  <match target="pattern"><test name="family"><string>system-ui</string></test><edit name="family" mode="assign" binding="same"><string>sans-serif</string></edit></match>
+  <match target="pattern"><test name="family"><string>ui-sans-serif</string></test><edit name="family" mode="assign" binding="same"><string>sans-serif</string></edit></match>
+  <match target="pattern"><test name="family"><string>-apple-system</string></test><edit name="family" mode="assign" binding="same"><string>sans-serif</string></edit></match>
+  <match target="pattern"><test name="family"><string>Segoe UI</string></test><edit name="family" mode="assign" binding="same"><string>sans-serif</string></edit></match>
+  <match target="pattern"><test name="family"><string>Roboto</string></test><edit name="family" mode="assign" binding="same"><string>sans-serif</string></edit></match>
+  <match target="pattern"><test name="family"><string>Helvetica Neue</string></test><edit name="family" mode="assign" binding="same"><string>sans-serif</string></edit></match>
+  <match target="pattern"><test name="family"><string>Noto Sans</string></test><edit name="family" mode="assign" binding="same"><string>sans-serif</string></edit></match>
+</fontconfig>
+EOF
 COPY --from=bun-runtime /usr/local/bin/bun /usr/local/bin/bun
 WORKDIR /src/browser
 COPY package.json bun.lock ./
@@ -56,11 +78,15 @@ RUN set -eu; \
     chromium_version="$(/usr/lib/chromium/chromium --version | sed 's/[[:space:]]*$//')"; \
     chromium_package_version="$(dpkg-query -W chromium | cut -f2)"; \
     chromium_common_version="$(dpkg-query -W chromium-common | cut -f2)"; \
-    fonts_version="$(dpkg-query -W fonts-liberation | cut -f2)"; \
+    fonts_liberation_version="$(dpkg-query -W fonts-liberation | cut -f2)"; \
+    fonts_inter_version="$(dpkg-query -W fonts-inter | cut -f2)"; \
+    fonts_mono_version="$(dpkg-query -W fonts-jetbrains-mono | cut -f2)"; \
+    fonts_emoji_version="$(dpkg-query -W fonts-noto-color-emoji | cut -f2)"; \
     certificates_version="$(dpkg-query -W ca-certificates | cut -f2)"; \
-    printf '{"sourceRevision":"%s","chromiumVersion":"%s","nssSoftoknModule":"%s","packages":{"chromium":"%s","chromium-common":"%s","fonts-liberation":"%s","ca-certificates":"%s"}}\n' \
+    printf '{"sourceRevision":"%s","chromiumVersion":"%s","nssSoftoknModule":"%s","packages":{"chromium":"%s","chromium-common":"%s","fonts-liberation":"%s","fonts-inter":"%s","fonts-jetbrains-mono":"%s","fonts-noto-color-emoji":"%s","ca-certificates":"%s"}}\n' \
         "$OPENCHAMBER_SOURCE_REVISION" "$chromium_version" "$softokn_module" "$chromium_package_version" \
-        "$chromium_common_version" "$fonts_version" "$certificates_version" \
+        "$chromium_common_version" "$fonts_liberation_version" "$fonts_inter_version" "$fonts_mono_version" \
+        "$fonts_emoji_version" "$certificates_version" \
         > /browser-rootfs/usr/share/openchamber/browser-build.json; \
     mkdir -p /browser-rootfs/usr/bin; \
     ln -s /usr/lib/chromium/chromium /browser-rootfs/usr/bin/chromium

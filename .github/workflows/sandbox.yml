@@ -2,9 +2,9 @@ name: Sandbox image
 on:
   push:
     branches: [main]
-    paths: ['docker/sandbox/**', '.github/workflows/sandbox.yml', 'docs/**', 'openspec', 'scripts/check-docs*']
+    paths: ['docker/sandbox/**', '.github/workflows/sandbox.yml', 'openspec/**', 'scripts/check-docs*']
   pull_request:
-    paths: ['docker/sandbox/**', '.github/workflows/sandbox.yml', 'docs/**', 'openspec', 'scripts/check-docs*']
+    paths: ['docker/sandbox/**', '.github/workflows/sandbox.yml', 'openspec/**', 'scripts/check-docs*']
   schedule:
     - cron: '23 4 * * 1'
   workflow_dispatch:
@@ -32,7 +32,9 @@ jobs:
           docker run --rm --network none --entrypoint bash "$image" \
             /usr/local/share/sandbox/check-image.sh
           docker run --rm --network none --volume "$PWD:/repo" --workdir /repo \
-            --entrypoint node "$image" --test docker/sandbox/sandbox.test.mjs scripts/check-docs.test.mjs
+            --entrypoint node "$image" --test docker/sandbox/sandbox.test.mjs
+          docker run --rm --network none --volume "$PWD:/repo" --workdir /repo \
+            --entrypoint bun "$image" test scripts/check-docs.test.mjs
           docker run --rm --network none --volume "$PWD:/repo" --workdir /repo \
             --entrypoint node "$image" scripts/check-docs.mjs
           docker run --rm --network none --volume "$PWD:/repo" --workdir /repo \

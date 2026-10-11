@@ -24,8 +24,8 @@ docker run --rm -i --network none --read-only --cap-drop ALL \
   --input-type=module < docker/browser/check-image.mjs
 ```
 
-The check exercises real Chromium, 38 MCP tools, responsive layout/color
-preference, authentication, navigation, screenshot, destination policy and
+The check exercises real Chromium, 38 MCP tools, proportional generic/system UI
+font resolution, responsive layout/color preference, authentication, navigation, screenshot, destination policy and
 cleanup. Runtime paths and image names remain unchanged.
 
 This package is the active Chromium MCP backend. The custom Agent Browser extension has been removed. This package has no guest service, panel, extension manifest, install ZIP or surface routes.
@@ -42,7 +42,7 @@ It provides 38 browser tools, bearer authentication, destination grants, tempora
 
 ## QA without browser installation
 
-Chromium, its runtime libraries, certificates, fonts and MCP code are baked into the image. Agents use the connected `browser` MCP directly. Do not install Playwright, download Chromium, start another browser server or attach raw CDP for ordinary agent QA.
+Chromium, its runtime libraries, certificates, fonts and MCP code are baked into the image. The font set is Liberation (metric aliases for Arial/Helvetica/Times/Courier New), Inter, JetBrains Mono and Noto Color Emoji, with `/etc/fonts/local.conf` binding generic and modern UI families (`sans-serif`, `system-ui`, `ui-sans-serif`, `Segoe UI`, `Roboto`, `Helvetica Neue`) to a proportional sans so review pages never fall back to a monospace face. Agents use the connected `browser` MCP directly. Do not install Playwright, download Chromium, start another browser server or attach raw CDP for ordinary agent QA.
 
 Use `browser_set_viewport` to change actual responsive layout (1–3840 CSS pixels), optionally mobile layout and the active page's light/dark color preference. `browser_screenshot` width/height change capture bounds only. Run the application using its existing host/project tooling, navigate to its localhost URL, exercise forms/keyboard/scroll/tabs, inspect console and network, and capture before/after images. Other private/LAN targets still need approved grants.
 

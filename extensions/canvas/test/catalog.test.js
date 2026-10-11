@@ -1,6 +1,6 @@
 import { describe, test, expect } from 'bun:test';
-import { parseArtifact, totalCost, catalog, components } from '../src/catalog.js';
-import { costExplorer, showcase } from '../src/examples.js';
+import { parseArtifact, totalCost, catalog, components, componentsSummary, CONTAINERS } from '../src/catalog.js';
+import { costExplorer, gallery } from '../src/examples.js';
 const mutated = fn => { const value = structuredClone(costExplorer); fn(value); return value; };
 describe('untrusted canvas boundary', () => {
   test('example validates with our validator and json-render catalog', () => {
@@ -33,11 +33,17 @@ describe('untrusted canvas boundary', () => {
     for (let i = 0; i < 18; i++) value.spec.elements[`n${i}`] = { type: 'Stack', props: {}, children: i < 17 ? [`n${i + 1}`] : [] };
     expect(() => parseArtifact(value)).toThrow('depth');
   });
-  test('showcase exercises every catalog component', () => {
-    const parsed = parseArtifact(showcase);
+  test('gallery exercises every catalog component', () => {
+    const parsed = parseArtifact(gallery);
     expect(catalog.validate(parsed.spec).success).toBe(true);
     const used = new Set(Object.values(parsed.spec.elements).map(element => element.type));
     expect([...used].sort()).toEqual(Object.keys(components).sort());
+  });
+  test('rejects mismatched heatmap rows and stacked series', () => {
+    const heat = { catalog_version: '1', title: 'h', spec: { root: 'x', elements: { x: { type: 'Heatmap', props: { columns: ['a', 'b'], rows: [{ label: 'r', values: [1] }] } } } } };
+    expect(() => parseArtifact(heat)).toThrow();
+    const stacked = { catalog_version: '1', title: 's', spec: { root: 'x', elements: { x: { type: 'StackedBarChart', props: { title: 't', categories: ['a', 'b'], series: [{ label: 'n', data: [1] }] } } } } };
+    expect(() => parseArtifact(stacked)).toThrow();
   });
   test('rejects diagram markup, front-matter config and directives', () => {
     const base = { catalog_version: '1', title: 'd', spec: { root: 'x', elements: { x: { type: 'Diagram', props: { title: 'd', code: 'flowchart LR\n A-->B' } } } } };
@@ -46,5 +52,28 @@ describe('untrusted canvas boundary', () => {
       const value = structuredClone(base); value.spec.elements.x.props.code = code;
       expect(() => parseArtifact(value)).toThrow();
     }
+  });
+  test('accepts diagram labels that merely contain "on...=" text', () => {
+    const value = { catalog_version: '1', title: 'd', spec: { root: 'x', elements: { x: { type: 'Diagram', props: { title: 'd', code: 'flowchart LR\n A[connection=fast]-->B' } } } } };
+    expect(parseArtifact(value).spec.elements.x.type).toBe('Diagram');
+  });
+  test('componentsSummary covers every component with derived props', () => {
+    const lines = componentsSummary();
+    expect(lines).toHaveLength(Object.keys(components).length);
+    for (const [name, component] of Object.entries(components)) {
+      const line = lines.find(candidate => candidate.startsWith(`${name}(`));
+      expect(line, name).toBeTruthy();
+      expect(line).toContain(component.description);
+    }
+    expect(lines.find(line => line.startsWith('LineChart('))).toContain('data');
+    expect(lines.find(line => line.startsWith('Heading('))).toContain('subtitle?');
+    expect(lines.find(line => line.startsWith('Diagram('))).toContain('gantt');
+  });
+  test('CONTAINERS lists exactly the slot components', () => {
+    expect([...CONTAINERS].sort()).toEqual(['Card', 'Disclosure', 'Grid', 'Row', 'Stack']);
+  });
+  test('rejects a table footer wider than the columns', () => {
+    const value = { catalog_version: '1', title: 't', spec: { root: 'x', elements: { x: { type: 'Table', props: { title: 't', columns: ['a', 'b'], rows: [['1', '2']], footer: ['1', '2', '3'] } } } } };
+    expect(() => parseArtifact(value)).toThrow();
   });
 });

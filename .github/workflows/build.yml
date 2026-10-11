@@ -56,9 +56,9 @@ jobs:
           persist-credentials: false
       - uses: oven-sh/setup-bun@0c5077e51419868618aeaa5fe8019c62421857d6 # v2.2.0
         with:
-          bun-version: '1.4.2'
-      - name: Test release discovery and latest promotion contracts
-        run: node --test docker/openchamber/releases.test.mjs docker/openchamber/latest.test.mjs
+          bun-version: '1.4.3'
+      - name: Test release, latest and entrypoint contracts
+        run: bun test docker/openchamber/releases.test.mjs docker/openchamber/latest.test.mjs docker/openchamber/entrypoint.test.mjs
       - name: Bundle the Rembric V2 plugin and check its export
         working-directory: extensions/rembric
         run: |
@@ -69,7 +69,7 @@ jobs:
           (cd dist && sha256sum rembric.js > SHA256SUMS)
           bun -e 'await Bun.write("dist/build.json", JSON.stringify({repository:process.env.GITHUB_REPOSITORY,source_commit:process.env.GITHUB_SHA,bun:Bun.version,opencode_api:"2.0.24",entrypoint:"./index.ts",runtime:"self-contained",bundle_sha256:(await Bun.file("dist/SHA256SUMS").text()).split(" ")[0]},null,2)+"\n")'
       - name: Retain plugin bundle and provenance
-        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
           name: rembric-opencode-${{ github.sha }}
           path: extensions/rembric/dist/

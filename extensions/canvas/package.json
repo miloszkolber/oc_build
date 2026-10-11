@@ -1,6 +1,6 @@
 {
   "name": "openchamber-generative-canvas",
-  "version": "0.9.5",
+  "version": "0.9.16",
   "private": true,
   "type": "module",
   "license": "MIT",
@@ -28,7 +28,8 @@
   "scripts": {
     "build": "bun scripts/build.mjs",
     "test": "bun test test",
-    "package": "bun scripts/package.mjs"
+    "package": "bun scripts/package.mjs",
+    "preview": "bun scripts/preview.mjs"
   },
   "dependencies": {
     "@json-render/core": "0.21.0",
