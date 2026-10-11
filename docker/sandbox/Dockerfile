@@ -63,6 +63,7 @@ RUN npm install --global --no-audit --no-fund pnpm@11.1.2 \
 RUN printf 'export PATH=/usr/local/go/bin:$PATH\n' > /etc/profile.d/sandbox-path.sh
 
 COPY check-image.sh /usr/local/share/sandbox/check-image.sh
+COPY README.md /usr/share/sandbox/README.md
 RUN --network=none bash /usr/local/share/sandbox/check-image.sh
 
 RUN printf '%s\n' \
