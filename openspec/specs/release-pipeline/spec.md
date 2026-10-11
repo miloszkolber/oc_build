@@ -26,10 +26,11 @@ Workflows SHALL build only their configured deliverables for relevant source cha
 | --- | --- | --- | --- |
 | Build | `main` pushes matching app/Rembric paths | Hourly `:17`, Monday `04:37` | App image and push-only plugin artifact |
 | Browser | `main` pushes matching browser paths | Monday `04:37` | Browser image |
+| Sandbox | Matching pushes to `main` and pull requests | Monday `04:23` | Checked sandbox image; pull requests do not publish |
 | Canvas | Matching pushes to `main` and pull requests | None | Extension ZIP |
 | Documentation contracts | Matching pushes to `main` and pull requests | None | Local checker/tests and upstream strict validation |
 
-All four accept manual dispatch. App/browser workflows have no pull-request
+All five accept manual dispatch. App/browser workflows have no pull-request
 trigger. Do not infer pre-merge coverage for their dependency updates.
 
 ### Requirement: Least-privilege automation

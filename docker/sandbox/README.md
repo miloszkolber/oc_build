@@ -132,6 +132,12 @@ docker run --rm -i --network none --entrypoint bash openchamber-sandbox:check \
   /usr/local/share/sandbox/check-image.sh
 docker run --rm --network none --volume "$PWD:/repo" --workdir /repo \
   --entrypoint node openchamber-sandbox:check --test docker/sandbox/sandbox.test.mjs
+docker run --rm --network none --volume "$PWD:/repo" --workdir /repo \
+  --entrypoint bun openchamber-sandbox:check test scripts/check-docs.test.mjs
+docker run --rm --network none --volume "$PWD:/repo" --workdir /repo \
+  --entrypoint bun openchamber-sandbox:check scripts/check-docs.mjs
+docker run --rm --network none --volume "$PWD:/repo" --workdir /repo \
+  --env OPENSPEC_TELEMETRY=0 --entrypoint openspec openchamber-sandbox:check validate --all --strict
 ```
 
 The build runs the same `check-image.sh` with `--network=none`, so a broken

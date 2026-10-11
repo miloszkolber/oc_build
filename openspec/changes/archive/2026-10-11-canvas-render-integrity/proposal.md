@@ -38,13 +38,13 @@ that make the canvas look broken or unreliable rather than native:
 
 ## Scope
 
-One capability: **Canvas panel** ([specs/canvas-panel](../../specs/canvas-panel/spec.md)).
+One capability: **Canvas panel** ([specs/canvas-panel](../../../specs/canvas-panel/spec.md)).
 Renderer, panel stylesheet and the served preview only. No catalog, schema, bundle,
 service, permission or host change. Keeps `cat >` free of new dependencies and
 adds no component.
 
 Deliberately excluded: native desktop acceptance (owned by
-[accept-canvas-panel-on-desktop](../accept-canvas-panel-on-desktop/proposal.md)),
+[accept-canvas-panel-on-desktop](../../accept-canvas-panel-on-desktop/proposal.md)),
 agent sandbox work (owned by artful-yak), and any redesign. The 0.9.12 visual
 system is retained; this change fixes resilience, redundant encoding, scroll
 stability and preview parity within it.
