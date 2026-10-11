@@ -1,0 +1,14 @@
+schema: spec-driven
+context: |
+  oc_build owns app/browser images, Canvas, Rembric and the agent sandbox.
+  This branch's sandbox spec is docs/specs/agent-sandbox/spec.md.
+  Package READMEs own commands. Host deployment and shared guidance are separate
+  owners. Rootless Docker and writable workspace mounts are trust grants.
+rules:
+  proposal:
+    - Name scope, affected capabilities, authorization and status.
+  specs:
+    - Use observable SHALL/MUST behavior and concrete WHEN/THEN scenarios.
+    - MODIFIED replaces the whole requirement. Preserve unaffected scenarios.
+  tasks:
+    - Number checkboxes and record actual verification alongside implementation.

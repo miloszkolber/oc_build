@@ -7,8 +7,8 @@ fail() {
     exit 1
 }
 
-for tool in bash git rg jq curl make gcc g++ pkg-config ssh \
-    python3 bun node npm pnpm go uv uvx docker file unzip patch; do
+for tool in bash git rg jq curl make gcc g++ pkg-config ssh flock \
+    python3 bun node npm pnpm go uv uvx docker file unzip patch openspec; do
     command -v "$tool" >/dev/null 2>&1 || fail "missing $tool"
 done
 
@@ -20,6 +20,7 @@ gofmt -h >/dev/null 2>&1 || fail "gofmt missing"
 
 docker compose version >/dev/null 2>&1 || fail "docker compose plugin missing"
 docker buildx version >/dev/null 2>&1 || fail "docker buildx plugin missing"
+OPENSPEC_TELEMETRY=0 openspec --version | grep -qx '1.14.1' || fail "OpenSpec version"
 
 [ "$BUN_INSTALL_CACHE_DIR" = /cache/bun ] || fail "bun cache env"
 [ "$GOMODCACHE" = /cache/go/mod ] || fail "GOMODCACHE env"

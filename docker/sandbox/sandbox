@@ -1,102 +1,108 @@
 #!/usr/bin/env bash
-# Run a command in the OpenChamber agent sandbox.
-#
-#   sandbox run [--] <command...>
-#
-# Shared caches live under $SANDBOX_DATA/cache and persist between runs.
-# A fresh per-run scratch directory is mounted at /tmp and removed when this
-# wrapper exits, so transient build artifacts never accumulate on the host.
+# Host launcher. The container's Docker endpoint is a separate rootless daemon.
 set -euo pipefail
-
 image="${SANDBOX_IMAGE:-openchamber-sandbox:latest}"
 data="${SANDBOX_DATA:-/data/.db/openchamber/sandbox}"
-cache="$data/cache"
-runs="$data/tmp"
-
-# The image runs as the host account that owns the mounts. Propagating the
-# caller identity would let `sudo sandbox run` hand the sandbox host-root write
-# access to /repo and /home/core, so it is pinned unless overridden on purpose.
 uid="${SANDBOX_UID:-1000}"
 gid="${SANDBOX_GID:-1000}"
-
-# Roots bind-mounted into the sandbox at their host paths. A working directory
-# outside them would otherwise run against the container's own filesystem and
-# host files would silently be invisible.
-mount_roots=(/repo /home/core /data/.db/openchamber)
-
-usage() {
-    echo "usage: sandbox run [--] <command...>" >&2
-    echo "run from inside: ${mount_roots[*]}" >&2
-    exit 2
+[[ "$uid" =~ ^[1-9][0-9]*$ && "$gid" =~ ^[1-9][0-9]*$ ]] || {
+    echo 'sandbox: identity must be a non-root numeric UID/GID' >&2; exit 2;
 }
+[[ "$data" = /* && "$data" != / ]] || {
+    echo 'sandbox: SANDBOX_DATA must be an absolute non-root path' >&2; exit 2;
+}
+# Do not inherit DOCKER_HOST, DOCKER_CONTEXT or a selected rootless context.
+host_docker() { docker --host unix:///var/run/docker.sock "$@"; }
 
-[ "${1:-}" = run ] || usage
+if [[ "${1:-}" = clean && $# = 1 ]]; then
+    [[ -d "$data/tmp" ]] || exit 0
+    while IFS= read -r -d '' dir; do
+        # The same flock is held throughout an active run, even beyond 24h.
+        (
+            exec 9>"$dir/.lock"
+            flock -n 9 || exit 0
+            name="sandbox-$(basename "$dir")"
+            # Remove an orphan container before removing the path it mounts.
+            host_docker info >/dev/null 2>&1 || exit 1
+            if host_docker container inspect "$name" >/dev/null 2>&1; then
+                host_docker rm --force "$name" >/dev/null || exit 1
+            fi
+            rm -rf -- "$dir"
+        ) || exit 1
+    done < <(find "$data/tmp" -mindepth 1 -maxdepth 1 -type d -name 'run-*' -mmin +1440 -print0)
+    exit 0
+fi
+
+[[ "${1:-}" = run ]] || { echo 'usage: sandbox run [--publish host:container] [--] <command...> | sandbox clean' >&2; exit 2; }
 shift
-[ "${1:-}" = -- ] && shift
-[ "${#}" -ge 1 ] || usage
-
-in_mounts=0
-for root in "${mount_roots[@]}"; do
-    case "$PWD" in
-        "$root" | "$root"/*) in_mounts=1 ;;
-    esac
+ports=()
+while [[ "${1:-}" = --publish ]]; do
+    mapping="${2:-}"
+    [[ "$mapping" =~ ^([1-9][0-9]{0,4}):([1-9][0-9]{0,4})$ ]] && \
+        (( 10#${BASH_REMATCH[1]} <= 65535 && 10#${BASH_REMATCH[2]} <= 65535 )) || {
+        echo 'sandbox: --publish requires host-port:container-port (1..65535)' >&2; exit 2;
+    }
+    ports+=(--publish "127.0.0.1:$mapping")
+    shift 2
 done
-if [ "$in_mounts" != 1 ]; then
-    echo "sandbox: $PWD is not under a mounted root (${mount_roots[*]});" >&2
-    echo "the command would run against the container's own filesystem." >&2
-    exit 2
-fi
-
-# Dedicated rootless Docker endpoint. The host's rootful socket is never
-# mounted; containers the sandbox builds or runs stay inside this rootless
-# daemon. Read-only on purpose: a client only needs to connect, and a
-# read-only bind mount stops the sandbox replacing the socket.
-runtime="/run/user/$uid"
-socket="$runtime/docker.sock"
-docker_args=()
-if [ -S "$socket" ]; then
-    docker_args=(-v "$socket:$socket:ro" -e "DOCKER_HOST=unix://$socket")
-fi
-
-# HOME is the per-run scratch directory, so the host identity files are not
-# visible through it. Point Git and npm at the host equivalents instead.
-config_args=()
-[ -f /home/core/.gitconfig ] && config_args+=(-e "GIT_CONFIG_GLOBAL=/home/core/.gitconfig")
-[ -f /home/core/.npmrc ] && config_args+=(-e "npm_config_userconfig=/home/core/.npmrc")
-
-run_id="$(date +%Y%m%dT%H%M%S)-$$"
-tmp="$runs/$run_id"
-# install -d creates the missing bind-mount sources as the sandbox identity.
-# A root-owned cache directory would make the shared cache read-only to the
-# container. The scratch directory must be private, not 1777: a world-writable
-# directory that the run's own user owns is refused by hosts that guard
-# rename-based state recovery (submarine treats it as unsafe), so tools that
-# reject other-writable state hierarchies keep working.
-install -d -m 0700 -o "$uid" -g "$gid" "$cache" "$runs"
+if [[ "${1:-}" = -- ]]; then shift; fi
+[[ $# -gt 0 ]] || { echo 'sandbox: command required' >&2; exit 2; }
+cwd="$(pwd -P)"
+case "$cwd" in
+    /repo|/repo/*|/home/core|/home/core/*|/data/.db/openchamber|/data/.db/openchamber/*) ;;
+    *) echo "sandbox: $cwd is outside mounted roots (/repo /home/core /data/.db/openchamber)" >&2; exit 2 ;;
+esac
+host_docker image inspect "$image" >/dev/null 2>&1 || {
+    echo "sandbox: image $image is missing; build docker/sandbox or pull the published image first" >&2
+    exit 1
+}
+install -d -m 0700 -o "$uid" -g "$gid" "$data/cache" "$data/tmp"
+tmp="$(mktemp -d "$data/tmp/run-XXXXXXXXXX")"
+name="sandbox-$(basename "$tmp")"
+exec 9>"$tmp/.lock"
+flock 9
+chown "$uid:$gid" "$tmp/.lock"
+chmod 0600 "$tmp/.lock"
 install -d -m 0700 -o "$uid" -g "$gid" "$tmp" "$tmp/home" \
     "$tmp/xdg-cache" "$tmp/xdg-config" "$tmp/xdg-data" "$tmp/xdg-state"
-cleanup() { rm -rf "$tmp"; }
-trap 'cleanup; exit 130' INT
-trap 'cleanup; exit 143' TERM
-trap 'cleanup; exit 129' HUP
+cleanup() {
+    # rm --force stops remaining descendants before deleting their scratch.
+    if ! host_docker rm --force "$name" >/dev/null 2>&1; then
+        if ! host_docker info >/dev/null 2>&1 || host_docker container inspect "$name" >/dev/null 2>&1; then
+            echo "sandbox: container cleanup unconfirmed; retaining $tmp" >&2
+            return
+        fi
+    fi
+    rm -rf -- "$tmp"
+}
 trap cleanup EXIT
+trap 'exit 130' INT
+trap 'exit 143' TERM
+trap 'exit 129' HUP
 
-docker run --rm -i \
-    --init \
-    --security-opt no-new-privileges \
-    --user "$uid:$gid" \
-    -w "$PWD" \
-    -v /repo:/repo \
-    -v /home/core:/home/core \
-    -v /data/.db/openchamber:/data/.db/openchamber \
-    -v "$cache":/cache \
-    -v "$tmp":/tmp \
-    "${docker_args[@]}" \
-    "${config_args[@]}" \
-    -e HOME=/tmp/home \
-    -e TMPDIR=/tmp \
-    -e XDG_CACHE_HOME=/tmp/xdg-cache \
-    -e XDG_CONFIG_HOME=/tmp/xdg-config \
-    -e XDG_DATA_HOME=/tmp/xdg-data \
-    -e XDG_STATE_HOME=/tmp/xdg-state \
-    "$image" "$@"
+args=(--rm -i --init --cap-drop ALL --security-opt no-new-privileges "${ports[@]}"
+    --name "$name" --user "$uid:$gid" --workdir "$cwd"
+    --mount type=bind,src=/repo,dst=/repo
+    --mount type=bind,src=/home/core,dst=/home/core
+    --mount type=bind,src=/data/.db/openchamber,dst=/data/.db/openchamber
+    --mount "type=bind,src=$data/cache,dst=/cache"
+    --mount "type=bind,src=$tmp,dst=/tmp"
+    -e HOME=/tmp/home -e TMPDIR=/tmp -e XDG_CACHE_HOME=/tmp/xdg-cache
+    -e XDG_CONFIG_HOME=/tmp/xdg-config -e XDG_DATA_HOME=/tmp/xdg-data
+    -e XDG_STATE_HOME=/tmp/xdg-state -e "DOCKER_HOST=unix:///run/user/$uid/docker.sock")
+[[ -t 0 && -t 1 ]] && args+=(-t)
+socket="/run/user/$uid/docker.sock"
+if [[ -S "$socket" ]]; then
+    args+=(--mount "type=bind,src=$socket,dst=$socket,readonly" -e "DOCKER_HOST=unix://$socket")
+fi
+[[ ! -f /home/core/.gitconfig ]] || args+=(-e GIT_CONFIG_GLOBAL=/home/core/.gitconfig)
+[[ ! -f /home/core/.npmrc ]] || args+=(-e npm_config_userconfig=/home/core/.npmrc)
+# Only the launcher owns the lock. An orphan Docker client must not keep it
+# locked after SIGKILL; stale cleanup needs to be able to stop that container.
+host_docker run "${args[@]}" "$image" "$@" 9>&- &
+client=$!
+set +e
+wait "$client"
+status=$?
+set -e
+exit "$status"

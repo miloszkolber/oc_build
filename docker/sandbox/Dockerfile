@@ -2,7 +2,7 @@
 
 # Agent dev sandbox: the language/framework toolchains that /repo builds and
 # tests need, plus one place for shared caches. Toolchains are copied from
-# their pinned upstream images so the runtime needs no downloader for them;
+# version-tagged upstream images so the runtime needs no downloader for them;
 # Debian apt supplies the OS build basics. This image is deliberately NOT
 # distroless: a dev image needs a shell and package managers. The browser image
 # stays distroless and separate.
@@ -20,7 +20,6 @@ FROM mirror.gcr.io/library/node:22-bookworm-slim AS sandbox
 ENV PATH=/usr/local/go/bin:/usr/local/bin:/usr/local/sbin:/usr/sbin:/usr/bin:/sbin:/bin \
     BUN_INSTALL_CACHE_DIR=/cache/bun \
     npm_config_cache=/cache/npm \
-    npm_config_store_dir=/cache/pnpm-store \
     PNPM_HOME=/cache/pnpm \
     PNPM_STORE_DIR=/cache/pnpm-store \
     GOTOOLCHAIN=local \
@@ -41,7 +40,7 @@ RUN apt-get update \
     && apt-get install --no-install-recommends -y \
         build-essential pkg-config \
         git openssh-client curl ca-certificates \
-        jq ripgrep file unzip zip xz-utils tar patch less procps \
+        jq ripgrep file unzip zip xz-utils tar patch less procps util-linux \
         python3 python3-venv python3-dev \
     && rm -rf /var/lib/apt/lists/*
 
@@ -52,7 +51,7 @@ COPY --from=uv /uvx /usr/local/bin/uvx
 COPY --from=dockercli /usr/local/bin/docker /usr/local/bin/docker
 COPY --from=dockercli /usr/local/libexec/docker/cli-plugins /usr/local/libexec/docker/cli-plugins
 
-RUN npm install --global --no-audit --no-fund pnpm@11.1.2 \
+RUN npm install --global --no-audit --no-fund pnpm@11.1.2 @fission-ai/openspec@1.14.1 \
     && rm -f /usr/local/bin/pnpm \
     && printf '#!/bin/sh\nexec node /usr/local/lib/node_modules/pnpm/bin/pnpm.mjs --store-dir "${PNPM_STORE_DIR:-/cache/pnpm-store}" "$@"\n' > /usr/local/bin/pnpm \
     && chmod +x /usr/local/bin/pnpm \
@@ -75,6 +74,7 @@ RUN printf '%s\n' \
     "python3 $(python3 --version | awk '{print $2}')" \
     "uv $(uv --version | awk '{print $2}')" \
     "docker $(docker --version | awk '{print $3}' | tr -d ,)" \
+    "openspec $(OPENSPEC_TELEMETRY=0 openspec --version)" \
     > /usr/local/share/sandbox/sandbox-build.txt
 
 USER 1000:1000
