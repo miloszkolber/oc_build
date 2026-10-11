@@ -31,6 +31,12 @@ test('broken paths and anchors are reported', () => fixture(root => {
   expect(failures.some(item => item.includes('missing anchor'))).toBe(true);
 }));
 
+test('skill Markdown links are checked', () => fixture(root => {
+  mkdirSync(join(root, 'skill'), { recursive: true });
+  writeFileSync(join(root, 'skill/SKILL.md'), '[Missing](references/gone.md)\n');
+  expect(checkDocumentation(root).failures.some(item => item.includes('missing link'))).toBe(true);
+}));
+
 test('every requirement needs its own valid scenario', () => fixture(root => {
   writeFileSync(join(root, 'openspec/specs/example/spec.md'), spec + '\n### Requirement: Missing case\nThe fixture SHALL reject this.\n');
   expect(checkDocumentation(root).failures.some(item => item.includes('Missing case has no scenarios'))).toBe(true);

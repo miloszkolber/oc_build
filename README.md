@@ -11,6 +11,7 @@ This repository builds the OpenChamber web image, standalone distroless browser 
 | [`docker/sandbox/`](docker/sandbox/README.md) | Agent development image, container toolchains, shared caches and per-run scratch |
 | [`extensions/rembric/`](extensions/rembric/README.md) | Rembric OpenCode V2 plugin and its standalone build/install scripts |
 | [`extensions/canvas/`](extensions/canvas/README.md) | File-backed json-render Canvas panel, charts and interactive quick tools |
+| [`skill/`](skill/README.md) | Agent-facing workspace skill: Canvas, browser evidence and the development sandbox |
 
 ## Build and release
 

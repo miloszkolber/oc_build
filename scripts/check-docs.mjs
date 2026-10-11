@@ -23,6 +23,8 @@ export function checkDocumentation(root) {
     const file = resolve(root, name);
     if (existsSync(file)) files.push(file);
   }
+  const skill = resolve(root, 'skill');
+  if (existsSync(skill)) files.push(...walk(skill).filter(file => file.endsWith('.md')));
 
   const heading = value => value.toLowerCase().replace(/[^\p{L}\p{N}_\- ]/gu, '').replace(/ /g, '-');
   for (const file of files) {
