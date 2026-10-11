@@ -7,7 +7,8 @@
 - [ ] 1.3 Switch conversations and enter a child session, checking the expected canvas and absence of late cross-session results.
 - [ ] 1.4 Exercise copy/insert, local sort/filter, tabs and horizon controls. Confirm insertion is not sent automatically and authored file hashes/mtimes remain unchanged.
 - [ ] 1.5 Use an owned probe canvas to test missing and invalid content. Confirm empty/error behavior and preserved last-good rendering, then restore/remove only the probe.
-- [ ] 1.6 Record the operator's acceptance or reproducible defects with screenshots and exact scope in `evidence.md`. Keep this change open if acceptance is withheld.
+- [ ] 1.6 Record native screenshots and exact scenario scope alongside operator acceptance in `evidence.md`. Operator approval is recorded, but screenshot evidence is not supplied.
+- [x] 1.7 Record the explicit operator visual/native sign-off without claiming execution of the detailed checks above.
 
 ## 2. Matched review surfaces
 

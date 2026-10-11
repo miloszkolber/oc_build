@@ -77,11 +77,12 @@ through what it can reach:
 The panel deliberately exposes no toolbar of its own; the request field lives
 only in the empty state.
 
-Recommended follow-up: add a short Canvas note to the agent instruction surface
-(a skill or the repository `AGENTS.md`) that states the file path pattern, the
-catalog components and "hidden in the Canvas panel — write JSON, never chat".
-That removes the compose step for agents that read instructions. The compose
-action covers the case where no instruction was read.
+Core's shared `workspace` skill routes Canvas tasks to
+`/home/core/agents/skills/workspace/references/canvas.md`. It covers destination
+resolution, catalog authoring, validation/atomic updates, chart/diagram choices,
+local controls and review. Other hosts can expose that contract through their
+agent instruction surface. A link alone does not load a skill or guarantee use.
+The compose action remains available when no instruction was read.
 
 ## Agent contract
 
@@ -153,6 +154,10 @@ the snapshot. Only publish a conversation artifact the user approved for review.
 
 Simple BarChart and CostChart rows compare one measure: they use one solid accent,
 direct labels and exact values, without per-row color keys or textures.
+Chart color is allowed when justified by series/category identification, ordered
+magnitude, intentional highlighting or semantic state. It is not decoration and
+need not be monochrome. Use supported encodings and readable labels/values, not
+invented palette props. Status hues should not imply meaning absent from the data.
 Stacked and part-to-whole charts use a single-hue accent ramp with matching labeled legend marks and values.
 The first five series stay solid. Each later group of five adds a sparse pattern
 (diagonal, dots, crosshatch, grid, vertical bars), repeated in the legend.

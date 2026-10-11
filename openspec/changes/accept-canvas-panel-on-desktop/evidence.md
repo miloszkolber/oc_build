@@ -17,15 +17,30 @@ copy. The manifest authority is identical to the previous installation. Backup:
 `/data/.db/openchamber/extension-backups/generative-canvas-0.9.14-final/`.
 No authored canvas was touched and no service was restarted during installation.
 
-## Open operator gate
+## Operator approval — 2026-10-11
+
+The operator explicitly states: “Okay, visual+native gets the approval,” with
+chart color allowed when justified, and requests complete agent-facing Canvas
+interaction guidance. This closes the operator approval gate for the reviewed
+result. It is operator-reported native acceptance, not an assistant-executed
+desktop test. No desktop-client version, native screenshots or per-scenario
+results were supplied in this sign-off. Tasks 1.1–1.6 remain unexecuted/unrecorded
+as detailed checks, not evidence of withheld approval.
+
+Latest reviewed visual source is `bbd1e41`. The last assistant-verified installed
+Canvas is the earlier 0.9.15 build recorded above. Approval does not prove the
+installed bytes match the newer preview or authorize a new installation. Release
+and installation parity remain separate from the accepted visual/native direction.
+
+## Earlier evidence gap at candidate installation
 
 Desktop-client version is unknown. The advertised browser tools control
-standalone Chromium, not the native client. No native screenshot, actual host
-font/theme check or operator approval has been obtained. Task 1.1 remains open
+standalone Chromium, not the native client. No native screenshot or actual host
+font/theme check had been obtained at this stage. Task 1.1 remains open
 because it also requires the desktop-client version. Tasks 1.2–1.6 remain open.
 
-Before sign-off, reload the actual client to discover 0.9.15, record its version,
-then follow `tasks.md` with an owned disposable probe canvas. Record native
+For reproducible native verification of an installation, reload the actual client,
+record its version and follow `tasks.md` with an owned disposable probe canvas. Record native
 screenshots, conversation/ancestor selection, composer insertion without send,
 local controls, empty/error recovery and unchanged authored file hashes/mtimes.
 Record operator approval explicitly. Do not use MCP Chromium evidence to check

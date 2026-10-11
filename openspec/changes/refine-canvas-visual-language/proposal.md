@@ -16,4 +16,7 @@ Preserve the read-only surface, catalog and rendering lifecycle.
 
 ## Status
 
-Implementation and visual verification in progress. Native acceptance stays open.
+Implementation and visual verification complete. Operator grants visual and native
+approval on 2026-10-11, with chart color permitted when justified. Agent guidance
+now covers the approved authoring and interaction contract. A versioned release/install and exact
+upgraded asset parity remain separate work, not implied by approval.

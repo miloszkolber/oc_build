@@ -3,11 +3,13 @@
 ## Why
 
 Canvas has tests, packaged examples and MCP Chromium render evidence. None proves
-the installed panel works in the native desktop client. Acceptance is still open.
+the installed panel works in the native desktop client. Operator approval is now
+recorded, while detailed native-check evidence remains separately identified.
 
 ## Scope and status
 
-**Status: awaiting operator review.** Review the installed panel on a named Canvas
+**Status: operator visual/native approval recorded on 2026-10-11.** Detailed
+installation/version and native scenario evidence remain unrecorded. Review the installed panel on a named Canvas
 and desktop-client version. No new component, browser service or behavior is
 proposed. This acceptance-only change uses `skip_specs: true`.
 

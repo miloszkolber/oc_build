@@ -1,5 +1,33 @@
 # Visual correction evidence — 2026-10-11
 
+## Operator approval and agent guidance
+
+The operator grants visual and native approval of the reviewed result and permits
+chart color when justified. This is operator-reported native sign-off, not newly
+executed assistant desktop tests or proof of installed/preview byte parity. The
+native acceptance change records that distinction. No release, installation,
+service restart, push or merge was performed for this guidance task.
+
+Audited `/home/core/agents/skills/workspace/references/canvas.md` against
+`src/catalog.js`, `src/panel.jsx`, `src/renderer.jsx`, `src/session.js` and the
+package README. Corrected the obsolete three-container rule: Row and Disclosure
+also accept children. Updated session ancestry fallback, catalog location and
+preview rebuild guidance. Added the complete author/update loop, a validated
+example, surface boundaries (including Doop), justified chart color, accessible
+diagram authoring, all local control types, refresh/recovery and verification.
+Workspace and design skill entries now route to the same Canvas owner. Maintainer
+rationale is in the workspace README, not repeated in global role prompts.
+
+Checks executed in the sandbox: 53 repository Markdown files passed, nine pinned
+OpenSpec 1.14.1 strict items passed, the complete guidance example passed the real
+Canvas parser and all five allowed containers were confirmed against source.
+Checked 45 relative links across the edited shared entries/module/README and
+the framework README. Native workspace skill path resolves to
+`/home/core/agents/skills/workspace`; the harness advertised the revised description
+during this turn. Both repository diffs pass whitespace checks. No cross-model
+adoption test was run and no automatic guarantee that every agent follows the
+module is claimed. The existing unrelated shared-design edits were preserved.
+
 ## Latest iteration: chart purpose and technical diagrams
 
 Operator follow-up approves the direction of Mermaid surfaces and asks for a more
