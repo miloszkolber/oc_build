@@ -1,0 +1,5 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Canvas panel boundary review</title>
+<style>html,body{height:100%;margin:0;font:14px sans-serif}body{display:flex;flex-direction:column}header{padding:8px;display:flex;gap:8px;flex-wrap:wrap;border-bottom:1px solid #999}iframe{flex:1;min-height:0;width:100%;border:0}button,select{font:inherit}#log{font-size:12px}</style></head>
+<body><header><label>Synthetic SDK host <select id="scenario"><option>Empty</option><option>Connecting</option><option>Gallery</option><option>Cost explorer</option><option>Invalid</option><option>Read error</option><option>No conversation</option><option>Boundaries</option></select></label><button id="theme">Dark theme</button><button id="reload">Remount panel</button><span id="log"></span></header>
+<iframe id="panel" title="Actual Canvas entrypoint" src="review-panel.html"></iframe><script type="module" src="review-host.js"></script></body></html>

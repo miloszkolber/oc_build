@@ -19,6 +19,15 @@
   .nav-list { margin: 0; padding-left: 1.2rem; display: flex; flex-direction: column; gap: 4px; font-size: .8125rem; color: var(--muted); font-family: var(--mono); }
   main { flex: 1; min-width: 0; height: 100%; }
   .canvas { height: 100%; overflow: auto; padding: 16px; }
+  .nav { scrollbar-width:none; }
+  .nav::-webkit-scrollbar { width:0;height:0; }
+  @media(max-width:720px) {
+    #app { flex-direction:column; }
+    .nav { flex:0 0 auto;height:auto;flex-direction:row;flex-wrap:wrap;align-items:center;padding:8px 12px;border-right:0;border-bottom:1px solid var(--line); }
+    .nav select, .nav button { height:30px; }
+    .nav-list, .nav-count { display:none; }
+    main { min-height:0; }
+  }
 </style>
 </head>
 <body>

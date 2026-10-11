@@ -1,5 +1,46 @@
 # Canvas verification
 
+## 0.9.14 independent review — 2026-10-11
+
+Previous sections are historical reports, not renewed acceptance. Independent
+review disproved the previous preview typography claim: the current browser's
+`system-ui` resolves monospace. The preview now applies explicit synthetic SDK
+themes. Actual native host fonts remain unverified.
+
+- Visually inspected all 39 gallery components at 1280 × 900 and 390 × 900 in
+  light/dark using MCP Chromium. Preserved the existing visual direction.
+- Repaired cyclic token fallbacks (including the neutral-looking Failed badge),
+  panel-width grid collapse, long labels, numeric table wrapping and search focus.
+- Repaired zero/tiny donut arcs, zero stacked marks and single-observation charts.
+  Wide tables, heatmaps, code and diagrams scroll locally with keyboard access.
+- Reviewed 13 Mermaid families in both themes. Removed default glowing shadows,
+  preserved real font families and fixed timeline label/inversion/filter colors,
+  weak graph marks and quadrant points. This is not coverage of every Mermaid DSL.
+- The actual panel entrypoint and production bundle were exercised with a
+  synthetic SDK parent. Polling preserved horizon/filter/sort/tab/disclosure
+  states. Compatible content retained 36 months. Removing that option reset to
+  the authored 24 months. Delayed old-session data did not replace the new view.
+- Hidden document: zero body layout rectangles, two pending diagrams and zero
+  SVGs. Showing it produced two SVGs and zero pending states. Cancelling a hidden
+  selection did not block two subsequent diagrams. The wait is cancellable,
+  not time-bounded. The transient retry branch was not fault-injected.
+- Visually reviewed connecting, no-conversation, empty request and invalid/read
+  failure states. Copy/compose were synthetic SDK requests. Zero file writes.
+- Settled horizon-label rectangles were identical before/after selection. A
+  retained-canvas error notice did not change the measured card rectangle.
+  Keyboard ArrowRight moved a focused table region by 40px.
+- Production gallery contrast sampled 203 visible HTML text elements per fixture
+  theme, compositing ancestor backgrounds with WCAG luminance. Minimum 4.56:1
+  light and 6.11:1 dark. This excludes SVG text, chart marks, gradients, disabled
+  states and real host themes. It is not a comprehensive accessibility certification.
+- 48 tests passed. Both shipped examples validated. Production ZIP contains 118
+  files. Review fixtures are not shipped.
+
+Detailed ledger:
+[openspec/changes/archive/2026-10-11-finish-canvas-review/](../../openspec/changes/archive/2026-10-11-finish-canvas-review/).
+Native desktop acceptance remains open. MCP Chromium and synthetic SDK fixtures
+do not establish real-client fidelity or grant behavior.
+
 ## 0.9.13
 
 - **Diagram resilience.** `Diagram` now waits for a rendered document before

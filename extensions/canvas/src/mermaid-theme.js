@@ -26,12 +26,21 @@ function readToken(name, fallback) {
 // become hex, not rgb(): Mermaid splits xyChart.plotColorPalette on commas, so
 // a palette entry must not contain any.
 const SRGB = /^color\(\s*srgb\s+([\d.eE+-]+)\s+([\d.eE+-]+)\s+([\d.eE+-]+)\s*(?:\/\s*([\d.eE+-]+)\s*)?\)$/;
+const RGB = /^rgba?\(\s*([\d.]+)[,\s]+([\d.]+)[,\s]+([\d.]+)\s*(?:[,/]\s*([\d.]+)\s*)?\)$/;
 export function normalizeColor(value, fallback) {
+  const rgb = typeof value === 'string' ? value.match(RGB) : null;
+  if (rgb) {
+    const alpha = rgb[4] === undefined ? 1 : Math.max(0, Math.min(1, Number(rgb[4])));
+    if (alpha === 0) return fallback;
+    const channels = rgb.slice(1, 4).map(part => Math.max(0, Math.min(255, Math.round(Number(part)))));
+    return alpha < 1 ? `rgba(${channels.join(', ')}, ${alpha})` : `#${channels.map(part => part.toString(16).padStart(2, '0')).join('')}`;
+  }
   const match = typeof value === 'string' ? value.match(SRGB) : null;
   if (match) {
     const channel = part => Math.max(0, Math.min(255, Math.round(Number(part) * 255)));
     const [red, green, blue] = [channel(match[1]), channel(match[2]), channel(match[3])];
     const alpha = match[4] === undefined ? 1 : Math.max(0, Math.min(1, Number(match[4])));
+    if (alpha === 0) return fallback;
     const hex = part => part.toString(16).padStart(2, '0');
     return alpha < 1 ? `rgba(${red}, ${green}, ${blue}, ${alpha})` : `#${hex(red)}${hex(green)}${hex(blue)}`;
   }
@@ -46,6 +55,9 @@ export function createColorResolver() {
   document.body.appendChild(probe);
   const resolve = (name, fallback) => {
     const raw = readToken(name, fallback);
+    // Font families are not colors. Assigning one to style.color silently
+    // returned inherited foreground and fed Mermaid an invalid font family.
+    if (name === '--font' || name === '--oc-font') return raw;
     probe.style.color = '';
     probe.style.color = raw;
     return normalizeColor(getComputedStyle(probe).color, raw);
@@ -59,15 +71,18 @@ export function diagramThemeVariables(resolve, dark) {
   const fg = resolve('--oc-fg', dark ? '#e3e5ea' : '#1f2430');
   const elevated = resolve('--oc-elevated', dark ? '#1d2023' : '#ffffff');
   const muted = resolve('--oc-muted', dark ? '#949aa6' : '#6b7280');
-  const border = resolve('--oc-border', dark ? '#2f3238' : '#d9dde5');
+  const border = resolve('--diagram-border', resolve('--oc-border', dark ? '#2f3238' : '#d9dde5'));
   const raised = resolve('--diagram-raised', elevated);
   const recessed = resolve('--diagram-recessed', bg);
   const palette = Array.from({ length: 12 }, (_, index) => resolve(`--diagram-${index + 1}`, muted));
   const at = index => palette[index % palette.length];
+  // Chart marks and branch lines need more contrast than pastel node surfaces.
+  const graphPalette = Array.from({ length: 5 }, (_, index) => resolve(index === 0 ? '--primary-text' : `--series-${index + 1}`, muted));
+  const graphAt = index => graphPalette[index % graphPalette.length];
 
   return {
     darkMode: dark,
-    fontFamily: resolve('--oc-font', 'sans-serif'),
+    fontFamily: resolve('--font', 'sans-serif'),
     fontSize: '13px',
     background: bg,
     primaryColor: elevated,
@@ -170,6 +185,10 @@ export function diagramThemeVariables(resolve, dark) {
     cScale9: at(9),
     cScale10: at(10),
     cScale11: at(11),
+    ...Object.fromEntries(Array.from({ length: 12 }, (_, index) => [
+      [`cScaleLabel${index}`, fg], [`cScaleInv${index}`, border],
+      [`lineColor${index}`, muted],
+    ]).flat()),
 
     pie1: at(0),
     pie2: at(1),
@@ -186,18 +205,18 @@ export function diagramThemeVariables(resolve, dark) {
     pieTitleTextColor: fg,
     pieSectionTextColor: fg,
     pieLegendTextColor: fg,
-    pieStrokeColor: elevated,
+    pieStrokeColor: border,
     pieOuterStrokeColor: border,
     pieOpacity: '1',
 
-    git0: at(0),
-    git1: at(1),
-    git2: at(2),
-    git3: at(3),
-    git4: at(4),
-    git5: at(5),
-    git6: at(6),
-    git7: at(7),
+    git0: graphAt(0),
+    git1: graphAt(1),
+    git2: graphAt(2),
+    git3: graphAt(3),
+    git4: graphAt(4),
+    git5: graphAt(5),
+    git6: graphAt(6),
+    git7: graphAt(7),
     gitInv0: bg,
     gitInv1: bg,
     gitInv2: bg,
@@ -207,14 +226,14 @@ export function diagramThemeVariables(resolve, dark) {
     gitInv6: bg,
     gitInv7: bg,
     branchLabelColor: fg,
-    gitBranchLabel0: fg,
-    gitBranchLabel1: fg,
-    gitBranchLabel2: fg,
-    gitBranchLabel3: fg,
-    gitBranchLabel4: fg,
-    gitBranchLabel5: fg,
-    gitBranchLabel6: fg,
-    gitBranchLabel7: fg,
+    gitBranchLabel0: bg,
+    gitBranchLabel1: bg,
+    gitBranchLabel2: bg,
+    gitBranchLabel3: bg,
+    gitBranchLabel4: bg,
+    gitBranchLabel5: bg,
+    gitBranchLabel6: bg,
+    gitBranchLabel7: bg,
     tagLabelColor: fg,
     tagLabelBackground: at(0),
     tagLabelBorder: border,
@@ -229,7 +248,7 @@ export function diagramThemeVariables(resolve, dark) {
     quadrant2TextFill: fg,
     quadrant3TextFill: fg,
     quadrant4TextFill: fg,
-    quadrantPointFill: at(0),
+    quadrantPointFill: graphAt(0),
     quadrantPointTextFill: fg,
     quadrantXAxisTextFill: fg,
     quadrantYAxisTextFill: fg,
@@ -274,7 +293,7 @@ export function diagramThemeVariables(resolve, dark) {
       yAxisLabelColor: fg,
       yAxisTickColor: muted,
       yAxisLineColor: border,
-      plotColorPalette: palette.join(','),
+      plotColorPalette: graphPalette.join(','),
     },
     cynefin: {
       boundaryColor: border,

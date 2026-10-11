@@ -67,6 +67,7 @@ function App() {
   const session = useRef(null), generation = useRef(0), alive = useRef(true);
   const canvasSession = useRef(null), directory = useRef(null);
   const copyTimer = useRef(null);
+  const sourceText = useRef(null);
 
   async function refresh() {
     const sessionAtRequest = session.current;
@@ -87,16 +88,24 @@ function App() {
     } catch (failure) {
       if (!current()) return;
       if (isNotFound(failure)) {
-        setArtifact(null); setError('');
+        sourceText.current = null; setArtifact(null); setError('');
       } else {
         setError(`Could not read this conversation’s canvas: ${errorMessage(failure)}`);
       }
       return;
     }
     try {
+      if (text === sourceText.current) { if (current()) setError(''); return; }
       const parsed = parseArtifact(text);
       if (!current()) return;
-      setArtifact(parsed); setMonths(initialMonths(parsed)); setError('');
+      const first = sourceText.current === null;
+      sourceText.current = text;
+      setArtifact(parsed);
+      setMonths(previous => {
+        const control = Object.values(parsed.spec.elements).find(element => element.type === 'HorizonControl');
+        return first || (control && !control.props.options.includes(previous)) ? initialMonths(parsed) : previous;
+      });
+      setError('');
     } catch (failure) {
       if (!current()) return;
       setError(`This conversation’s canvas is invalid and was left as-is: ${errorMessage(failure)}`);
@@ -129,11 +138,13 @@ function App() {
     generation.current++;
     session.current = id;
     canvasSession.current = null;
+    sourceText.current = null;
     setSessionId(id); setArtifact(null); setMonths(12); setError('');
     if (!id) return;
+    const selectedGeneration = generation.current;
     void (async () => {
       const resolved = await resolveCanvasSession(id);
-      if (!alive.current || session.current !== id) return;
+      if (!alive.current || session.current !== id || generation.current !== selectedGeneration) return;
       canvasSession.current = resolved;
       void refresh();
     })();
@@ -163,7 +174,7 @@ function App() {
     const ready = host.onReady(context => {
       applyHostReady(context, document.documentElement);
       directory.current = context.directory ?? null;
-      setTheme(`${context.theme?.mode ?? ''}|${context.theme?.tokens?.primary ?? ''}|${context.theme?.tokens?.elevated ?? ''}|${context.theme?.tokens?.foreground ?? ''}`);
+      setTheme(`${context.theme?.mode ?? ''}|${JSON.stringify(context.theme?.tokens ?? {})}`);
       setConnected(true);
       select(context.session);
     });

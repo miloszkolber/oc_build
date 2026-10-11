@@ -2,6 +2,7 @@ import React, { createContext, useContext, useEffect, useId, useRef, useState } 
 import { defineRegistry, JSONUIProvider, Renderer } from '@json-render/react';
 import { catalog, totalCost, errorMessage } from './catalog.js';
 import { diagramThemeVariables, createColorResolver } from './mermaid-theme.js';
+import { waitForRenderedDocument } from './diagram-visibility.js';
 
 const Controls = createContext(null);
 const Theme = createContext('');
@@ -16,14 +17,17 @@ function loadMermaid() {
 // render. Two diagrams drawing at once can make one measure a detached node
 // ("svg element not in render tree"), so initialize and render are serialized.
 let renderQueue = Promise.resolve();
-function renderDiagram(id, code, dark) {
+function renderDiagram(id, code, dark, signal) {
   const task = renderQueue.then(async () => {
+    if (signal.aborted) throw new DOMException('Diagram render cancelled', 'AbortError');
     const mermaid = await loadMermaid();
+    await waitForRenderedDocument(signal);
     const resolve = createColorResolver();
     try {
       mermaid.initialize({
         startOnLoad: false,
         securityLevel: 'strict',
+        look: 'classic',
         theme: 'base',
         themeVariables: diagramThemeVariables(resolve, dark),
       });
@@ -53,29 +57,6 @@ function diagramAccessibility(code, fallback) {
 // switch) that node has no layout box and Mermaid rejects with "svg element not
 // in render tree". Render attempts therefore wait for a rendered document, and a
 // measurement failure is retried once instead of being stored as terminal state.
-function documentIsRendered() {
-  if (typeof document === 'undefined') return true;
-  if (document.visibilityState === 'hidden') return false;
-  return Boolean(document.body?.getClientRects().length);
-}
-function whenDocumentRendered(callback) {
-  if (documentIsRendered()) { callback(); return () => {}; }
-  let frame = 0;
-  let done = false;
-  const stop = () => {
-    if (done) return;
-    done = true;
-    cancelAnimationFrame(frame);
-    document.removeEventListener('visibilitychange', check);
-    window.removeEventListener('resize', check);
-  };
-  const check = () => { if (!documentIsRendered()) return; stop(); callback(); };
-  document.addEventListener('visibilitychange', check);
-  window.addEventListener('resize', check);
-  const poll = () => { if (done) return; frame = requestAnimationFrame(poll); check(); };
-  frame = requestAnimationFrame(poll);
-  return stop;
-}
 const TRANSIENT_DIAGRAM_ERROR = /not in render tree/i;
 function Diagram({ props }) {
   // Mermaid is loaded and rendered asynchronously. The host stays empty in the
@@ -90,38 +71,37 @@ function Diagram({ props }) {
   const descrId = `diagram-desc-${uid}`;
   useEffect(() => {
     let alive = true;
-    let cancelWait = null;
+    const controller = new AbortController();
     setStatus('pending'); setError('');
     const run = retries => {
       if (!alive || !host.current) return;
-      cancelWait = whenDocumentRendered(() => {
-        cancelWait = null;
-        renderDiagram(`canvas-diagram-${uid}`, props.code, isDarkTheme(themeKey)).then(({ svg }) => {
-          if (!alive || !host.current) return;
-          host.current.innerHTML = svg;
-          setStatus('ready');
-        }).catch(failure => {
-          if (!alive) return;
-          if (retries < 1 && TRANSIENT_DIAGRAM_ERROR.test(errorMessage(failure))) { run(retries + 1); return; }
-          setError(`Diagram could not be rendered. ${errorMessage(failure)}`);
-          setStatus('error');
-        });
+      renderDiagram(`canvas-diagram-${uid}`, props.code, isDarkTheme(themeKey), controller.signal).then(({ svg }) => {
+        if (!alive || !host.current) return;
+        host.current.innerHTML = svg;
+        const drawing = host.current.querySelector('svg');
+        if (drawing?.viewBox.baseVal.width) drawing.style.minWidth = `${drawing.viewBox.baseVal.width}px`;
+        setStatus('ready');
+      }).catch(failure => {
+        if (!alive) return;
+        if (retries < 1 && TRANSIENT_DIAGRAM_ERROR.test(errorMessage(failure))) { run(retries + 1); return; }
+        setError(`Diagram could not be rendered. ${errorMessage(failure)}`);
+        setStatus('error');
       });
     };
     run(0);
-    return () => { alive = false; cancelWait?.(); };
+    return () => { alive = false; controller.abort(); };
   }, [props.code, uid, themeKey]);
   return <section className="card diagram-card"><h2>{props.title}</h2>{error
     ? <p className="muted">{error}</p>
-    : status !== 'ready' && <p className="muted diagram-status">Rendering diagram…</p>}<div className="diagram-host" ref={host} role={error ? undefined : 'img'} aria-label={error ? undefined : label} aria-describedby={!error && description ? descrId : undefined} aria-busy={status === 'pending'} hidden={status !== 'ready'} />{description && <span className="sr-only" id={descrId}>{description}</span>}{props.caption && <p className="muted diagram-caption">{props.caption}</p>}</section>;
+     : status !== 'ready' && <p className="muted diagram-status">Rendering diagram…</p>}<div className="diagram-host" ref={host} tabIndex={0} role={error ? undefined : 'img'} aria-label={error ? undefined : label} aria-describedby={!error && description ? descrId : undefined} aria-busy={status === 'pending'} hidden={status !== 'ready'} />{description && <span className="sr-only" id={descrId}>{description}</span>}{props.caption && <p className="muted diagram-caption">{props.caption}</p>}</section>;
 }
 function LineChart({ props }) {
   const maximum = Math.max(1, ...props.data.map(item => item.value));
-  const points = props.data.map((item, index) => [24 + index / Math.max(1, props.data.length - 1) * 552, 160 - item.value / maximum * 136]);
+  const points = props.data.map((item, index) => [props.data.length === 1 ? 300 : 24 + index / (props.data.length - 1) * 552, 160 - item.value / maximum * 136]);
   const line = points.map(point => point.join(',')).join(' ');
   return <section className="card chart-card"><div className="section-heading"><h2>{props.title}</h2><span className="chart-label">{props.unit ?? 'TREND'}</span></div><svg className="line-chart" viewBox="0 0 600 180" role="img" aria-label={props.title}><desc>{props.data.map(item => `${item.label}: ${item.value}`).join(', ')}</desc>
     {[24, 69, 114, 160].map(y => <line key={y} x1="24" x2="576" y1={y} y2={y} className="chart-grid" />)}
-    <polygon points={`24,160 ${line} 576,160`} fill={colors[0]} fillOpacity=".12" />
+    {points.length > 1 && <polygon points={`24,160 ${line} 576,160`} fill={colors[0]} fillOpacity=".12" />}
     <polyline points={line} fill="none" stroke={colors[0]} strokeWidth="2.5" strokeLinejoin="round" strokeLinecap="round" />
     {points.map(([x, y], index) => <circle key={index} cx={x} cy={y} r="4" fill={colors[0]}><title>{`${props.data[index].label}: ${props.data[index].value.toLocaleString()}${props.unit ? ` ${props.unit}` : ''}`}</title></circle>)}
   </svg><div className="axis-labels"><span>{props.data[0].label}</span><span>{props.data.at(-1).label}</span></div></section>;
@@ -131,14 +111,20 @@ function DonutChart({ props }) {
   const uid = useId().replace(/[^a-zA-Z0-9_-]/g, '');
   const radius = 50;
   const circumference = 2 * Math.PI * radius;
-  // A 2px gap between slices separates neighbours without another color.
+  // Keep each boundary at its true share. Gaps shrink with tiny slices and zero
+  // slices never consume an angle. A single nonzero slice is a complete ring.
+  const nonzero = props.data.filter(item => item.value > 0).length;
   let offset = 0;
   const slices = props.data.map((item, index) => {
-    const length = Math.max(0, (total ? item.value / total * circumference : 0) - 2);
+    const arc = total ? item.value / total * circumference : 0;
+    const length = arc - (nonzero > 1 ? Math.min(2, arc * .1) : 0);
     const slice = { index, length, start: offset };
-    offset += length + 2;
+    offset += arc;
     return slice;
-  });
+  }).filter(slice => slice.length > 0);
+  const displayTotal = total.toLocaleString().length > 8
+    ? new Intl.NumberFormat(undefined, { notation: 'compact', maximumFractionDigits: 1 }).format(total)
+    : total.toLocaleString();
   const share = item => (total ? Math.round(item.value / total * 100) : 0);
   return <section className="card"><h2>{props.title}</h2><div className="distribution">
     <svg className="donut" viewBox="0 0 120 120" role="img" aria-label={`${props.title}: ${props.data.map(item => `${item.label} ${share(item)}%`).join(', ')}`}>
@@ -148,7 +134,7 @@ function DonutChart({ props }) {
         {slices.map(slice => <circle key={slice.index} className="donut-seg" cx="60" cy="60" r={radius} style={{ stroke: colors[slice.index % colors.length] }} strokeDasharray={`${slice.length} ${circumference - slice.length}`} strokeDashoffset={-slice.start} />)}
         {slices.filter(slice => patternOf(slice.index) > 1).map(slice => <circle key={`pattern-${slice.index}`} className="donut-seg" cx="60" cy="60" r={radius} stroke={`url(#donut-${uid}-p${patternOf(slice.index)})`} strokeDasharray={`${slice.length} ${circumference - slice.length}`} strokeDashoffset={-slice.start} />)}
       </g>
-      <text className="donut-total" x="60" y="57">{total.toLocaleString()}</text>
+      <text className="donut-total" x="60" y="57"><title>{total.toLocaleString()}</title>{displayTotal}</text>
       <text className="donut-label" x="60" y="72">Total</text>
     </svg>
     <dl className="legend">{props.data.map((item, index) => <div key={index}><dt><i className={`pat-${patternOf(index)}`} style={{ backgroundColor: colors[index % colors.length] }} />{item.label}</dt><dd>{share(item)}% <span>{item.value.toLocaleString()}</span></dd></div>)}</dl>
@@ -169,9 +155,9 @@ function Table({ props }) {
     return (typeof left === 'number' && typeof right === 'number' ? left - right : String(left ?? '').localeCompare(String(right ?? ''))) * sort.direction;
   });
   const align = index => props.align?.[index] === 'right' ? 'right' : 'left';
-  return <section className="card"><div className="section-heading"><h2>{props.title}</h2><div className="search-field"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true"><circle cx="11" cy="11" r="7" /><path d="m20 20-3.5-3.5" /></svg><input value={query} onChange={event => setQuery(event.target.value)} type="search" aria-label="Filter rows" placeholder="Filter rows" /></div></div><div className="table-scroll"><table>
+  return <section className="card"><div className="section-heading"><h2>{props.title}</h2><div className="search-field"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true"><circle cx="11" cy="11" r="7" /><path d="m20 20-3.5-3.5" /></svg><input value={query} onChange={event => setQuery(event.target.value)} type="search" aria-label="Filter rows" placeholder="Filter rows" /></div></div><div className="table-scroll" tabIndex={0} role="region" aria-label={`${props.title} table`}><table>
     <thead><tr>{props.columns.map((column, index) => <th key={index} style={{ textAlign: align(index) }} aria-sort={sort?.index === index ? sort.direction === 1 ? 'ascending' : 'descending' : 'none'}><button onClick={() => setSort({ index, direction: sort?.index === index ? -sort.direction : 1 })}>{column}<span className="sort-arrow" aria-hidden="true">{sort?.index === index ? (sort.direction === 1 ? '↑' : '↓') : ''}</span></button></th>)}</tr></thead>
-    <tbody>{rows.map((row, index) => <tr key={index}>{row.map((cell, column) => <td key={column} style={{ textAlign: align(column) }}>{String(cell ?? '—')}</td>)}</tr>)}</tbody>
+    <tbody>{rows.map((row, index) => <tr key={index}>{row.map((cell, column) => <td key={column} className={typeof cell === 'number' ? 'numeric' : undefined} style={{ textAlign: align(column) }}>{String(cell ?? '—')}</td>)}</tr>)}</tbody>
     {props.footer && <tfoot><tr>{props.columns.map((_, index) => <td key={index} style={{ textAlign: align(index) }}>{String(props.footer[index] ?? '—')}</td>)}</tr></tfoot>}
   </table></div><p className="muted table-count">{rows.length} of {props.rows.length} rows{rows.length === 0 ? ' · No matching rows' : ''}</p></section>;
 }
@@ -205,13 +191,13 @@ function KeyValue({ props }) {
   return <section className="card"><Title>{props.title}</Title><dl className="kv">{props.items.map((item, index) => <div key={index} className={toneClass(item.tone)}><dt>{item.label}</dt><dd>{item.value}</dd></div>)}</dl></section>;
 }
 function Badge({ props }) {
-  return <span className={`badge ${toneClass(props.tone)}`}>{props.label}</span>;
+  return <span className={`badge ${toneClass(props.tone)}`}><span>{props.label}</span></span>;
 }
 function Callout({ props }) {
   return <section className={`callout ${toneClass(props.tone ?? 'blue')}`} role="note">{props.title && <strong>{props.title}</strong>}<p>{props.text}</p></section>;
 }
 function CodeBlock({ props }) {
-  return <section className="card"><Title>{props.title}</Title>{props.language && <span className="chart-label">{props.language}</span>}<pre className="code-block">{props.code}</pre></section>;
+  return <section className="card"><Title>{props.title}</Title>{props.language && <span className="chart-label">{props.language}</span>}<pre className="code-block" tabIndex={0} aria-label={props.title ?? 'Code'}>{props.code}</pre></section>;
 }
 function Progress({ props }) {
   const percent = props.max ? Math.min(100, Math.round(props.value / props.max * 100)) : 0;
@@ -233,12 +219,12 @@ function Gauge({ props }) {
 }
 function Sparkline({ props }) {
   const maximum = Math.max(1, ...props.data.map(item => item.value));
-  const line = props.data.map((item, index) => `${(index / Math.max(1, props.data.length - 1) * 100).toFixed(2)},${(30 - item.value / maximum * 26).toFixed(2)}`).join(' ');
-  return <section className={`card ${toneClass(props.tone ?? 'blue')}`}><Title>{props.title}</Title><svg className="sparkline" viewBox="0 0 100 32" preserveAspectRatio="none" role="img" aria-label={props.title ?? 'Trend'}><polyline points={line} vectorEffect="non-scaling-stroke" /></svg><div className="spark-meta"><span>{props.data[0].label}</span><span>{props.data.at(-1).label}</span></div></section>;
+  const line = props.data.map((item, index) => `${(props.data.length === 1 ? 50 : index / (props.data.length - 1) * 100).toFixed(2)},${(30 - item.value / maximum * 26).toFixed(2)}`).join(' ');
+  return <section className={`card ${toneClass(props.tone ?? 'blue')}`}><Title>{props.title}</Title><svg className="sparkline" viewBox="0 0 100 32" preserveAspectRatio="none" role="img" aria-label={props.title ?? 'Trend'}><desc>{props.data.map(item => `${item.label}: ${item.value}`).join(', ')}</desc>{props.data.length === 1 ? <path d={`M49 ${30 - props.data[0].value / maximum * 26}h2`} stroke="var(--tone)" strokeWidth="4" strokeLinecap="round" vectorEffect="non-scaling-stroke" /> : <polyline points={line} vectorEffect="non-scaling-stroke" />}</svg><div className="spark-meta"><span>{props.data[0].label}</span><span>{props.data.at(-1).label}</span></div></section>;
 }
 function Heatmap({ props }) {
   const maximum = Math.max(1, ...props.rows.flatMap(row => row.values));
-  return <section className="card"><Title>{props.title}</Title><div className="heat" style={{ gridTemplateColumns: `auto repeat(${props.columns.length}, minmax(0, 1fr))` }}><span />{props.columns.map((column, index) => <span className="heat-col" key={index}>{column}</span>)}{props.rows.map((row, rowIndex) => <React.Fragment key={rowIndex}><span className="heat-label">{row.label}</span>{row.values.map((value, cellIndex) => <span className="heat-cell" key={cellIndex} title={`${row.label} · ${props.columns[cellIndex]}: ${value}`} style={{ opacity: 0.15 + 0.85 * (value / maximum) }} />)}</React.Fragment>)}</div></section>;
+  return <section className="card"><Title>{props.title}</Title><div className="heat" tabIndex={0} role="img" aria-label={props.title ?? 'Heatmap'} style={{ gridTemplateColumns: `minmax(40px,auto) repeat(${props.columns.length}, minmax(36px, 1fr))` }}><span />{props.columns.map((column, index) => <span className="heat-col" key={index}>{column}</span>)}{props.rows.map((row, rowIndex) => <React.Fragment key={rowIndex}><span className="heat-label">{row.label}</span>{row.values.map((value, cellIndex) => <span className="heat-cell" key={cellIndex} title={`${row.label} · ${props.columns[cellIndex]}: ${value}`} style={{ opacity: 0.15 + 0.85 * (value / maximum) }} />)}</React.Fragment>)}</div></section>;
 }
 function StackedBarChart({ props }) {
   const totals = props.categories.map((_, index) => props.series.reduce((sum, entry) => sum + (entry.data[index] ?? 0), 0));

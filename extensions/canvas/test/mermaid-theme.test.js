@@ -1,14 +1,16 @@
 import { test, expect } from 'bun:test';
-import { diagramThemeVariables, normalizeColor } from '../src/mermaid-theme.js';
+import { createColorResolver, diagramThemeVariables, normalizeColor } from '../src/mermaid-theme.js';
 
 const fallback = (name, value) => value;
 
 test('normalizes chromium color(srgb) serialization to comma-free colours', () => {
   expect(normalizeColor('color(srgb 1 0 0)', '#000')).toBe('#ff0000');
   expect(normalizeColor('color(srgb 0.5 0.5 0.5 / 0.5)', '#000')).toBe('rgba(128, 128, 128, 0.5)');
-  expect(normalizeColor('rgb(1, 2, 3)', '#000')).toBe('rgb(1, 2, 3)');
+  expect(normalizeColor('rgb(1, 2, 3)', '#000')).toBe('#010203');
+  expect(normalizeColor('rgb(1 2 3)', '#000')).toBe('#010203');
   expect(normalizeColor('#abcdef', '#000')).toBe('#abcdef');
   expect(normalizeColor('rgba(0, 0, 0, 0)', '#123456')).toBe('#123456');
+  expect(normalizeColor('color(srgb 0 0 0 / 0)', '#123456')).toBe('#123456');
   expect(normalizeColor('', '#123456')).toBe('#123456');
 });
 
@@ -35,6 +37,10 @@ test('covers every diagram variable family mermaid 12 reads', () => {
     for (const name of names) expect(vars[name], `${family}.${name}`).toBeTruthy();
   }
   for (let index = 0; index < 12; index++) expect(vars[`cScale${index}`], `cScale${index}`).toBeTruthy();
+  for (let index = 0; index < 12; index++) {
+    expect(vars[`cScaleLabel${index}`]).toBe(vars.textColor);
+    expect(vars[`cScaleInv${index}`]).toBe(vars.nodeBorder);
+  }
 });
 
 test('themes object-shaped families rather than leaving hardcoded light defaults', () => {
@@ -50,9 +56,32 @@ test('themes object-shaped families rather than leaving hardcoded light defaults
 });
 
 test('builds a twelve-colour palette from --diagram-N', () => {
-  const indexed = (name, value) => name.startsWith('--diagram-') ? `rgb(${name.slice(10)} 0 0)` : value;
+  const indexed = (name, value) => /^--diagram-\d+$/.test(name) ? `rgb(${name.slice(10)} 0 0)` : value;
   const vars = diagramThemeVariables(indexed, false);
   expect(vars.pie1).toBe('rgb(1 0 0)');
   expect(vars.cScale11).toBe('rgb(12 0 0)');
   expect(vars.pie1).not.toBe(vars.pie2);
+});
+
+test('font families bypass the color probe', () => {
+  const previousDocument = globalThis.document, previousStyle = globalThis.getComputedStyle;
+  let writes = 0;
+  const style = { set color(value) { writes++; } };
+  globalThis.document = { documentElement:{}, body:{appendChild() {}}, createElement:() => ({style,setAttribute() {},remove() {}}) };
+  globalThis.getComputedStyle = () => ({getPropertyValue:() => 'Example Sans, sans-serif',color:'rgb(0, 0, 0)'});
+  try {
+    const resolve = createColorResolver();
+    expect(resolve('--font', 'sans-serif')).toBe('Example Sans, sans-serif');
+    expect(writes).toBe(0);
+    resolve.dispose();
+  } finally { globalThis.document = previousDocument; globalThis.getComputedStyle = previousStyle; }
+});
+
+test('chart marks use stronger series tokens than pastel node faces', () => {
+  const vars = diagramThemeVariables((name, fallback) => ({'--diagram-1':'#dddddd','--primary-text':'#224488','--series-2':'#335577'}[name] ?? fallback),false);
+  expect(vars.pie1).toBe('#dddddd');
+  expect(vars.git0).toBe('#224488');
+  expect(vars.git1).toBe('#335577');
+  expect(vars.xyChart.plotColorPalette).toStartWith('#224488,#335577');
+  expect(vars.gitBranchLabel0).toBe(vars.background);
 });

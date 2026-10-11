@@ -4,6 +4,7 @@ import { renderToStaticMarkup } from 'react-dom/server';
 import { Canvas } from '../src/renderer.jsx';
 import { parseArtifact } from '../src/catalog.js';
 import { costExplorer, gallery } from '../src/examples.js';
+import { boundaries } from '../preview/fixtures.js';
 test('gallery renders every component without crashing', () => {
   const html = renderToStaticMarkup(<Canvas artifact={parseArtifact(gallery)} months={12} setMonths={() => {}} />);
   expect(html).toContain('gauge-ring');
@@ -69,4 +70,24 @@ test('plain text never becomes executable markup', () => {
   const html = renderToStaticMarkup(<Canvas artifact={value} months={12} setMonths={() => {}} />);
   expect(html).toContain('&lt;img');
   expect(html).not.toContain('<img');
+});
+
+test('boundary fixture validates and zero ring data paints no slice', () => {
+  expect(() => parseArtifact(boundaries)).not.toThrow();
+  const render = data => renderToStaticMarkup(<Canvas artifact={parseArtifact({catalog_version:'1',title:'Ring',spec:{root:'r',elements:{r:{type:'DonutChart',props:{title:'Ring',data}}}}})} months={12} setMonths={() => {}} />);
+  const zero = render([{label:'A',value:0},{label:'B',value:0}]);
+  expect(zero).not.toContain('class="donut-seg"');
+  const single = render([{label:'Zero',value:0},{label:'Full',value:1}]);
+  expect(single).toContain('stroke-dashoffset="0"');
+  expect(single).toContain('stroke-dasharray="314.1592653589793 0"');
+  const tiny = render([{label:'Tiny',value:.001},{label:'Large',value:1e9}]);
+  const lengths = [...tiny.matchAll(/stroke-dasharray="([\d.e+-]+) /g)].map(match => Number(match[1]));
+  expect(lengths[0]).toBeGreaterThan(0);
+  expect(lengths[0]).toBeLessThan(.001);
+});
+
+test('one line observation is centered and does not imply a filled trend', () => {
+  const html = renderToStaticMarkup(<Canvas artifact={parseArtifact({catalog_version:'1',title:'One',spec:{root:'r',elements:{r:{type:'LineChart',props:{title:'One',data:[{label:'Now',value:1}]}}}}})} months={12} setMonths={() => {}} />);
+  expect(html).toContain('cx="300"');
+  expect(html).not.toContain('<polygon');
 });
