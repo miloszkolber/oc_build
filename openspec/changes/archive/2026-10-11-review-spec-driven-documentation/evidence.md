@@ -53,3 +53,17 @@ execution, rollout or push was performed. Canvas desktop acceptance remains in
 its own open change. The user accepted this documentation change on 2026-10-11:
 “Looks good, documentation accepted.” Implementation is committed in `f679a84`.
 This approval does not establish native Canvas acceptance or authorize deployment.
+
+## Subsequent layout simplification
+
+On 2026-10-11 the user approved replacing the alias with one physical `openspec/`
+directory and removing `docs/`. The alias findings above describe the former
+layout, not the current archive procedure. Links, config, CI paths and checker
+fixtures now target `openspec/`. The checker rejects aliases and duplicate trees.
+
+In `/tmp/opencode/openspec-layout-vHfwHT`, a copy of the resulting tree passed
+strict validation and `archive layout-probe --yes --json` merged one ADDED
+requirement into app-image with `specsUpdated: true`. A byte-prefix comparison
+confirmed existing spec content was preserved. The active fixture was removed,
+the delta remained in its dated archive, and strict validation passed afterward.
+The repository's local checks and eight regression tests also passed.

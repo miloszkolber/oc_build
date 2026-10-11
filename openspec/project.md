@@ -41,8 +41,8 @@ upstream package resolutions mean builds are **not bit-reproducible**.
 
 | Subject | Owner |
 | --- | --- |
-| Implemented behavior | `docs/specs/<capability>/spec.md` alongside source |
-| Proposed behavior, tasks and evidence | One scoped folder in `docs/changes/` |
+| Implemented behavior | `openspec/specs/<capability>/spec.md` alongside source |
+| Proposed behavior, tasks and evidence | One scoped folder in `openspec/changes/` |
 | Build/install/configuration commands | The affected package README |
 | Canvas render history | `extensions/canvas/VERIFICATION.md` |
 | Host deployment, credentials, recovery | `/home/core/docker/openchamber/` in the host repository |

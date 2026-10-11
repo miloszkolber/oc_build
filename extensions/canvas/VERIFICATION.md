@@ -283,4 +283,4 @@ CRUD service, conversation scoping, UI-kit chrome, the showcase example,
 token-based styling, removal of all panel chrome, the Mermaid `Diagram`
 component and parent-canvas resolution for subagent sessions were each
 installed and verified in MCP Chromium. Details are preserved in the repository
-history and in [`docs/`](../../docs/README.md).
+history and in [`openspec/`](../../openspec/README.md).

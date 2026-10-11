@@ -1,6 +1,6 @@
 ## About
 
-This repository builds the OpenChamber web image, standalone distroless browser MCP, Canvas panel and Rembric OpenCode V2 plugin. Behavior changes follow the [spec-driven workflow](docs/README.md#working-a-change).
+This repository builds the OpenChamber web image, standalone distroless browser MCP, Canvas panel and Rembric OpenCode V2 plugin. Behavior changes follow the [spec-driven workflow](openspec/README.md#working-a-change).
 
 ## Layout
 
@@ -17,4 +17,4 @@ See [`docker/openchamber/README.md`](docker/openchamber/README.md) for image con
 
 ## Documentation
 
-[`docs/`](docs/README.md) owns implemented [contracts](docs/specs/), scoped [changes](docs/changes/) and the [deferred backlog](docs/backlog.md). The root `openspec` symlink exposes the same files to OpenSpec. Start at [`docs/README.md`](docs/README.md).
+[`openspec/`](openspec/README.md) is the single documentation and planning tree: implemented [contracts](openspec/specs/), scoped [changes](openspec/changes/) and the [deferred backlog](openspec/backlog.md). Start at [`openspec/README.md`](openspec/README.md).

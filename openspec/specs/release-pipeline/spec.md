@@ -138,6 +138,12 @@ checks and the pinned upstream OpenSpec validator.
 
 #### Scenario: One planning home
 - **WHEN** OpenSpec resolves the repository's planning files
-- **THEN** `openspec` resolves to `docs`, including project configuration
+- **THEN** the physical `openspec/` directory contains the specifications and project configuration
 - **AND** validation creates no second copy of the specifications
 - **AND** structural success does not claim implemented behavior or native-client acceptance
+
+#### Scenario: Reviewed delta archive
+- **GIVEN** a completed change with reviewed requirement deltas
+- **WHEN** OpenSpec archives it with spec updates enabled
+- **THEN** the deltas merge into main specs while unaffected requirements remain
+- **AND** the archived change moves out of the active changes list

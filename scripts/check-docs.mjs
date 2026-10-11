@@ -1,4 +1,4 @@
-import { readFileSync, readdirSync, existsSync, realpathSync } from 'node:fs';
+import { readFileSync, readdirSync, existsSync, lstatSync } from 'node:fs';
 import { resolve, dirname, relative } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
@@ -9,17 +9,20 @@ export function checkDocumentation(root) {
     const file = resolve(dir, entry.name);
     return entry.isDirectory() ? walk(file) : [file];
   });
-  const docs = resolve(root, 'docs');
-  const files = walk(docs).filter(file => file.endsWith('.md'));
+  const planning = resolve(root, 'openspec');
+  try {
+    if (!lstatSync(planning).isDirectory()) {
+      return { files: 0, failures: ['openspec must be a real directory, not an alias'] };
+    }
+  } catch {
+    return { files: 0, failures: ['missing openspec directory'] };
+  }
+  if (existsSync(resolve(root, 'docs'))) failures.push('openspec must be the only documentation tree (remove docs)');
+  const files = walk(planning).filter(file => file.endsWith('.md'));
   for (const name of ['README.md', 'AGENTS.md', 'extensions/README.md', 'extensions/canvas/VERIFICATION.md']) {
     const file = resolve(root, name);
     if (existsSync(file)) files.push(file);
   }
-  try {
-    if (realpathSync(resolve(root, 'openspec')) !== realpathSync(docs)) {
-      failures.push('openspec must resolve to docs (one source of truth)');
-    }
-  } catch { failures.push('missing openspec -> docs alias'); }
 
   const heading = value => value.toLowerCase().replace(/[^\p{L}\p{N}_\- ]/gu, '').replace(/ /g, '-');
   for (const file of files) {
@@ -36,7 +39,7 @@ export function checkDocumentation(root) {
       }
     }
     if (!file.endsWith('/spec.md')) continue;
-    const isMain = relative(docs, file).startsWith('specs/');
+    const isMain = relative(planning, file).startsWith('specs/');
     if (isMain && (!/^## Purpose\s*$/m.test(text) || !/^## Requirements\s*$/m.test(text))) {
       fail(file, 'main spec needs Purpose and Requirements');
     }
@@ -69,9 +72,9 @@ export function checkDocumentation(root) {
       }
     }
   }
-  for (const entry of readdirSync(resolve(docs, 'changes'), { withFileTypes: true })) {
+  for (const entry of readdirSync(resolve(planning, 'changes'), { withFileTypes: true })) {
     if (!entry.isDirectory() || entry.name === 'archive') continue;
-    const dir = resolve(docs, 'changes', entry.name);
+    const dir = resolve(planning, 'changes', entry.name);
     for (const name of ['proposal.md', 'tasks.md', '.openspec.yaml']) {
       if (!existsSync(resolve(dir, name))) fail(dir, `missing ${name}`);
     }

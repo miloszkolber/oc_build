@@ -2,8 +2,8 @@ schema: spec-driven
 
 context: |
   oc_build packages the upstream OpenChamber web app, standalone browser MCP,
-  Canvas panel and Rembric OpenCode V2 plugin. See docs/project.md for boundaries,
-  docs/specs/ for implemented contracts and package READMEs for commands.
+  Canvas panel and Rembric OpenCode V2 plugin. See openspec/project.md for boundaries,
+  openspec/specs/ for implemented contracts and package READMEs for commands.
   Agent sandbox development is owned by artful-yak. Do not recreate its plan.
   OpenCode and host deployment are external owners. Browser MCP is standalone
   Chromium, not the native desktop client. Publication is not deployment.

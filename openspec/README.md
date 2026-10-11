@@ -37,9 +37,9 @@ MCP Chromium checks do not establish native desktop acceptance.
    A proposal is not permission to deploy, restart services or begin paused work.
 5. Verify implementation against scenarios. Record commands, results and gaps
    in `evidence.md`. A checkbox or structural validation is not runtime acceptance.
-6. Merge completed deltas into main specs, preserving unaffected requirements.
-   Validate the merged specs, then archive with `--skip-specs` under
-   `changes/archive/YYYY-MM-DD-<name>/` after review.
+6. After verification and review, archive the change with OpenSpec. It merges
+   completed deltas into main specs and moves the change under
+   `changes/archive/YYYY-MM-DD-<name>/`. Validate the resulting main specs.
 
 Use `## Purpose`, `## Requirements`, `### Requirement: Name`, and
 `#### Scenario: Name` in main specs. Requirements use SHALL or MUST and describe
@@ -53,8 +53,8 @@ only a reviewed diff and checks. Do not manufacture archive history retrospectiv
 
 ## Tooling
 
-OpenSpec discovers a root `openspec/` directory. The tracked `openspec -> docs`
-symlink exposes these same files to the CLI without a second documentation tree.
+`openspec/` is the real documentation and planning directory. There is no
+`docs/` copy or alias. OpenSpec discovers this standard layout directly.
 Run from the repository root:
 
 ```sh
@@ -63,18 +63,18 @@ OPENSPEC_TELEMETRY=0 bun x --bun @fission-ai/openspec@1.14.1 list --specs
 OPENSPEC_TELEMETRY=0 bun x --bun @fission-ai/openspec@1.14.1 validate --all --strict
 ```
 
-After review and **manual delta merge**, archive with:
+After verification and review, merge deltas and archive with:
 
 ```sh
-OPENSPEC_TELEMETRY=0 bun x --bun @fission-ai/openspec@1.14.1 archive <name> --skip-specs
+OPENSPEC_TELEMETRY=0 bun x --bun @fission-ai/openspec@1.14.1 archive <name>
+OPENSPEC_TELEMETRY=0 bun x --bun @fission-ai/openspec@1.14.1 validate --all --strict
 ```
 
-Do not use automatic spec-update archive with this alias on 1.14.1. It fails
-its final delta fingerprint check. Creation, instructions, validation and
-archive **without** spec updates were exercised in isolated fixtures. See
-[review evidence](changes/archive/2026-10-11-review-spec-driven-documentation/evidence.md).
-`--skip-specs` bypasses merging, not the requirement to merge and review behavior
-deltas first. Never use `--no-validate` to hide an archive failure.
+Use `--skip-specs` only for changes with no deltas or deltas already merged and
+reviewed. Never use it to omit required updates. Never use `--no-validate` to
+hide an archive failure. The former alias workaround in the
+[archived review](changes/archive/2026-10-11-review-spec-driven-documentation/evidence.md)
+is historical and does not apply to this physical directory.
 
 The lightweight check verifies local links, scenario structure, change metadata
 and task numbering. The upstream CLI checks its own parsing and validation rules.

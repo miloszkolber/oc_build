@@ -2,9 +2,9 @@ name: Documentation contracts
 on:
   push:
     branches: [main]
-    paths: ['docs/**', 'openspec', 'AGENTS.md', 'README.md', 'scripts/check-docs*', '.github/workflows/**', 'docker/**', 'extensions/**']
+    paths: ['openspec/**', 'AGENTS.md', 'README.md', 'scripts/check-docs*', '.github/workflows/**', 'docker/**', 'extensions/**']
   pull_request:
-    paths: ['docs/**', 'openspec', 'AGENTS.md', 'README.md', 'scripts/check-docs*', '.github/workflows/**', 'docker/**', 'extensions/**']
+    paths: ['openspec/**', 'AGENTS.md', 'README.md', 'scripts/check-docs*', '.github/workflows/**', 'docker/**', 'extensions/**']
   workflow_dispatch:
 permissions:
   contents: read
