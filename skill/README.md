@@ -26,9 +26,9 @@ tests and future tool additions to the container. Inventory stays in image sourc
 | Source | Relevance | What it does not establish |
 | --- | --- | --- |
 | OpenChamber extension SDK documentation (`docs.openchamber.dev/sdk/*`) | Panel surfaces, host API, UI kit and theme tokens | Behaviour of a specific installed extension version |
-| The Generative Canvas extension in `/repo/oc_build/extensions/canvas` | The concrete catalog, file path and validation rules the module states | That an agent will discover Canvas without being asked |
+| The Generative Canvas extension in this repository (`extensions/canvas`) | The concrete catalog, file path and validation rules the module states | That an agent will discover Canvas without being asked |
 | OpenChamber's own browser panel versus the `browser` MCP server | The state-sharing and evidence boundary | That either surface is reachable in every deployment |
-| Operator-approved Canvas review and `openspec/changes/refine-canvas-visual-language/` in the Canvas source repository | Technical diagram direction, justified chart color and request for complete authoring/interaction guidance | That every agent adopts the guidance or that approved preview bytes are installed |
+| Operator-approved Canvas review, recorded in the repository [change history](../openspec/changes/history.md#visual-language-refinement-2026-10-11) | Technical diagram direction, justified chart color and request for complete authoring/interaction guidance | That every agent adopts the guidance or that approved preview bytes are installed |
 | [The case for monochrome data visualization](https://medium.com/design-bootcamp/the-case-for-monochrome-data-visualization-53d2c90c6eb8) (Bootcamp, 2026) | Read-vs-scan color rule: quiet default for in-flow reading, color for scanning/monitoring; value for order, distinct marks for categories; semantic hue reinforces labels | Print/editorial examples and WCAG summary, not a Canvas component specification |
 
 ## Evidence limits
@@ -39,7 +39,9 @@ tests and future tool additions to the container. Inventory stays in image sourc
 
 ## In-repo snapshot note
 
-This directory mirrors `/home/core/agents/skills/workspace`. Re-sync copies
-the master verbatim, then re-applies one transform: the two design-reference
-links in `references/canvas.md` become absolute `/home/core/...` paths,
-because the master's relative links only resolve inside the canonical tree.
+This directory mirrors the canonical workspace skill collection. Re-sync copies
+the master verbatim, then re-applies two transforms: the design-reference
+links in `references/canvas.md` become plain text, and host paths become
+role names ("configured canvas directory", "local deployment docs"), because
+neither the master's relative links nor host-absolute values resolve portably
+from this snapshot layout.

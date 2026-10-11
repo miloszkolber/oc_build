@@ -1,5 +1,20 @@
 # Canvas verification
 
+## 0.9.17 release — 2026-10-11
+
+Empty-state copy button uses the authentic Remix `file-copy-line` glyph
+(fill, 16px, block-aligned in its 24px button) instead of the hand-drawn
+stroke clone. Verified in the review harness: remix glyph renders centered,
+and the copied state confirms with its label. Tests pass; package is
+118 files. Installed as the new version with the prior build retained as
+backup, authored canvases untouched, no service restarted. Client reload
+discovers the new version.
+
+ZIP SHA-256:
+`66e89660d0b79358807f867e6b122b76fac767bad69062e6743b97cee7d59406`.
+Panel main bundle SHA-256:
+`e2d7862acf341f3f74e45364305b27ff62f6c124478e4d1407aa78cd2e0023c4`.
+
 ## 0.9.16 release — 2026-10-11
 
 Approved visual source installed as version 0.9.16 at
