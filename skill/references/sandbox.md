@@ -43,7 +43,7 @@ sandbox run -- docker build -t project:check .
 ## Add a missing tool
 
 1. Check the project lockfile, runtime requirements and current image. Do not
-   use host package managers, global installers or host install locations to
+   use host package managers, global installers or host `/usr/local/bin` to
    supply a development dependency.
 2. Record reusable runtimes/CLIs in `oc_build/docker/sandbox` Dockerfile, README
    and image check. Project libraries belong in project manifests/lockfiles
@@ -57,7 +57,7 @@ sandbox run -- docker build -t project:check .
 5. Update this reference only if invocation changes. The tool inventory belongs
    to the image source and README, not a competing skill inventory.
 
-Commands and deployment: the sandbox image README in this repository and the
-`openchamber-sandbox` service section of the local openchamber deployment docs. If source/image or the rootless endpoint
+Commands and deployment: the sandbox image README in the project repository and
+the `openchamber-sandbox` service section of the local deployment docs. If source/image or the rootless endpoint
 is missing, report and repair through those owners. Do not fall back to
 installing development tooling on the host.

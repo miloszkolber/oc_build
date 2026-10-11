@@ -13,7 +13,7 @@ Use when creating, updating, inspecting or debugging an OpenChamber conversation
 
 One conversation owns one canvas. The panel follows the selected conversation, reads a single JSON file and renders it with trusted components. The panel never writes and never shows raw JSON.
 
-- File: `<canvas-dir>/<session-id>.canvas.json` under the configured canvas directory.
+- File: the canvas directory the panel reports, `<canvas-dir>/<session-id>.canvas.json`. The panel's empty-state request supplies the exact path for the conversation, so use that when available.
 - Session ids are normally safe filename segments. Unusual ids use `session-<16 hex>.canvas.json` (deterministic hash). The single source of truth is the extension's `src/session.js`.
 - Write atomically: write a temporary file, then replace. Never leave a half-written file.
 - A missing file is an empty canvas, not an error. Invalid JSON shows an error and keeps the last good render.
@@ -80,7 +80,7 @@ A complete same-measure example (illustrative values, not live records):
 - Preserve honest geometry and data domains. Built-in chart data is nonnegative. Do not clamp negative values, replace missing values with zero or imply live measurements from example data. Use a labeled table or explain the unsupported view instead.
 - Keep structural diagrams technical: meaningful authored shapes, concise labels, restrained connections and host type. Do not rewrite topology just to resemble a screenshot. Charts inside Mermaid may use useful color without making structural nodes decorative.
 - Give each diagram a meaningful `title`. Put `accTitle:` and `accDescr:` after the Mermaid type line to name and explain relationships for assistive technology. Use `caption` for a visible takeaway. A family name or visual screenshot is not a relationship description.
-- If exact chart data is not readily available as text, include a compact `Table`/`KeyValue` or explanatory text alongside the visualization. Hover-only details are not a sufficient sole representation. For renderer changes, load the design accessibility and review procedures from the canonical skill collection to check actual text and essential-mark contrast in both themes. (In-repo snapshot only: the master links these relatively; relative links cannot resolve from this snapshot layout, so they are plain text here. The snapshot also replaces host paths with role names; re-sync must re-apply both transforms.)
+- If exact chart data is not readily available as text, include a compact `Table`/`KeyValue` or explanatory text alongside the visualization. Hover-only details are not a sufficient sole representation. For renderer changes, load the design accessibility and review procedures from the canonical skill collection to check actual text and essential-mark contrast in both themes. (In-repo snapshot only: the master links these relatively; relative links cannot resolve from this snapshot layout, so they are plain text here. Re-sync must re-apply this transform.)
 
 ## User interaction and refresh
 
