@@ -38,6 +38,21 @@ test('status, explicit runtime, hardening and normal cleanup', () => {
     assert.deepEqual(readdirSync(`${f.root}/state/tmp`), []);
   } finally { f.close(); }
 });
+test('no Docker endpoint, socket or CLI reaches the container', () => {
+  const f = fixture();
+  try {
+    assert.equal(f.run().status, 0);
+    const log = readFileSync(f.env.PROBE_LOG, 'utf8');
+    // --host unix:///var/run/docker.sock is the launcher selecting the host
+    // runtime for the toolkit container. Nothing Docker-facing may enter the
+    // container: no DOCKER_HOST env, no socket bind mount, and not the
+    // caller's own DOCKER_HOST.
+    assert.ok(!/DOCKER_HOST/.test(log), 'launcher passed DOCKER_HOST');
+    assert.ok(!/DOCKER_CONTEXT/.test(log), 'launcher passed DOCKER_CONTEXT');
+    assert.ok(!/tcp:\/\/invalid:9999/.test(log), 'caller DOCKER_HOST leaked');
+    assert.ok(!/--mount[^ ]*docker\.sock/.test(log), 'launcher mounted a Docker socket');
+  } finally { f.close(); }
+});
 test('reject root identity and missing command before Docker invocation', () => {
   const f = fixture();
   try {

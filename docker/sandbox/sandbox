@@ -1,5 +1,6 @@
 #!/usr/bin/env bash
-# Host launcher. The container's Docker endpoint is a separate rootless daemon.
+# Host launcher. Runs the dev-toolchain image on demand. The sandbox receives
+# no Docker endpoint, socket or CLI: container building is out of scope.
 set -euo pipefail
 image="${SANDBOX_IMAGE:-ghcr.io/miloszkolber/openchamber-sandbox:latest}"
 data="${SANDBOX_DATA:-/data/.db/openchamber/sandbox}"
@@ -89,12 +90,9 @@ args=(--rm -i --init --cap-drop ALL --security-opt no-new-privileges "${ports[@]
     --mount "type=bind,src=$tmp,dst=/tmp"
     -e HOME=/tmp/home -e TMPDIR=/tmp -e XDG_CACHE_HOME=/tmp/xdg-cache
     -e XDG_CONFIG_HOME=/tmp/xdg-config -e XDG_DATA_HOME=/tmp/xdg-data
-    -e XDG_STATE_HOME=/tmp/xdg-state -e "DOCKER_HOST=unix:///run/user/$uid/docker.sock")
+    -e XDG_STATE_HOME=/tmp/xdg-state)
 [[ -t 0 && -t 1 ]] && args+=(-t)
-socket="/run/user/$uid/docker.sock"
-if [[ -S "$socket" ]]; then
-    args+=(--mount "type=bind,src=$socket,dst=$socket,readonly" -e "DOCKER_HOST=unix://$socket")
-fi
+# No DOCKER_HOST, no socket mount: container building happens on the host.
 [[ ! -f /home/core/.gitconfig ]] || args+=(-e GIT_CONFIG_GLOBAL=/home/core/.gitconfig)
 [[ ! -f /home/core/.npmrc ]] || args+=(-e npm_config_userconfig=/home/core/.npmrc)
 # Only the launcher owns the lock. An orphan Docker client must not keep it

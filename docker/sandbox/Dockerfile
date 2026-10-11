@@ -5,12 +5,12 @@
 # version-tagged upstream images so the runtime needs no downloader for them;
 # Debian apt supplies the OS build basics. This image is deliberately NOT
 # distroless: a dev image needs a shell and package managers. The browser image
-# stays distroless and separate.
+# stays distroless and separate. Container-image building is out of scope: the
+# sandbox ships no Docker CLI, endpoint or build cache.
 
 FROM mirror.gcr.io/oven/bun:1.4.2 AS bun
 FROM mirror.gcr.io/library/golang:1.25-bookworm AS go
 FROM ghcr.io/astral-sh/uv:0.13.0 AS uv
-FROM mirror.gcr.io/library/docker:29-cli AS dockercli
 
 FROM mirror.gcr.io/library/node:22-bookworm-slim AS sandbox
 
@@ -48,8 +48,6 @@ COPY --from=bun /usr/local/bin/bun /usr/local/bin/bun
 COPY --from=go /usr/local/go /usr/local/go
 COPY --from=uv /uv /usr/local/bin/uv
 COPY --from=uv /uvx /usr/local/bin/uvx
-COPY --from=dockercli /usr/local/bin/docker /usr/local/bin/docker
-COPY --from=dockercli /usr/local/libexec/docker/cli-plugins /usr/local/libexec/docker/cli-plugins
 
 RUN npm install --global --no-audit --no-fund pnpm@11.1.2 @fission-ai/openspec@1.14.1 \
     && rm -f /usr/local/bin/pnpm \
@@ -73,7 +71,6 @@ RUN printf '%s\n' \
     "pnpm $(pnpm --version)" \
     "python3 $(python3 --version | awk '{print $2}')" \
     "uv $(uv --version | awk '{print $2}')" \
-    "docker $(docker --version | awk '{print $3}' | tr -d ,)" \
     "openspec $(OPENSPEC_TELEMETRY=0 openspec --version)" \
     > /usr/local/share/sandbox/sandbox-build.txt
 
