@@ -2,7 +2,9 @@ name: Sandbox image
 on:
   push:
     branches: [main]
-    paths: ['docker/sandbox/**', '.github/workflows/sandbox.yml']
+    paths: ['docker/sandbox/**', '.github/workflows/sandbox.yml', 'docs/**', 'openspec', 'scripts/check-docs*']
+  pull_request:
+    paths: ['docker/sandbox/**', '.github/workflows/sandbox.yml', 'docs/**', 'openspec', 'scripts/check-docs*']
   schedule:
     - cron: '23 4 * * 1'
   workflow_dispatch:
@@ -29,6 +31,13 @@ jobs:
             --label "org.opencontainers.image.revision=$GITHUB_SHA" docker/sandbox
           docker run --rm --network none --entrypoint bash "$image" \
             /usr/local/share/sandbox/check-image.sh
+          docker run --rm --network none --volume "$PWD:/repo" --workdir /repo \
+            --entrypoint node "$image" --test docker/sandbox/sandbox.test.mjs scripts/check-docs.test.mjs
+          docker run --rm --network none --volume "$PWD:/repo" --workdir /repo \
+            --entrypoint node "$image" scripts/check-docs.mjs
+          docker run --rm --network none --volume "$PWD:/repo" --workdir /repo \
+            --env OPENSPEC_TELEMETRY=0 --entrypoint openspec "$image" validate --all --strict
+          if [ "${{ github.event_name }}" = pull_request ]; then exit 0; fi
           printf '%s' "$GITHUB_TOKEN" | docker login ghcr.io --username "$GITHUB_ACTOR" --password-stdin
           docker push "$image"
           latest="ghcr.io/$GITHUB_REPOSITORY_OWNER/openchamber-sandbox:latest"

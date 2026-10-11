@@ -75,20 +75,17 @@ search index).
 
 ### Development container
 
-**Status: In progress** — image, caches, launcher, rootless endpoint and cleanup verified on Core
+**Status: Implemented and locally verified — remote publication pending**
 
-A build/test image agents use directly, so a task does not depend on whatever
-toolchain happens to be installed. Two tiers: permanent shared caches
-(`/data/.db/openchamber/sandbox/cache`) downloaded once, and an ephemeral
-per-run scratch directory that the wrapper removes on exit. The browser image
-stays separate and distroless.
+The [agent sandbox spec](specs/agent-sandbox/spec.md) owns the implemented
+contract. [Package commands](../docker/sandbox/README.md) and the host deployment
+at `/home/core/docker/sandbox` own invocation and operation. The scoped review
+tracks completed tasks and evidence in
+[the archived review](changes/archive/2026-10-11-review-agent-sandbox/evidence.md).
 
-- [x] Toolchain image `openchamber-sandbox` (`docker/sandbox/`): Bun, Node/npm, pnpm, Go, Python/uv, Docker CLI + compose + buildx, git/make/gcc/ripgrep/jq.
-- [x] Shared cache directories wired and asserted in the image check; Go toolchain auto-download disabled, pnpm store pinned.
-- [x] Entry point `sandbox run -- <cmd>`; mounts `/repo`, `/home/core`, `/data/.db/openchamber`; scratch dir removed on exit; exit status propagates.
-- [x] Host deployment: `/usr/local/bin/sandbox` launcher, rootless Docker user daemon, `sandbox-clean.timer` for crash leftovers (host repo `docker/sandbox`).
-- [x] Dedicated rootless Docker endpoint: build and run verified inside the sandbox without the host rootful socket.
-- [ ] CI parity: `sandbox.yml` builds, checks and publishes the image, but it has not run (needs a `main` push).
+CI-equivalent image, launcher and spec checks pass locally. Hosted Actions and
+registry publication still require remote integration. This status does not
+claim that an unrun hosted workflow passed.
 
 ### Design and visual tooling
 
