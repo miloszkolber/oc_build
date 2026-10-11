@@ -88,6 +88,19 @@ diagram structure, reserving semantic hues for explicit meaning or state.
 - **AND** sparse patterns distinguish later repetitions of the five-fill ramp
 - **AND** legends match chart marks and values remain available as text
 
+#### Scenario: Same-measure comparisons
+- **WHEN** BarChart or CostChart compares directly labeled values of the same measure
+- **THEN** the bars share one solid fill without category swatches or repeating textures
+- **AND** every row exposes its label and numeric value as semantic text
+- **AND** lengths keep their common zero baseline and proportional scale
+
+#### Scenario: Technical diagrams versus charts
+- **WHEN** structural Mermaid diagrams render
+- **THEN** connectors and frames are restrained and labels use consistent host typography
+- **WHEN** Mermaid pie charts render
+- **THEN** a quiet accent/neutral chart palette may distinguish parts from each other
+- **AND** chart labels and structure remain readable without applying UI semantic colors to categories
+
 #### Scenario: Diagram scale
 - **WHEN** a Mermaid diagram renders in a wide panel
 - **THEN** it does not upscale its intrinsic geometry to fill the card

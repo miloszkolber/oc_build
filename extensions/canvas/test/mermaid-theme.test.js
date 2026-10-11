@@ -86,3 +86,10 @@ test('chart marks use stronger series tokens than pastel node faces', () => {
   expect(vars.xyChart.plotColorPalette).toStartWith('#224488,#335577');
   expect(vars.gitBranchLabel0).toBe(vars.background);
 });
+test('pie fills can differ from structural node surfaces without changing labels', () => {
+  const vars = diagramThemeVariables((name, fallback) => ({'--diagram-1':'#eeeeee','--diagram-chart-1':'#ccddee','--diagram-chart-2':'#dddddd'}[name] ?? fallback),false);
+  expect(vars.cScale0).toBe('#eeeeee');
+  expect(vars.pie1).toBe('#ccddee');
+  expect(vars.pie2).toBe('#dddddd');
+  expect(vars.pieSectionTextColor).toBe(vars.textColor);
+});

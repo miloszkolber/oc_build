@@ -2,6 +2,13 @@
 
 ## Operator visual corrections — 2026-10-11
 
+Second iteration: simple BarChart/CostChart comparisons use one solid fill and
+direct label/value text, not per-row series keys. Mermaid sequence text resolves
+to the host font at 13px through global config fields. Structural diagram frames
+are restrained; mindmap edge normalization is family-scoped. Pie fills have a
+separate quiet chart palette. Tests: 59 passed, 334 assertions. Scoped contrast
+samples and reference analysis are recorded in the change evidence/design.
+
 Development source and rebuilt preview now use monochrome ordinary controls,
 top-right metric changes and a stronger heading. Charts keep the first five fills
 solid and add sparse patterns only when fills repeat. This supersedes the earlier

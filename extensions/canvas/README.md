@@ -151,7 +151,9 @@ HTML, JS and CSS as the extension and supplies the copied JSON via a read-only
 SDK host. It never changes the conversation's file. Rebuild explicitly to refresh
 the snapshot. Only publish a conversation artifact the user approved for review.
 
-Charts use a single-hue accent ramp with matching labeled legend marks and values.
+Simple BarChart and CostChart rows compare one measure: they use one solid accent,
+direct labels and exact values, without per-row color keys or textures.
+Stacked and part-to-whole charts use a single-hue accent ramp with matching labeled legend marks and values.
 The first five series stay solid. Each later group of five adds a sparse pattern
 (diagonal, dots, crosshatch, grid, vertical bars), repeated in the legend.
 Six groups produce 30 distinct automatic fill/pattern pairs within the catalog limit. Single-series
@@ -166,6 +168,12 @@ choices, checklists, steps and timeline dots use monochrome host foreground.
 Explicit status colors remain semantic. Unchanged polling preserves local controls. Compatible content
 updates preserve the chosen horizon. A new selection or removed option uses its
 authored default.
+
+Mermaid structure uses neutral frames, restrained connectors and consistent host
+type. Chart fills are separate: pies can use quiet accent/neutral differentiation
+while their labels and boundaries retain contrast. Prefer direct labels and
+authored data context over decorative color keys. Structural diagram styling
+does not imply that all charts must be monochrome.
 
 For retry diagnostics, build the review-only adapter with
 `sandbox run -- bun scripts/preview.mjs --build-only --fault-injection` and open

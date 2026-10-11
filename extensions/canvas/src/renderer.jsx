@@ -29,9 +29,13 @@ function renderDiagram(id, code, dark, signal) {
         securityLevel: 'strict',
         look: 'classic',
         theme: 'base',
+        // Sequence reads global config font fields, not only themeVariables.
+        fontFamily: resolve('--font', 'sans-serif'),
+        fontSize: 13,
         themeVariables: diagramThemeVariables(resolve, dark),
         quadrantChart: { chartWidth: 360, chartHeight: 360, titleFontSize: 16 },
         xyChart: { width: 520, height: 280 },
+        flowchart: { nodeSpacing: 24, rankSpacing: 36, padding: 10 },
       });
       return await mermaid.render(id, code);
     } finally {
@@ -82,6 +86,7 @@ function Diagram({ props }) {
         host.current.innerHTML = svg;
         const drawing = host.current.querySelector('svg');
         if (/^\s*timeline\b/im.test(props.code)) drawing?.classList.add('mermaid-timeline');
+        if (/^\s*mindmap\b/im.test(props.code)) drawing?.classList.add('mermaid-mindmap');
         if (drawing?.viewBox.baseVal.width) {
           // Do not upscale Mermaid's width=100% drawings and their labels.
           const width = `${drawing.viewBox.baseVal.width}px`;
@@ -151,7 +156,7 @@ function DonutChart({ props }) {
 function Bars({ title, data, format }) {
   const maximum = Math.max(1, ...data.map(item => item.value));
   return <section className="card"><h2>{title}</h2><dl className="bars">{data.map((item, index) => <div className="bar-row" key={index}>
-    <dt><i className={`series-dot pat-${patternOf(index)}`} style={{ backgroundColor: colors[index % colors.length] }} />{item.label}</dt><dd><span className="bar-track" aria-hidden="true"><span className={`bar-fill pat-${patternOf(index)}`} style={{ width: `${item.value / maximum * 100}%`, backgroundColor: colors[index % colors.length] }} /></span><strong>{format(item.value)}</strong></dd>
+    <dt>{item.label}</dt><dd><span className="bar-track" aria-hidden="true"><span className="bar-fill" style={{ width: `${item.value / maximum * 100}%`, backgroundColor: colors[0] }} /></span><strong>{format(item.value)}</strong></dd>
   </div>)}</dl></section>;
 }
 function Table({ props }) {

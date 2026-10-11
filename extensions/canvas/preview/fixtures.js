@@ -48,7 +48,7 @@ export const boundaries = { catalog_version:'1', title:'Boundary review', spec:{
 }} };
 
 const diagramCases = [
-  ['Flow', 'flowchart LR\n A[Author] --> B[Canvas]'],
+  ['Flow', 'flowchart LR\n A[Read artifact] --> B{Valid?}\n B -->|Yes| C[Render Canvas]\n B -->|No| D[Retain last good view]\n C --> E[Poll for changes]\n D --> E'],
   ['Sequence', 'sequenceDiagram\n Agent->>Panel: Render\n Panel-->>Agent: Ready'],
   ['Class', 'classDiagram\n class Canvas {\n +String title\n +render()\n }'],
   ['State', 'stateDiagram-v2\n [*] --> Pending\n Pending --> Ready\n Ready --> [*]'],

@@ -79,6 +79,8 @@ export function diagramThemeVariables(resolve, dark) {
   // Chart marks and branch lines need more contrast than pastel node surfaces.
   const graphPalette = Array.from({ length: 5 }, (_, index) => resolve(index === 0 ? '--primary-text' : `--series-${index + 1}`, muted));
   const graphAt = index => graphPalette[index % graphPalette.length];
+  const chartPalette = Array.from({ length: 5 }, (_, index) => resolve(`--diagram-chart-${index + 1}`, at(index)));
+  const chartAt = index => chartPalette[index % chartPalette.length];
 
   return {
     darkMode: dark,
@@ -190,11 +192,11 @@ export function diagramThemeVariables(resolve, dark) {
       [`lineColor${index}`, muted],
     ]).flat()),
 
-    pie1: at(0),
-    pie2: at(1),
-    pie3: at(2),
-    pie4: at(3),
-    pie5: at(4),
+    pie1: chartAt(0),
+    pie2: chartAt(1),
+    pie3: chartAt(2),
+    pie4: chartAt(3),
+    pie5: chartAt(4),
     pie6: at(5),
     pie7: at(6),
     pie8: at(7),
@@ -210,8 +212,8 @@ export function diagramThemeVariables(resolve, dark) {
     pieOuterStrokeWidth: '1px',
     pieSectionTextColor: fg,
     pieLegendTextColor: fg,
-    pieStrokeColor: border,
-    pieOuterStrokeColor: border,
+    pieStrokeColor: fg,
+    pieOuterStrokeColor: fg,
     pieOpacity: '1',
 
     git0: graphAt(0),

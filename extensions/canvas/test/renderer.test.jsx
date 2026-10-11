@@ -51,8 +51,8 @@ test('first-ramp series stay solid with matching legend marks', () => {
     donut: { type: 'DonutChart', props: { title: 'Donut', data: [{ label: 'p', value: 2 }, { label: 'q', value: 1 }, { label: 'r', value: 1 }] } },
   } } });
   const html = renderToStaticMarkup(<Canvas artifact={artifact} months={12} setMonths={() => {}} />);
-  expect(html).toContain('bar-fill pat-1');
-  expect(html).toContain('series-dot pat-1');
+  expect(html).toContain('class="bar-fill"');
+  expect(html).not.toContain('series-dot');
   expect(html).toContain('stacked-seg pat-1');
   expect(html).toContain('stack-seg pat-1');
   expect(html).not.toContain('pat-2');
@@ -71,6 +71,23 @@ test('single-series charts stay solid', () => {
   const html = renderToStaticMarkup(<Canvas artifact={artifact} months={12} setMonths={() => {}} />);
   expect(html).not.toContain('pat-');
   expect(html).toContain('line-chart');
+});
+test('simple comparison rows share one color and expose label/value text', () => {
+  const data = Array.from({length:6},(_,i)=>({label:`Day ${i+1}`,value:i}));
+  const html = one('BarChart',{title:'One measure',unit:'deploys',data});
+  expect(html).not.toContain('pat-');
+  expect(html).not.toContain('series-dot');
+  expect(html.match(/background-color:var\(--series-1\)/g)).toHaveLength(6);
+  expect(html).toContain('<dt>Day 1</dt><dd>');
+  expect(html).toContain('<strong>0 deploys</strong>');
+  expect(html).toContain('width:0%');
+  expect(html).toContain('<strong>5 deploys</strong>');
+});
+test('cost comparisons do not turn plans into patterned series', () => {
+  const html = renderToStaticMarkup(<Canvas artifact={parseArtifact(costExplorer)} months={6} setMonths={() => {}} />);
+  expect(html).not.toContain('series-dot');
+  expect(html).not.toContain('bar-fill pat-');
+  expect(html.match(/class="bar-fill"[^>]+background-color:var\(--series-1\)/g)).toHaveLength(2);
 });
 test('plain text never becomes executable markup', () => {
   const value = parseArtifact({ catalog_version: '1', title: 'untrusted', spec: { root: 'text', elements: { text: { type: 'Text', props: { text: '<img src=x onerror=alert(1)>' } } } } });
