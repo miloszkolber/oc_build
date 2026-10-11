@@ -138,13 +138,21 @@ not establish native font resolution. The preview includes boundaries and 13 dia
 families. `/panel-review.html` exercises the actual panel entrypoint with a
 synthetic SDK parent and disposable data, without reading or writing real files.
 
-Development commands run in the agent sandbox. Serve the preview with
-`sandbox run --publish 8805:8805 -- sh -lc 'PORT=8805 bun run preview'`.
+Development commands run in the agent sandbox. Examples below write
+`sandbox <command>` for a sandbox run; the workspace sandbox reference covers
+the Compose invocation and the optional alias. Serve the preview by publishing
+a loopback port before the service name:
+
+```sh
+docker compose -f <deployment compose> run --rm -w "$PWD" \
+  -p 127.0.0.1:8805:8805 openchamber-sandbox sh -lc 'PORT=8805 bun run preview'
+```
+
 Rebuild served assets after edits with
-`sandbox run -- bun scripts/preview.mjs --build-only`.
+`sandbox bun scripts/preview.mjs --build-only`.
 
 For a like-for-like conversation review, build with
-`sandbox run -- bun scripts/preview.mjs --build-only --conversation-file <absolute-canvas-path>`.
+`sandbox bun scripts/preview.mjs --build-only --conversation-file <absolute-canvas-path>`.
 This validates and copies exactly that file, plus the packaged panel, into the
 preview output. Open `/conversation.html` for captured Cursor Light or
 `/conversation.html?theme=dark` for Cursor Dark. There is no gallery toolbar,
@@ -182,7 +190,7 @@ authored data context over decorative color keys. Structural diagram styling
 does not imply that all charts must be monochrome.
 
 For retry diagnostics, build the review-only adapter with
-`sandbox run -- bun scripts/preview.mjs --build-only --fault-injection` and open
+`sandbox bun scripts/preview.mjs --build-only --fault-injection` and open
 `/panel-review.html?faults`. After rendering a diagram, the guest exposes
 `diagramProbe`: `failures` queues error messages, `hold` pauses a render until
 `release()` is called, and `calls`/`maxActive` record attempts and concurrency.

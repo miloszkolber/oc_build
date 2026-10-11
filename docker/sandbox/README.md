@@ -7,7 +7,7 @@ separate and distroless; this image is deliberately not distroless because a
 dev image needs a shell and package managers.
 
 Source lives here in `oc_build`. Host deployment is the openchamber-sandbox
-Compose service plus the installed launcher; see the local deployment docs.
+Compose service plus an optional alias; see the local deployment docs.
 
 ## Toolchains
 
@@ -45,7 +45,7 @@ every run:
 | --- | --- | --- |
 | `BUN_INSTALL_CACHE_DIR` | `/cache/bun` | Bun install cache |
 | `npm_config_cache` | `/cache/npm` | npm cache |
-| `PNPM_STORE_DIR` (image wrapper) | `/cache/pnpm-store` | pnpm store |
+| `PNPM_STORE_DIR` (image entrypoint) | `/cache/pnpm-store` | pnpm store |
 | `GOPATH` / `GOMODCACHE` / `GOCACHE` | `/cache/go`, `/cache/go/mod`, `/cache/go/build` | Go workspace/module/build |
 | `PIP_CACHE_DIR` | `/cache/pip` | pip wheels |
 | `UV_CACHE_DIR` / `UV_PYTHON_INSTALL_DIR` | `/cache/uv{,/python}` | uv cache and managed Pythons |
@@ -53,40 +53,54 @@ every run:
 `GOTOOLCHAIN=local` stops Go from silently downloading a second toolchain when
 a `go.mod` asks for a newer patch version; a mismatch fails explicitly instead.
 
-**Ephemeral, per-run, auto-wiped** — `HOME`, `TMPDIR` and `XDG_*` point at a
-scratch directory that the wrapper creates and deletes around each command.
-Chromium profiles, `node-compile-cache` and probe output land there, not on the
-host.
+**Ephemeral, per-run, auto-wiped** — `HOME`, `TMPDIR` and `XDG_*` live on a
+temporary filesystem the deployment mounts for the run. Chromium profiles,
+`node-compile-cache` and probe output land there, not on the host, and vanish
+with the container.
 
-## Entry point
+## Run it
 
-`sandbox run [--publish host-port:container-port] [--] <command...>` launches the image with the shared cache and a
-fresh scratch directory. The container identity is pinned to uid/gid 1000
-(`SANDBOX_UID`/`SANDBOX_GID` override) rather than taken from the caller, so
-`sudo sandbox run` cannot hand the sandbox host-root write access to the mounts.
+The sandbox is a Compose service in the deployment that owns the mounts. Run a
+command with the deployment's compose file:
+
+```sh
+docker compose -f <deployment compose> run --rm -w "$PWD" openchamber-sandbox bun test
+```
+
+- `--rm` removes the container and its temporary filesystem when the command
+  exits, and the command's exit status is returned.
+- `-w "$PWD"` starts the command in the current directory, so run from inside a
+  mounted root. A path outside the mounts is not visible to the container.
+- The service pins the non-root UID/GID and drops capabilities, so running it
+  through `sudo` still does not give the command host-root write access.
+- To publish a dev server, pass the port before the service name and bind the
+  server to `0.0.0.0`:
+
+```sh
+docker compose -f <deployment compose> run --rm -w "$PWD" \
+  -p 127.0.0.1:5173:5173 openchamber-sandbox bun run dev --host 0.0.0.0
+```
+
+An optional shell alias makes the common case shorter. It is deployment-local
+because it names that deployment's compose file and service:
+
+```sh
+alias sandbox='docker compose -f <deployment compose> run --rm -w "$PWD" openchamber-sandbox'
+```
 
 Behaviour worth knowing:
 
-- The working directory must be under one of the launcher's configured
-  workspace roots; anything else fails with a clear error instead of
-  silently running against the container's own filesystem.
 - All configured roots are mounted read-write at their host paths.
 - Containers run with `--init` (reaps orphans) and `no-new-privileges`.
-- `HOME` is the per-run scratch directory, so the host `~/.gitconfig` and
+- `HOME` is on the temporary filesystem, so the host `~/.gitconfig` and
   `~/.npmrc` are reached through `GIT_CONFIG_GLOBAL` and `npm_config_userconfig`
   instead. Git commits work inside the sandbox.
-- The scratch directory is removed when the wrapper exits, including on
-  SIGINT/SIGTERM/SIGHUP. A SIGKILL or host reboot leaves a directory behind; the
-  daily cleanup timer removes unlocked leftovers older than 24 hours. Active
-  runs hold a lock, so their scratch is preserved regardless of age.
-- That directory is mode `0700`, not the usual `1777`. Hosts that refuse an
-  other-writable state hierarchy — submarine rejects rename-guarded capture
-  recovery when a state path is world-writable — fail otherwise, and the sandbox
-  runs everything as one uid, so a private `/tmp` loses nothing.
+- The temporary filesystem is private to the run, so one run cannot see
+  another's scratch and nothing needs host-side cleanup.
+
 
 The container receives no Docker endpoint: no `DOCKER_HOST`, no socket mount and
-no Docker CLI. The image does not include the wrapper; the installed launcher
-copy holds the container-identity pin.
+no Docker CLI.
 
 ## Boundaries
 
@@ -94,32 +108,30 @@ The sandbox is a build/test convenience, not a security boundary. It shares the
 host user's files through the mounted roots. Treat host credentials reachable
 under those roots as exposed to whatever runs inside the sandbox.
 
-Host deployment (compose image entry, launcher install) is documented in the
-local openchamber deployment docs.
+Host deployment (the compose service and the optional alias) is documented in
+the local deployment docs.
 
-## Runtime routing and dev servers
+## Docker and dev servers
 
-The launcher explicitly uses `/var/run/docker.sock` and ignores the caller's
-Docker context or environment, selecting the host runtime that runs the toolkit
-container. That endpoint is not available inside the container. Container builds
-run on the host directly.
+Docker is a host-installed tool. Run Docker, compose and buildx on the host
+directly; the sandbox neither ships them nor receives an endpoint. Use the
+host's configured context and socket for container work.
+
+Docker context or environment. The endpoint used to run the toolkit container is
+not available inside it. Container builds run on the host directly.
 
 For browser QA, publish only the required loopback port and bind the container
-server to `0.0.0.0`:
+server to `0.0.0.0` (see the port example above).
 
-```sh
-sandbox run --publish 5173:5173 -- bun run dev --host 0.0.0.0
-```
-
-Stop the foreground launcher when finished. It removes its named container
-before deleting scratch. Deliverables belong in project paths, not `/tmp`.
-`sandbox clean` is the lock-aware crash recovery entry point for stale runs. It never
-prunes Docker images, caches or authored project files.
+Deliverables belong in project paths, not the temporary filesystem. Nothing
+needs host-side cleanup: the run's temporary filesystem disappears with its
+container. This image never prunes Docker images, caches or authored project
+files.
 
 New reusable development tools belong in this Dockerfile, README and image
 check. Project libraries belong in project manifests/lockfiles. Do not install
 new development tools on the host. Container-engine tooling stays out of this
-image; See the workspace sandbox reference.
+image; see the workspace sandbox reference.
 
 ## Build locally
 

@@ -22,8 +22,7 @@
   `skip_specs: true`. Never fabricate completed task or archive history.
 - Run `bun scripts/check-docs.mjs` and the pinned upstream validation documented
   in `openspec/README.md`. Update specs and evidence with the code, not afterward.
-- Use `sandbox run -- <command>` for builds, tests and development tooling.
-  Record new tools in docker/sandbox/Dockerfile and its checks, not on the host.
+- Use the sandbox service for builds, tests and development tooling; Docker itself is a host-installed tool. Record new tools in docker/sandbox/Dockerfile and its checks, not on the host.
 - Package READMEs own commands. Host deployment and OpenCode are separate owners.
   Publishing an image does not authorize rollout or a service restart.
 - Browser MCP evidence is not native desktop acceptance. Guest permissions and
