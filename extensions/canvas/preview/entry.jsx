@@ -7,9 +7,9 @@ import { Canvas } from '../src/renderer.jsx';
 import { parseArtifact, componentsSummary } from '../src/catalog.js';
 import { gallery, costExplorer } from '../src/examples.js';
 import { applyHostTheme } from '@openchamber/sdk/ui';
-import { boundaries, diagramThemes, reviewTheme } from './fixtures.js';
+import { boundaries, diagramThemes, reviewTheme, statesReview } from './fixtures.js';
 
-const EXAMPLES = { Gallery: gallery, 'Cost explorer': costExplorer, Boundaries: boundaries, 'Diagram themes': diagramThemes };
+const EXAMPLES = { Gallery: gallery, 'Cost explorer': costExplorer, Boundaries: boundaries, States: statesReview, 'Diagram themes': diagramThemes };
 
 function Preview() {
   const [name, setName] = useState('Gallery');

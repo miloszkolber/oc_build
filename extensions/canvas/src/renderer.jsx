@@ -132,18 +132,18 @@ function DonutChart({ props }) {
       <circle className="donut-track" cx="60" cy="60" r={radius} />
       <g transform="rotate(-90 60 60)">
         {slices.map(slice => <circle key={slice.index} className="donut-seg" cx="60" cy="60" r={radius} style={{ stroke: colors[slice.index % colors.length] }} strokeDasharray={`${slice.length} ${circumference - slice.length}`} strokeDashoffset={-slice.start} />)}
-        {slices.filter(slice => patternOf(slice.index) > 1).map(slice => <circle key={`pattern-${slice.index}`} className="donut-seg" cx="60" cy="60" r={radius} stroke={`url(#donut-${uid}-p${patternOf(slice.index)})`} strokeDasharray={`${slice.length} ${circumference - slice.length}`} strokeDashoffset={-slice.start} />)}
+        {slices.filter(slice => patternFill(`donut-${uid}`, slice.index)).map(slice => <circle key={`pattern-${slice.index}`} className="donut-seg" cx="60" cy="60" r={radius} stroke={patternFill(`donut-${uid}`, slice.index)} strokeDasharray={`${slice.length} ${circumference - slice.length}`} strokeDashoffset={-slice.start} />)}
       </g>
       <text className="donut-total" x="60" y="57"><title>{total.toLocaleString()}</title>{displayTotal}</text>
       <text className="donut-label" x="60" y="72">Total</text>
     </svg>
-    <dl className="legend">{props.data.map((item, index) => <div key={index}><dt><i className={`pat-${patternOf(index)}`} style={{ backgroundColor: colors[index % colors.length] }} />{item.label}</dt><dd>{share(item)}% <span>{item.value.toLocaleString()}</span></dd></div>)}</dl>
+    <dl className="legend">{props.data.map((item, index) => <div key={index}><dt><i className={`pat-${patternOf(index)}${denseOf(index)}`} style={{ backgroundColor: colors[index % colors.length] }} />{item.label}</dt><dd>{share(item)}% <span>{item.value.toLocaleString()}</span></dd></div>)}</dl>
   </div></section>;
 }
 function Bars({ title, data, format }) {
   const maximum = Math.max(1, ...data.map(item => item.value));
   return <section className="card"><h2>{title}</h2><dl className="bars">{data.map((item, index) => <div className="bar-row" key={index}>
-    <dt><i className={`series-dot pat-${patternOf(index)}`} style={{ backgroundColor: colors[index % colors.length] }} />{item.label}</dt><dd><span className="bar-track" aria-hidden="true"><span className={`bar-fill pat-${patternOf(index)}`} style={{ width: `${item.value / maximum * 100}%`, backgroundColor: colors[index % colors.length] }} /></span><strong>{format(item.value)}</strong></dd>
+    <dt><i className={`series-dot pat-${patternOf(index)}${denseOf(index)}`} style={{ backgroundColor: colors[index % colors.length] }} />{item.label}</dt><dd><span className="bar-track" aria-hidden="true"><span className={`bar-fill pat-${patternOf(index)}${denseOf(index)}`} style={{ width: `${item.value / maximum * 100}%`, backgroundColor: colors[index % colors.length] }} /></span><strong>{format(item.value)}</strong></dd>
   </div>)}</dl></section>;
 }
 function Table({ props }) {
@@ -158,7 +158,7 @@ function Table({ props }) {
   return <section className="card"><div className="section-heading"><h2>{props.title}</h2><div className="search-field"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true"><circle cx="11" cy="11" r="7" /><path d="m20 20-3.5-3.5" /></svg><input value={query} onChange={event => setQuery(event.target.value)} type="search" aria-label="Filter rows" placeholder="Filter rows" /></div></div><div className="table-scroll" tabIndex={0} role="region" aria-label={`${props.title} table`}><table>
     <thead><tr>{props.columns.map((column, index) => <th key={index} style={{ textAlign: align(index) }} aria-sort={sort?.index === index ? sort.direction === 1 ? 'ascending' : 'descending' : 'none'}><button onClick={() => setSort({ index, direction: sort?.index === index ? -sort.direction : 1 })}>{column}<span className="sort-arrow" aria-hidden="true">{sort?.index === index ? (sort.direction === 1 ? '↑' : '↓') : ''}</span></button></th>)}</tr></thead>
     <tbody>{rows.map((row, index) => <tr key={index}>{row.map((cell, column) => <td key={column} className={typeof cell === 'number' ? 'numeric' : undefined} style={{ textAlign: align(column) }}>{String(cell ?? '—')}</td>)}</tr>)}</tbody>
-    {props.footer && <tfoot><tr>{props.columns.map((_, index) => <td key={index} style={{ textAlign: align(index) }}>{String(props.footer[index] ?? '—')}</td>)}</tr></tfoot>}
+    {props.footer && <tfoot><tr>{props.columns.map((_, index) => <td key={index} className={typeof props.footer[index] === 'number' ? 'numeric' : undefined} style={{ textAlign: align(index) }}>{String(props.footer[index] ?? '—')}</td>)}</tr></tfoot>}
   </table></div><p className="muted table-count">{rows.length} of {props.rows.length} rows{rows.length === 0 ? ' · No matching rows' : ''}</p></section>;
 }
 // Display helpers shared by the read-only components.
@@ -167,7 +167,12 @@ const toneColor = (value, index) => TONE_COLORS[value] ?? colors[index % colors.
 const toneClass = value => `tone-${value ?? 'neutral'}`;
 // Series carry a pattern as well as a fill, so adjacent steps of the single-hue
 // ramp stay separable without relying on color alone. Pattern 1 stays solid.
+// The catalog allows 12 composition segments and 8 stacked series, so a
+// five-step cycle would give the first and sixth entry the same fill and
+// pattern. Each step past the fifth pairs the ramp with a denser repeat of the
+// same shape, so index and index+5 stay separable.
 const patternOf = index => (index % 5) + 1;
+const denseOf = index => (index < 5 ? '' : ' dense');
 const PATTERNS = [
   null,
   <path key="diagonal" d="M-1 5L5-1M0 8L8 0" />,
@@ -175,9 +180,16 @@ const PATTERNS = [
   <g key="cross"><path d="M-1 5L5-1M0 8L8 0" /><path d="M-1 3L5 9M0 0L8 8" /></g>,
   <g key="grid"><path d="M0 3.5H8M3.5 0V8" /></g>,
 ];
-function PatternDefs({ id }) {
-  return <>{PATTERNS.map((shape, index) => shape && <pattern key={index} id={`${id}-p${index + 1}`} className="series-pattern" width="8" height="8" patternUnits="userSpaceOnUse">{shape}</pattern>)}</>;
-}
+// Ten distinct marks: five shapes, each in a normal and a denser repeat. The
+// dense repeat keeps index and index+5 separable once the five-step ramp wraps.
+// The solid step needs a shape for its dense form, matching `.pat-1.dense`.
+const SOLID_DENSE = <path key="bars" d="M1.6 0V8M5.2 0V8" />;
+// pattern 1 is solid, so a dense series index never has a patterned overlay to
+// draw. Selecting a real shape keeps every wrapped entry distinguishable.
+const PatternDefs = ({ id }) => <>{PATTERNS.map((shape, index) => shape && [1, 2].map(density => <pattern key={`${index}-${density}`} id={`${id}-p${index + 1}d${density}`} className="series-pattern" width="8" height="8" patternUnits="userSpaceOnUse" patternTransform={density === 1 ? undefined : 'scale(.55)'}>{shape}</pattern>))}<pattern id={`${id}-solid-dense`} className="series-pattern" width="8" height="8" patternUnits="userSpaceOnUse">{SOLID_DENSE}</pattern></>;
+const patternFill = (id, index) => patternOf(index) === 1
+  ? (index < 5 ? '' : `url(#${id}-solid-dense)`)
+  : `url(#${id}-p${patternOf(index)}d${index < 5 ? 1 : 2})`;
 const Title = ({ children }) => children ? <h2>{children}</h2> : null;
 
 function Divider({ props }) {
@@ -201,21 +213,24 @@ function CodeBlock({ props }) {
 }
 function Progress({ props }) {
   const percent = props.max ? Math.min(100, Math.round(props.value / props.max * 100)) : 0;
-  return <section className={`card progress-card ${toneClass(props.tone ?? 'blue')}`}><div className="progress-head"><span>{props.title ?? 'Progress'}</span><strong>{props.value.toLocaleString()}{props.unit ? ` ${props.unit}` : ''} · {percent}%</strong></div><div className="progress-track" role="progressbar" aria-valuenow={props.value} aria-valuemin="0" aria-valuemax={props.max} aria-label={props.title ?? 'Progress'}><span style={{ width: `${percent}%` }} /></div></section>;
+  // A zero maximum has no share to report, so state the value alone rather than
+  // pairing it with a misleading 0%.
+  const amount = `${props.value.toLocaleString()}${props.unit ? ` ${props.unit}` : ''}`;
+  return <section className={`card progress-card ${toneClass(props.tone ?? 'blue')}`}><div className="progress-head"><span>{props.title ?? 'Progress'}</span><strong>{props.max ? `${amount} · ${percent}%` : amount}</strong></div><div className="progress-track" role="progressbar" aria-valuenow={props.value} aria-valuemin="0" aria-valuemax={props.max} aria-label={props.title ?? 'Progress'}><span style={{ width: `${percent}%` }} /></div></section>;
 }
 function StackedBar({ props }) {
   const total = props.segments.reduce((sum, segment) => sum + segment.value, 0);
   const share = segment => (total ? Math.round(segment.value / total * 100) : 0);
   return <section className="card"><div className="section-heading"><h2>{props.title ?? 'Composition'}</h2><span className="chart-label">{props.unit ?? 'SHARE'}</span></div>
     <div className="stacked-bar" role="img" aria-label={`${props.title ?? 'Composition'}: ${props.segments.map(segment => `${segment.label} ${share(segment)}%`).join(', ')}`}>
-      {props.segments.map((segment, index) => <span key={index} className={`stacked-seg pat-${patternOf(index)}`} style={{ width: total ? `${segment.value / total * 100}%` : '0%', backgroundColor: toneColor(segment.tone, index) }} />)}
+      {props.segments.map((segment, index) => <span key={index} className={`stacked-seg pat-${patternOf(index)}${denseOf(index)}`} style={{ width: total ? `${segment.value / total * 100}%` : '0%', backgroundColor: toneColor(segment.tone, index) }} />)}
     </div>
-    <dl className="legend">{props.segments.map((segment, index) => <div key={index}><dt><i className={`pat-${patternOf(index)}`} style={{ backgroundColor: toneColor(segment.tone, index) }} />{segment.label}</dt><dd>{share(segment)}% <span>{segment.value.toLocaleString()}</span></dd></div>)}</dl></section>;
+    <dl className="legend">{props.segments.map((segment, index) => <div key={index}><dt><i className={`pat-${patternOf(index)}${denseOf(index)}`} style={{ backgroundColor: toneColor(segment.tone, index) }} />{segment.label}</dt><dd>{share(segment)}% <span>{segment.value.toLocaleString()}</span></dd></div>)}</dl></section>;
 }
 function Gauge({ props }) {
   const ratio = props.max ? Math.max(0, Math.min(1, props.value / props.max)) : 0;
   const radius = 44, circumference = 2 * Math.PI * radius;
-  return <section className={`card gauge-card ${toneClass(props.tone ?? 'blue')}`}><Title>{props.title}</Title><div className="gauge"><svg viewBox="0 0 120 120" role="img" aria-label={`${props.title ?? 'Gauge'}: ${props.value} of ${props.max}`}><circle className="gauge-track" cx="60" cy="60" r={radius} /><circle className="gauge-ring" cx="60" cy="60" r={radius} strokeDasharray={`${(circumference * ratio).toFixed(1)} ${circumference.toFixed(1)}`} transform="rotate(-90 60 60)" /></svg><div className="gauge-center"><strong>{props.value.toLocaleString()}</strong>{props.unit && <span>{props.unit}</span>}</div></div></section>;
+  return <section className={`card gauge-card ${toneClass(props.tone ?? 'blue')}`}><Title>{props.title}</Title><div className="gauge"><svg viewBox="0 0 120 120" role="img" aria-label={`${props.title ?? 'Gauge'}: ${props.value} of ${props.max}`}><circle className="gauge-track" cx="60" cy="60" r={radius} />{ratio > 0 && <circle className="gauge-ring" cx="60" cy="60" r={radius} strokeDasharray={`${(circumference * ratio).toFixed(1)} ${circumference.toFixed(1)}`} transform="rotate(-90 60 60)" />}</svg><div className="gauge-center"><strong>{props.value.toLocaleString()}</strong>{props.unit && <span>{props.unit}</span>}</div></div></section>;
 }
 function Sparkline({ props }) {
   const maximum = Math.max(1, ...props.data.map(item => item.value));
@@ -229,7 +244,7 @@ function Heatmap({ props }) {
 function StackedBarChart({ props }) {
   const totals = props.categories.map((_, index) => props.series.reduce((sum, entry) => sum + (entry.data[index] ?? 0), 0));
   const maximum = Math.max(1, ...totals);
-  return <section className="card"><div className="section-heading"><h2>{props.title}</h2>{props.unit && <span className="chart-label">{props.unit}</span>}</div><div className="stack-chart">{props.categories.map((category, index) => <div className="stack-col" key={index}><div className="stack-col-bars">{props.series.map((entry, seriesIndex) => <span key={seriesIndex} className={`stack-seg pat-${patternOf(seriesIndex)}`} style={{ height: `${(entry.data[index] ?? 0) / maximum * 100}%`, backgroundColor: colors[seriesIndex % colors.length] }} title={`${entry.label}: ${entry.data[index]}`} />)}</div><span className="axis-x">{category}</span></div>)}</div><dl className="legend">{props.series.map((entry, index) => <div key={index}><dt><i className={`pat-${patternOf(index)}`} style={{ backgroundColor: colors[index % colors.length] }} />{entry.label}</dt><dd>{entry.data.reduce((sum, value) => sum + value, 0).toLocaleString()}</dd></div>)}</dl></section>;
+  return <section className="card"><div className="section-heading"><h2>{props.title}</h2>{props.unit && <span className="chart-label">{props.unit}</span>}</div><div className="stack-chart">{props.categories.map((category, index) => <div className="stack-col" key={index}><div className="stack-col-bars">{props.series.map((entry, seriesIndex) => <span key={seriesIndex} className={`stack-seg pat-${patternOf(seriesIndex)}${denseOf(seriesIndex)}`} style={{ height: `${(entry.data[index] ?? 0) / maximum * 100}%`, backgroundColor: colors[seriesIndex % colors.length] }} title={`${entry.label}: ${entry.data[index]}`} />)}</div><span className="axis-x">{category}</span></div>)}</div><dl className="legend">{props.series.map((entry, index) => <div key={index}><dt><i className={`pat-${patternOf(index)}${denseOf(index)}`} style={{ backgroundColor: colors[index % colors.length] }} />{entry.label}</dt><dd>{entry.data.reduce((sum, value) => sum + value, 0).toLocaleString()}</dd></div>)}</dl></section>;
 }
 function ScatterChart({ props }) {
   const xs = props.points.map(point => point.x), ys = props.points.map(point => point.y);
@@ -301,7 +316,14 @@ function Diff({ props }) {
 }
 function Rating({ props }) {
   const value = Math.max(0, Math.min(props.max, props.value));
-  return <section className="card"><Title>{props.label}</Title><div className="rating" role="img" aria-label={`${props.label ?? 'Rating'}: ${value} of ${props.max}`}>{Array.from({ length: props.max }, (_, index) => index < Math.round(value) ? <span className="star on" key={index}><Glyph name="starFill" size={16} /></span> : <span className="star" key={index}><Glyph name="star" size={16} /></span>)}<span className="rating-value">{value}/{props.max}</span></div></section>;
+  // A fractional rating shows a half star rather than rounding a mark it does
+  // not have: 2.5 of 5 is not three full stars.
+  const fraction = value - Math.floor(value);
+  return <section className="card"><Title>{props.label}</Title><div className="rating" role="img" aria-label={`${props.label ?? 'Rating'}: ${value} of ${props.max}`}>{Array.from({ length: props.max }, (_, index) => {
+    if (index < Math.floor(value)) return <span className="star on" key={index}><Glyph name="starFill" size={16} /></span>;
+    if (index === Math.floor(value) && fraction >= 0.25 && fraction < 0.75) return <span className="star half" key={index}><Glyph name="star" size={16} /><span className="star-half-fill"><Glyph name="starFill" size={16} /></span></span>;
+    return <span className="star" key={index}><Glyph name="star" size={16} /></span>;
+  })}<span className="rating-value">{value}/{props.max}</span></div></section>;
 }
 function Tree({ props }) {
   const branch = nodes => <ul className="tree">{nodes.map((node, index) => <li key={index}><div className="tree-node"><span className="tree-label">{node.label}</span>{node.detail && <span className="muted">{node.detail}</span>}</div>{node.children?.length ? branch(node.children) : null}</li>)}</ul>;

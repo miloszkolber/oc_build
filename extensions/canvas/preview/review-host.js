@@ -1,5 +1,5 @@
 import { gallery, costExplorer } from '../src/examples.js';
-import { boundaries, reviewTheme } from './fixtures.js';
+import { boundaries, reviewTheme, statesReview } from './fixtures.js';
 
 const frame = document.querySelector('#panel');
 const panelUrl = new URLSearchParams(location.search).has('production') ? 'production/index.html' : 'review-panel.html';
@@ -25,7 +25,7 @@ window.addEventListener('message', event => {
   } else if (message.type === 'file-read') {
     state.reads++;
     const scenario = state.scenario;
-    const content = state.content ?? JSON.stringify(scenario === 'Gallery' ? gallery : scenario === 'Boundaries' ? boundaries : costExplorer);
+    const content = state.content ?? JSON.stringify(scenario === 'Gallery' ? gallery : scenario === 'Boundaries' ? boundaries : scenario === 'States' ? statesReview : costExplorer);
     setTimeout(() => {
       if (scenario === 'Empty') reply(null,{code:'NOT_FOUND',message:'Missing synthetic file'});
       else if (scenario === 'Read error') reply(null,{code:'PERMISSION_DENIED',message:'Synthetic read denied'});

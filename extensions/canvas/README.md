@@ -143,13 +143,17 @@ Rebuild served assets after edits with
 Charts encode every series twice. Series keep the single-hue accent ramp, and
 each one also carries a repeating pattern (solid, diagonal, dots, crosshatch,
 grid) that the legend repeats, so adjacent steps stay separable without relying
-on color. Single-series charts stay solid. `Diagram` renders wait for a rendered
-document, so a collapsed panel or hidden tab defers the render instead of
-failing it, and a transient Mermaid measurement failure is retried once. The wait
-is cancellable, not time-limited. Wide diagrams, tables, heatmaps and code retain
-local keyboard-scrollable regions instead of shrinking their text to fit.
-Unchanged polling preserves local controls. Compatible content updates preserve
-the chosen horizon. A new selection or removed option uses its authored default.
+on color. Past five series the ramp repeats and the pattern switches to a denser
+form of the same shape, so the sixth entry never copies the first. Single-series
+charts stay solid. Marks never exaggerate data: zero values draw nothing, an
+empty gauge has no ring, and a fractional rating shows a half star. `Diagram`
+renders wait for a rendered document, so a collapsed panel or hidden tab defers
+the render instead of failing it, and a transient Mermaid measurement failure is
+retried once. The wait is cancellable, not time-limited. Wide diagrams, tables,
+heatmaps and code retain local keyboard-scrollable regions instead of shrinking
+their text to fit. Unchanged polling preserves local controls. Compatible content
+updates preserve the chosen horizon. A new selection or removed option uses its
+authored default.
 
 Catalog 1 remains compatible with 0.1.0/0.2.0 components. Files written by
 older global Canvas versions stay on disk but are no longer displayed; do not

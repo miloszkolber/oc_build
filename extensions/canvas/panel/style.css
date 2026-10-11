@@ -155,6 +155,14 @@ p { line-height:1.55; }
 .pat-5 { background-image:repeating-linear-gradient(0deg,var(--pattern-ink) 0 1px,transparent 1px 6px),repeating-linear-gradient(90deg,var(--pattern-ink) 0 1px,transparent 1px 6px); }
 .series-pattern path { stroke:var(--pattern-ink);stroke-width:1.6;fill:none; }
 .series-pattern circle { fill:var(--pattern-ink); }
+/* The five-step ramp repeats past five series; a denser repeat of the same
+   shape keeps index and index+5 separable without a sixth hue. The solid mark
+   needs its own dense form, otherwise the sixth entry repeats the first. */
+.pat-1.dense { background-image:repeating-linear-gradient(90deg,var(--pattern-ink) 0 1.4px,transparent 1.4px 8px); }
+.pat-2.dense { background-image:repeating-linear-gradient(45deg,var(--pattern-ink) 0 1.5px,transparent 1.5px 4px); }
+.pat-3.dense { background-image:radial-gradient(var(--pattern-ink) 1.1px,transparent 1.2px);background-size:3.5px 3.5px; }
+.pat-4.dense { background-image:repeating-linear-gradient(45deg,var(--pattern-ink) 0 1.3px,transparent 1.3px 4px),repeating-linear-gradient(-45deg,var(--pattern-ink) 0 1.3px,transparent 1.3px 4px); }
+.pat-5.dense { background-image:repeating-linear-gradient(0deg,var(--pattern-ink) 0 1px,transparent 1px 4px),repeating-linear-gradient(90deg,var(--pattern-ink) 0 1px,transparent 4px); }
 .legend { margin:0;flex:1;min-width:140px;font-size:.9286rem;display:flex;flex-direction:column;gap:8px; } .legend > div { display:flex;align-items:center;justify-content:space-between;gap:10px; } .legend dt { display:flex;gap:8px;align-items:center;color:var(--fg);font-weight:500; } .legend dd { margin:0;white-space:nowrap;color:var(--muted-strong);font-variant-numeric:tabular-nums;font-weight:500; } .legend dd span { margin-left:8px; }
 .series-dot,.legend i,.insight-dot { display:inline-block;width:8px;height:8px;border-radius:9999px;flex-shrink:0; }
 .series-dot,.legend i { width:11px;height:11px;border-radius:3px;box-shadow:inset 0 0 0 1px color-mix(in srgb, var(--fg) 14%, transparent); }
@@ -267,7 +275,7 @@ table { min-width:480px; }
 
 .diff { display:flex;flex-direction:column;gap:3px;font:12px/1.55 var(--mono); } .diff-row { display:grid;grid-template-columns:1fr 1fr;gap:8px; } .diff-before { color:var(--muted-strong);text-decoration:line-through;text-decoration-color:color-mix(in srgb,var(--muted-strong) 55%,transparent);padding:3px 8px;border-radius:6px;background:color-mix(in srgb,var(--error) 9%,var(--elevated));overflow-wrap:anywhere; } .diff-after { padding:3px 8px;border-radius:6px;background:color-mix(in srgb,var(--success) 11%,var(--elevated));overflow-wrap:anywhere; }
 
-.rating { display:inline-flex;align-items:center;gap:2px; } .rating .star { color:color-mix(in srgb,var(--muted) 45%,transparent);font-size:1.1rem;line-height:1; } .rating .star.on { color:var(--warning-text,var(--warning)); } .rating-value { margin-left:7px;color:var(--muted-strong);font-size:.8571rem;font-variant-numeric:tabular-nums; }
+.rating { display:inline-flex;align-items:center;gap:2px; } .rating .star { position:relative;color:color-mix(in srgb,var(--muted) 45%,transparent);font-size:1.1rem;line-height:1; } .rating .star.on { color:var(--warning-text,var(--warning)); } .rating .star.half { color:color-mix(in srgb,var(--muted) 45%,transparent); } .star-half-fill { position:absolute;inset:0;width:50%;overflow:hidden;color:var(--warning-text,var(--warning)); } .rating-value { margin-left:7px;color:var(--muted-strong);font-size:.8571rem;font-variant-numeric:tabular-nums; }
 
 .tree { list-style:none;margin:0;padding:0;font-size:.9286rem; } .tree .tree { margin-left:7px;padding-left:14px;border-left:1px solid var(--card-line); } .tree li { margin:3px 0; } .tree-node { display:flex;align-items:baseline;gap:8px; } .tree-label { font-weight:500; } .tree-node .muted { font-size:.8571rem; }
 

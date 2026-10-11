@@ -33,7 +33,17 @@ themes. Actual native host fonts remain unverified.
   theme, compositing ancestor backgrounds with WCAG luminance. Minimum 4.56:1
   light and 6.11:1 dark. This excludes SVG text, chart marks, gradients, disabled
   states and real host themes. It is not a comprehensive accessibility certification.
-- 48 tests passed. Both shipped examples validated. Production ZIP contains 118
+- A second review pass added a state fixture covering optional props and boundary
+  numbers the gallery never shows. It found four further defects, all repaired:
+  a zero-value gauge painted a round cap dot; a fractional rating rounded 2.5/5 up
+  to three full stars; a zero-maximum progress paired a value with a misleading
+  `0%`; and the five-step ramp repeated the first fill and pattern for the sixth
+  series, although the catalog allows 12 segments and 8 series. Wrapped series now
+  take a denser repeat of the same shape, including a vertical-bar dense form for
+  the solid step, in CSS and in the donut's SVG patterns.
+- State-fixture contrast: 158 visible HTML text elements per theme, minimum 5.22:1
+  light and 6.95:1 dark. Same method and exclusions as the gallery figures.
+- 54 tests passed. Both shipped examples validated. Production ZIP contains 118
   files. Review fixtures are not shipped.
 
 Detailed ledger:

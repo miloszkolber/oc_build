@@ -4,7 +4,7 @@ import { renderToStaticMarkup } from 'react-dom/server';
 import { Canvas } from '../src/renderer.jsx';
 import { parseArtifact } from '../src/catalog.js';
 import { costExplorer, gallery } from '../src/examples.js';
-import { boundaries } from '../preview/fixtures.js';
+import { boundaries, statesReview } from '../preview/fixtures.js';
 test('gallery renders every component without crashing', () => {
   const html = renderToStaticMarkup(<Canvas artifact={parseArtifact(gallery)} months={12} setMonths={() => {}} />);
   expect(html).toContain('gauge-ring');
@@ -90,4 +90,48 @@ test('one line observation is centered and does not imply a filled trend', () =>
   const html = renderToStaticMarkup(<Canvas artifact={parseArtifact({catalog_version:'1',title:'One',spec:{root:'r',elements:{r:{type:'LineChart',props:{title:'One',data:[{label:'Now',value:1}]}}}}})} months={12} setMonths={() => {}} />);
   expect(html).toContain('cx="300"');
   expect(html).not.toContain('<polygon');
+});
+
+const one = (type, props) => renderToStaticMarkup(<Canvas artifact={parseArtifact({catalog_version:'1',title:'One',spec:{root:'r',elements:{r:{type,props}}}})} months={12} setMonths={() => {}} />);
+
+test('state fixture validates and exercises optional props the gallery omits', () => {
+  expect(() => parseArtifact(statesReview)).not.toThrow();
+});
+
+test('an empty gauge paints no ring rather than a round cap dot', () => {
+  expect(one('Gauge',{title:'Empty',value:0,max:512})).not.toContain('gauge-ring');
+  expect(one('Gauge',{title:'Partly',value:256,max:512})).toContain('gauge-ring');
+  expect(one('Gauge',{title:'Above',value:900,max:512})).toContain('stroke-dasharray="276.5 276.5"');
+});
+
+test('a fractional rating draws the fraction instead of rounding a star it lacks', () => {
+  const half = one('Rating',{label:'R',value:2.5,max:5});
+  expect(half.match(/star on/g)).toHaveLength(2);
+  expect(half).toContain('star-half-fill');
+  expect(one('Rating',{label:'R',value:0,max:5})).not.toContain('star on');
+});
+
+test('a zero maximum reports the value instead of a misleading zero percent', () => {
+  expect(one('Progress',{title:'None',value:5,max:0})).toContain('>5</strong>');
+  expect(one('Progress',{title:'Half',value:5,max:10})).toContain('50%');
+  expect(one('Progress',{title:'Over',value:30,max:10})).toContain('100%');
+});
+
+test('a wrapped ramp stays separable past five series', () => {
+  const segments = Array.from({length:6},(_,i)=>({label:`S${i+1}`,value:i+1}));
+  const html = one('StackedBar',{title:'Six',segments});
+  expect(html).toContain('stacked-seg pat-1 dense');
+  expect(html.match(/class="legend"/)).toBeTruthy();
+  // Index 5 must not reuse index 0's solid mark.
+  expect(html).toContain('pat-1 dense');
+  expect(one('StackedBar',{title:'One',segments:segments.slice(0,1)})).not.toContain('dense');
+  const donut = one('DonutChart',{title:'Six',data:segments});
+  expect(donut).toContain('-solid-dense');
+  const series = one('StackedBarChart',{title:'Six',categories:['A'],series:segments.map(s=>({label:s.label,data:[s.value]}))});
+  expect(series).toContain('stack-seg pat-1 dense');
+});
+
+test('numeric footer cells stay unbreakable like numeric body cells', () => {
+  const html = one('Table',{title:'T',columns:['a'],rows:[['1']],footer:[12]});
+  expect(html).toContain('<tfoot><tr><td class="numeric"');
 });

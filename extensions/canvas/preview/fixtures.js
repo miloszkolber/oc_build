@@ -62,3 +62,43 @@ export const diagramThemes = { catalog_version:'1', title:'Diagram themes', spec
   root:{type:'Stack',props:{},children:diagramCases.map((_,i)=>`d${i}`)},
   ...Object.fromEntries(diagramCases.map(([title,code],i)=>[`d${i}`,{type:'Diagram',props:{title,code}}])),
 }} };
+
+// Optional props, boundary numbers and states the gallery never exercises.
+const states = [
+  ['Metric', {label:'No change badge',value:'42'}],
+  ['Metric', {label:'No detail',value:'1,024',change:'-8',tone:'red'}],
+  ['Progress', {title:'Zero progress',value:0,max:100,unit:'%'}],
+  ['Progress', {title:'Above maximum',value:140,max:100,unit:'%'}],
+  ['Progress', {title:'Zero maximum',value:5,max:0}],
+  ['Gauge', {title:'Empty gauge',value:0,max:512,unit:'GB'}],
+  ['Gauge', {title:'Above maximum',value:900,max:512,unit:'GB'}],
+  ['Rating', {label:'Fractional rating',value:2.5,max:5}],
+  ['Rating', {label:'Zero rating',value:0,max:5}],
+  ['Heatmap', {title:'All-zero matrix',columns:['a','b','c'],rows:[{label:'row',values:[0,0,0]},{label:'other',values:[0,0,0]}]}],
+  ['Heatmap', {title:'Constant matrix',columns:['a','b'],rows:[{label:'row',values:[7,7]}]}],
+  ['Choice', {label:'Nothing selected',options:[{label:'One'},{label:'Two'}]}],
+  ['Choice', {label:'Multiple mode',mode:'multiple',options:[{label:'One',selected:true},{label:'Two',selected:true},{label:'Three'}]}],
+  ['Person', {name:'Single name'}],
+  ['Divider', {}],
+  ['Callout', {text:'A callout with no title.'}],
+  ['Icon', {name:'sparkle',size:64,tone:'amber'}],
+  ['Icon', {name:'star',size:12}],
+  ['Timeline', {title:'No timestamps',items:[{title:'First',detail:'Detail only'},{title:'Second'}]}],
+  ['Table', {title:'Footer and alignment',columns:['Item','Delta','Signed'],rows:[['Alpha',12,-4],['Beta',7,3],['Gamma',0,0]],align:['left','right','right'],footer:['Total',19,-1]}],
+  ['StackedBar', {title:'Single segment',segments:[{label:'Only',value:5}]}],
+  ['StackedBar', {title:'Six segments',segments:Array.from({length:6},(_,i)=>({label:`S${i+1}`,value:i+1}))}],
+  ['StackedBarChart', {title:'Six series',categories:['A','B'],series:Array.from({length:6},(_,i)=>({label:`S${i+1}`,data:[i+1,i+2]}))}],
+  ['BarChart', {title:'Zero among values',data:[{label:'None',value:0},{label:'Some',value:5}]}],
+  ['LineChart', {title:'Flat series',data:[{label:'a',value:5},{label:'b',value:5},{label:'c',value:5}]}],
+  ['Sparkline', {title:'Flat trend',data:[{label:'a',value:5},{label:'b',value:5}]}],
+  ['DonutChart', {title:'Six slices',data:Array.from({length:6},(_,i)=>({label:`R${i+1}`,value:i+1}))}],
+  ['BarChart', {title:'Six rows',data:Array.from({length:6},(_,i)=>({label:`R${i+1}`,value:i+1}))}],
+  ['ScatterChart', {title:'One point',xUnit:'rps',yUnit:'ms',points:[{x:1,y:1}]}],
+  ['Text', {text:'Right aligned caption',variant:'caption',align:'right'}],
+  ['List', {title:'Bulleted',items:['First','Second']}],
+  ['CodeBlock', {title:'No language',code:'single line'}],
+];
+export const statesReview = { catalog_version:'1', title:'State review', spec:{root:'root',elements:{
+  root:{type:'Stack',props:{},children:states.map((_,i)=>`s${i}`)},
+  ...Object.fromEntries(states.map(([type,props],i)=>[`s${i}`,{type,props}])),
+}} };

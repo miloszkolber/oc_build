@@ -135,6 +135,21 @@ for zero data or hiding a single observation.
 - **WHEN** a line chart or sparkline contains one observation
 - **THEN** it displays a centered mark rather than a nonexistent trend
 
+#### Scenario: Empty gauge and fractional rating
+- **WHEN** a gauge's value is zero
+- **THEN** it shows its track and value without a progress ring or cap artifact
+- **WHEN** a rating is fractional
+- **THEN** it draws full stars plus a partial star instead of rounding to a star it does not have
+- **WHEN** a progress maximum is zero
+- **THEN** it reports the value alone rather than a percentage it cannot compute
+
+#### Scenario: Series beyond the ramp
+- **GIVEN** a component allows more series than the accent ramp has steps
+- **WHEN** the series index exceeds the ramp length
+- **THEN** it repeats the ramp fill with a denser form of the same pattern
+- **AND** the legend repeats that mark
+- **AND** index and index plus the ramp length never share a fill and pattern pair
+
 ### Requirement: Readable panel-width layout
 Canvas content SHALL adapt to the containing panel width and keep wide data
 locally scrollable without forcing the entire canvas to scroll horizontally.

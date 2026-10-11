@@ -45,6 +45,49 @@ Wide content receives focusable local scroll regions. Mermaid fonts bypass color
 parsing. Default shadows, inverted timeline colors, timeline brightening and weak
 chart/point colors no longer override the host-derived presentation.
 
+## Second review pass
+
+A new `States` fixture exercised optional props and boundary numbers the gallery
+never shows: omitted metric detail and change, zero and above-maximum progress, a
+zero maximum, empty and above-maximum gauges, fractional and zero ratings, all-zero
+and constant heatmaps, unselected and multiple-mode choices, a person without a
+role, an unlabelled divider, a callout without a title, 12 and 64px icons, a
+timeline without timestamps, a table footer with alignment and signed numbers,
+single-segment and six-segment composition, six-series stacking, zero values among
+bars, flat series, a one-point scatter, right-aligned caption text, a bulleted list
+and a code block without a language. Probing the static renderer confirmed the
+values in the report below.
+
+Four defects were confirmed and repaired:
+
+- **Empty gauge painted a dot.** `stroke-dasharray="0.0 276.5"` with
+  `stroke-linecap: round` still renders a cap. The ring is now omitted at zero.
+  An above-maximum value still clamps to a full ring and states the real number.
+- **Fractional rating overstated.** 2.5 of 5 rounded to three filled stars. It now
+  draws two full stars and a half-star overlay for fractions from 0.25 to 0.75.
+- **Zero maximum paired a value with `0%`.** 5 against a maximum of 0 has no share
+  to report, so the percentage is omitted and the value stands alone.
+- **The ramp repeated at six.** The pattern cycle was five, so the sixth series
+  received the first series' fill and pattern even though the catalog allows 12
+  segments and 8 series. Wrapped series now take a denser repeat of the same
+  shape. The solid step needed its own dense form, otherwise index five still
+  matched index zero; `.pat-1.dense` draws vertical bars and the donut gained a
+  matching `solid-dense` SVG pattern.
+
+Verified in MCP Chromium after the change: at 2.4× zoom the six donut slices are
+solid, diagonal, dots, crosshatch, grid and vertical bars, and the sixth legend
+chip matches its slice. The six-segment, six-series and six-row bar charts show the
+same six distinct marks at 1280 × 900 and 390 × 900 in both themes.
+
+State-fixture contrast through the synthetic host and the production bundle:
+158 visible HTML text elements per theme, minimum 5.22:1 light and 6.95:1 dark,
+none below 4.5. Same sampling method and exclusions as the gallery figures.
+
+Six new renderer tests cover the empty and above-maximum gauge, the fractional and
+zero rating, the zero and over maximum progress, wrapped patterns in stacked bars,
+stacked columns and the donut, and numeric footer cells. 54 tests pass, 302
+assertions. Both examples validate and the ZIP is still 118 files.
+
 ## Runtime checks
 
 - Unchanged polling retained table filter `worker`, ascending latency sort,
