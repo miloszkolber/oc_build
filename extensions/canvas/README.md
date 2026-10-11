@@ -9,14 +9,16 @@ json-render 0.21.0 and OpenChamber SDK 2.2.0.
 Styling is derived entirely from the host theme variables written by
 `applyHostReady` (`--oc-bg`, `--oc-fg`, `--oc-elevated`, `--oc-muted`,
 `--oc-border`, `--oc-hover`, `--oc-primary`, `--oc-radius`, `--oc-font`, the
-`--oc-*` status colours and the `--oc-*-text` aliases). Cards, tables, badges
-and controls use the same radius, borders and type scale as the rest of
-OpenChamber, so a canvas looks like part of the app rather than a dropped-in
-website. Mermaid diagrams are themed from the same tokens across their diagram
-types, so they too follow the host in light and dark. The panel renders its own
-empty state, error notice and controls from those tokens, matching the app's
-control metrics and focus treatment rather than embedding the imperative SDK UI
-kit.
+`--oc-*` status colours and the `--oc-*-text` aliases). Visual language: cards
+carry hairline borders on elevated surfaces, one accent is reserved for
+selection and active states, host status colours mark state, and chart series
+read as a single accent-tinted ramp. Cards, tables, badges and controls use the
+same radius, borders and type scale as the rest of OpenChamber, so a canvas
+looks like part of the app rather than a dropped-in website. Mermaid diagrams
+are themed from the same tokens across their diagram types, so they too follow
+the host in light and dark. The panel renders its own empty state, error notice
+and controls from those tokens, matching the app's control metrics and focus
+treatment rather than embedding the imperative SDK UI kit.
 
 ## Use
 
@@ -136,7 +138,7 @@ export its JSON elsewhere — the panel is a presentation surface, not storage.
 ## Build and install
 
 1. Run `bun install --frozen-lockfile`, `bun test`, then `bun run package` here.
-2. Install `dist/openchamber-generative-canvas-0.9.10.zip` through OpenChamber Extensions.
+2. Install `dist/openchamber-generative-canvas-0.9.11.zip` through OpenChamber Extensions.
 3. Review and approve the `/data/.db/openchamber/canvas/**` filesystem and `sessions` declarations.
 4. Reload the client to discover the updated Canvas entry. Canvas is panel-only;
    it declares no page surface.

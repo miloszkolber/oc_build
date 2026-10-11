@@ -1,5 +1,24 @@
 # Canvas verification
 
+## 0.9.11
+
+- Visual system pass on `panel/style.css`, requested to remove the generic
+  AI-generated look: color discipline (one accent for selection/active states,
+  host status colors for state, a single accent-tinted ramp for chart series
+  instead of five unrelated hues), bordered elevated cards instead of borderless
+  fill blobs, a tightened type scale (eyebrows at 11px, secondary text at
+  13px with `--muted-strong` for contrast), tabular numerals everywhere
+  numbers align, and stronger states (solid fill checkboxes/step circles,
+  primary-tinted selected chips and radio segments, raised active tab on a
+  subtle track, visible focus ring).
+- Mermaid token names and all component class names are unchanged; the theme
+  map still resolves the same custom properties. Renderer JSX is untouched.
+- Verified in the preview page (MCP Chromium) in light and dark across every
+  component section, plus interaction states (tab switch, disclosure open).
+  40 tests pass. Preview harness now supplies proportional `--oc-font` because
+  the review Chromium maps `ui-sans-serif` to a monospace face.
+- Production ZIP `openchamber-generative-canvas-0.9.11.zip`.
+
 ## 0.9.10
 
 - Simplification pass. Removed the redundant `showcase` example: the `gallery`
@@ -244,4 +263,4 @@ CRUD service, conversation scoping, UI-kit chrome, the showcase example,
 token-based styling, removal of all panel chrome, the Mermaid `Diagram`
 component and parent-canvas resolution for subagent sessions were each
 installed and verified in MCP Chromium. Details are preserved in the repository
-history and in `docs/ROADMAP.md`.
+history and in [`docs/`](../docs/README.md).
