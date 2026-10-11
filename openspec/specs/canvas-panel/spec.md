@@ -181,7 +181,7 @@ The manifest SHALL declare only the panel, session capability and scoped filesys
 
 Canvas files have a durable owner independent of extension installation. Agents
 should replace them atomically and back them up with app data. Native desktop
-acceptance is recorded in the [archived acceptance](../../changes/archive/2026-10-11-accept-canvas-panel-on-desktop/evidence.md).
+acceptance is recorded in the [change history](../../changes/history.md#native-desktop-acceptance-2026-10-11).
 
 ### Requirement: Restrained visual encoding
 Canvas SHALL use neutral host foreground and surfaces for ordinary controls and

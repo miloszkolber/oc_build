@@ -1,6 +1,6 @@
 ---
 name: "workspace"
-description: "Use OpenChamber workspace surfaces and agent development containers: build/test tools and sandbox storage, Canvas, Files/Git/Context, and native versus standalone browsers."
+description: "Use OpenChamber workspace surfaces and agent development containers: create, update, inspect or debug conversation Canvas visualizations, build/test tools and sandbox storage, Files/Git/Context, and native versus standalone browsers."
 ---
 
 # Workspace
@@ -16,7 +16,7 @@ description: "Use OpenChamber workspace surfaces and agent development container
 
 | Procedure | Use for |
 | --- | --- |
-| [Canvas](references/canvas.md) | Writing or debugging an in-conversation presentation canvas and its component JSON |
+| [Canvas](references/canvas.md) | Creating, updating, inspecting or debugging conversation Canvas JSON, chart/diagram choices, local interactions and review |
 | [Browser](references/browser.md) | Native desktop browser panel, annotations, versus the standalone browser MCP and its evidence limits |
 | [Sandbox](references/sandbox.md) | Container builds, tests, dependencies, tool additions and persistent versus temporary storage |
 

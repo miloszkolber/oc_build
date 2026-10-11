@@ -41,6 +41,9 @@ MCP Chromium checks do not establish native desktop acceptance.
 6. After verification and review, archive the change with OpenSpec. It merges
    completed deltas into main specs and moves the change under
    `changes/archive/YYYY-MM-DD-<name>/`. Validate the resulting main specs.
+   Completed archives are periodically consolidated into the single
+   [change history](changes/history.md) to keep the record readable; full
+   detail stays recoverable from git history.
 
 Use `## Purpose`, `## Requirements`, `### Requirement: Name`, and
 `#### Scenario: Name` in main specs. Requirements use SHALL or MUST and describe
@@ -74,7 +77,7 @@ OPENSPEC_TELEMETRY=0 bun x --bun @fission-ai/openspec@1.14.1 validate --all --st
 Use `--skip-specs` only for changes with no deltas or deltas already merged and
 reviewed. Never use it to omit required updates. Never use `--no-validate` to
 hide an archive failure. The former alias workaround in the
-[archived review](changes/archive/2026-10-11-review-spec-driven-documentation/evidence.md)
+[change history](changes/history.md#spec-driven-documentation-review-2026-10-11)
 is historical and does not apply to this physical directory.
 
 The lightweight check verifies local links, scenario structure, change metadata

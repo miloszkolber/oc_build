@@ -5,7 +5,7 @@ approved. Start a change only when its scope and authority are settled.
 
 | Area | State | Next evidence or decision |
 | --- | --- | --- |
-| Canvas desktop acceptance | Accepted 2026-10-11 | [Acceptance evidence](changes/archive/2026-10-11-accept-canvas-panel-on-desktop/evidence.md). Operator-reported approval; detailed native checks explicitly waived |
+| Canvas desktop acceptance | Accepted 2026-10-11 | [Acceptance record](changes/history.md#native-desktop-acceptance-2026-10-11). Operator-reported approval; detailed native checks explicitly waived |
 | External OpenCode integration | Next investigation | Inventory actually advertised tools. Native app flags do not prove injection into externally managed OpenCode |
 | Base-image updates | Maintenance gap | Dependabot covers Bun packages and Actions, not Docker base versions. Weekly image rebuilds refresh mutable layers but do not detect major-version drift. Choose a mechanism only for a demonstrated need |
 | Native search | Disabled host feature | [Projection blocker and acceptance](references/runtime.md#search-projection-blocker). Requires a supported pre-serialization reader and rollout authorization |

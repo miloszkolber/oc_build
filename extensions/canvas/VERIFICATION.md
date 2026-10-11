@@ -33,7 +33,7 @@ solid and add sparse patterns only when fills repeat. This supersedes the earlie
 always-textured chart direction below. Mermaid categorical surfaces are neutral
 and diagrams no longer upscale to fill cards. Tests: 56 passed, 320 assertions.
 Package and both generated examples passed. The approved source is now
-installed as 0.9.16 (see above). See [scoped evidence](../../openspec/changes/archive/2026-10-11-refine-canvas-visual-language/evidence.md)
+installed as 0.9.16 (see above). See the [change history](../../openspec/changes/history.md#visual-language-refinement-2026-10-11)
 for executed browser checks and acceptance limits.
 
 ## 0.9.15 gap closure — 2026-10-11
@@ -115,7 +115,7 @@ themes. Actual native host fonts remain unverified.
   files. Review fixtures are not shipped.
 
 Detailed ledger:
-[openspec/changes/archive/2026-10-11-finish-canvas-review/](../../openspec/changes/archive/2026-10-11-finish-canvas-review/).
+[change history](../../openspec/changes/history.md#canvas-review-completion-2026-10-11).
 Native desktop acceptance remains open. MCP Chromium and synthetic SDK fixtures
 do not establish real-client fidelity or grant behavior.
 
