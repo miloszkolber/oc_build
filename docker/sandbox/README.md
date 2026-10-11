@@ -55,16 +55,41 @@ host.
 ## Entry point
 
 `./sandbox run [--] <command...>` launches the image with the shared cache and a
-fresh scratch directory, running as the host UID/GID, at the current working
-directory, with `/repo`, `/home/core` and `/data/.db/openchamber` mounted at
-their host paths. The scratch directory is removed on exit, including on
-interrupt.
+fresh scratch directory. The container identity is pinned to uid/gid 1000
+(`SANDBOX_UID`/`SANDBOX_GID` override) rather than taken from the caller, so
+`sudo sandbox run` cannot hand the sandbox host-root write access to the mounts.
+
+Behaviour worth knowing:
+
+- The working directory must be under `/repo`, `/home/core` or
+  `/data/.db/openchamber`; anything else fails with a clear error instead of
+  silently running against the container's own filesystem.
+- All three roots are mounted read-write at their host paths.
+- Containers run with `--init` (reaps orphans) and `no-new-privileges`.
+- `HOME` is the per-run scratch directory, so the host `~/.gitconfig` and
+  `~/.npmrc` are reached through `GIT_CONFIG_GLOBAL` and `npm_config_userconfig`
+  instead. Git commits work inside the sandbox.
+- The scratch directory is removed when the wrapper exits, including on
+  SIGINT/SIGTERM/SIGHUP. A SIGKILL or host reboot leaves a directory behind; the
+  daily cleanup timer removes leftovers older than 24 hours.
+- That directory is mode `0700`, not the usual `1777`. Hosts that refuse an
+  other-writable state hierarchy — submarine rejects rename-guarded capture
+  recovery when a state path is world-writable — fail otherwise, and the sandbox
+  runs everything as one uid, so a private `/tmp` loses nothing.
 
 The wrapper also mounts the **rootless** Docker socket
-(`/run/user/$(id -u)/docker.sock`) and sets `DOCKER_HOST` when it exists, so the
-sandbox can build and run images without ever touching the host's rootful
-socket. The image does not include the wrapper; the installed copy is
-`/usr/local/bin/sandbox`.
+(`/run/user/<SANDBOX_UID>/docker.sock`, read-only) and sets `DOCKER_HOST` when
+it exists, so the sandbox can build and run images without ever touching the
+host's rootful socket. The image does not include the wrapper; the installed
+copy is `/usr/local/bin/sandbox`.
+
+## Boundaries
+
+The sandbox is a build/test convenience, not a security boundary. It shares the
+host user's files, and the rootless Docker socket lets a container bind-mount
+host paths as uid 1000 — that is the intended price of building images there.
+Treat host credentials reachable under the mounted roots as exposed to whatever
+runs inside the sandbox.
 
 Host deployment (launcher install, rootless daemon, cleanup timer) is in the
 host repository at `/home/core/docker/sandbox`.

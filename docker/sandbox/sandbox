@@ -4,8 +4,8 @@
 #   sandbox run [--] <command...>
 #
 # Shared caches live under $SANDBOX_DATA/cache and persist between runs.
-# A fresh per-run scratch directory is mounted at /tmp and removed on exit,
-# so transient build artifacts never accumulate on the host.
+# A fresh per-run scratch directory is mounted at /tmp and removed when this
+# wrapper exits, so transient build artifacts never accumulate on the host.
 set -euo pipefail
 
 image="${SANDBOX_IMAGE:-openchamber-sandbox:latest}"
@@ -13,8 +13,20 @@ data="${SANDBOX_DATA:-/data/.db/openchamber/sandbox}"
 cache="$data/cache"
 runs="$data/tmp"
 
+# The image runs as the host account that owns the mounts. Propagating the
+# caller identity would let `sudo sandbox run` hand the sandbox host-root write
+# access to /repo and /home/core, so it is pinned unless overridden on purpose.
+uid="${SANDBOX_UID:-1000}"
+gid="${SANDBOX_GID:-1000}"
+
+# Roots bind-mounted into the sandbox at their host paths. A working directory
+# outside them would otherwise run against the container's own filesystem and
+# host files would silently be invisible.
+mount_roots=(/repo /home/core /data/.db/openchamber)
+
 usage() {
     echo "usage: sandbox run [--] <command...>" >&2
+    echo "run from inside: ${mount_roots[*]}" >&2
     exit 2
 }
 
@@ -23,25 +35,56 @@ shift
 [ "${1:-}" = -- ] && shift
 [ "${#}" -ge 1 ] || usage
 
+in_mounts=0
+for root in "${mount_roots[@]}"; do
+    case "$PWD" in
+        "$root" | "$root"/*) in_mounts=1 ;;
+    esac
+done
+if [ "$in_mounts" != 1 ]; then
+    echo "sandbox: $PWD is not under a mounted root (${mount_roots[*]});" >&2
+    echo "the command would run against the container's own filesystem." >&2
+    exit 2
+fi
+
 # Dedicated rootless Docker endpoint. The host's rootful socket is never
 # mounted; containers the sandbox builds or runs stay inside this rootless
-# daemon. Mounted read-write because Docker needs to talk to it.
-runtime="/run/user/$(id -u)"
+# daemon. Read-only on purpose: a client only needs to connect, and a
+# read-only bind mount stops the sandbox replacing the socket.
+runtime="/run/user/$uid"
 socket="$runtime/docker.sock"
 docker_args=()
 if [ -S "$socket" ]; then
-    docker_args=(-v "$socket:$socket" -e "DOCKER_HOST=unix://$socket")
+    docker_args=(-v "$socket:$socket:ro" -e "DOCKER_HOST=unix://$socket")
 fi
+
+# HOME is the per-run scratch directory, so the host identity files are not
+# visible through it. Point Git and npm at the host equivalents instead.
+config_args=()
+[ -f /home/core/.gitconfig ] && config_args+=(-e "GIT_CONFIG_GLOBAL=/home/core/.gitconfig")
+[ -f /home/core/.npmrc ] && config_args+=(-e "npm_config_userconfig=/home/core/.npmrc")
 
 run_id="$(date +%Y%m%dT%H%M%S)-$$"
 tmp="$runs/$run_id"
-mkdir -p "$cache" \
-    "$tmp/home" "$tmp/xdg-cache" "$tmp/xdg-config" "$tmp/xdg-data" "$tmp/xdg-state"
+# install -d creates the missing bind-mount sources as the sandbox identity.
+# A root-owned cache directory would make the shared cache read-only to the
+# container. The scratch directory must be private, not 1777: a world-writable
+# directory that the run's own user owns is refused by hosts that guard
+# rename-based state recovery (submarine treats it as unsafe), so tools that
+# reject other-writable state hierarchies keep working.
+install -d -m 0700 -o "$uid" -g "$gid" "$cache" "$runs"
+install -d -m 0700 -o "$uid" -g "$gid" "$tmp" "$tmp/home" \
+    "$tmp/xdg-cache" "$tmp/xdg-config" "$tmp/xdg-data" "$tmp/xdg-state"
 cleanup() { rm -rf "$tmp"; }
+trap 'cleanup; exit 130' INT
+trap 'cleanup; exit 143' TERM
+trap 'cleanup; exit 129' HUP
 trap cleanup EXIT
 
 docker run --rm -i \
-    --user "$(id -u):$(id -g)" \
+    --init \
+    --security-opt no-new-privileges \
+    --user "$uid:$gid" \
     -w "$PWD" \
     -v /repo:/repo \
     -v /home/core:/home/core \
@@ -49,6 +92,7 @@ docker run --rm -i \
     -v "$cache":/cache \
     -v "$tmp":/tmp \
     "${docker_args[@]}" \
+    "${config_args[@]}" \
     -e HOME=/tmp/home \
     -e TMPDIR=/tmp \
     -e XDG_CACHE_HOME=/tmp/xdg-cache \
