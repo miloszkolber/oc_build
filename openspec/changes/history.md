@@ -105,6 +105,20 @@ the documentation check. Documentation/layout change only; no capability
 requirement changed, no deployment authorized. The in-repo copy is a snapshot
 of the canonical workspace guidance and must be re-synced when the master changes.
 
+## Sandbox runs through Compose (2026-10-11)
+
+The sandbox was run by a ~100-line host wrapper that created per-run scratch,
+held locks, scanned for stale runs, forced a Docker endpoint and mounted a
+socket. Dropping the Docker capability removed the endpoint and socket work, so
+Compose now provides the rest declaratively. The wrapper and its 122-line
+regression suite are deleted; the deployment's Compose service pins the
+non-root identity, mounts the workspace roots plus the shared cache, gives each
+run a private temporary filesystem, publishes loopback ports on request and
+removes the container on exit. An optional deployment-local alias shortens the
+common build/test case. The image workflow trigger narrowed to image-affecting
+paths, so documentation changes no longer rebuild the image. Docker is now
+managed with the host's own Docker, compose and buildx.
+
 ## Sandbox drops Docker (2026-10-11)
 
 The sandbox is for reproducible development toolchains, not container builds.
