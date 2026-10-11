@@ -8,7 +8,7 @@ for an independent review and a minimal, detailed spec-driven foundation.
 
 ## Scope and status
 
-**Implemented, awaiting user review.** Correct and consolidate documentation
+**Implemented and accepted on 2026-10-11.** Correct and consolidate documentation
 against source. Remove unsupported archive claims and duplicate plans. Expose
 the one docs tree to OpenSpec and add local/CI validation. Preserve package
 command ownership and native-client acceptance boundaries.

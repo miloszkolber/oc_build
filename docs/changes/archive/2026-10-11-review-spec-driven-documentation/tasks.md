@@ -11,4 +11,4 @@
 - [x] 2.1 Add one planning-tree alias and verify pinned CLI discovery and configuration instructions.
 - [x] 2.2 Exercise create, strict validate, merge and archive in isolated fixtures. Document the confirmed alias archive limitation and working manual-merge path.
 - [x] 2.3 Add local checks, focused failure regressions and a least-privilege CI job. Execute the local checks and affected existing suites, recording results in evidence.md.
-- [ ] 2.4 Obtain user review of the revised documentation and removal scope before archiving this review change.
+- [x] 2.4 Obtain user review of the revised documentation and removal scope before archiving this review change. Accepted on 2026-10-11: “Looks good, documentation accepted.”

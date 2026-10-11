@@ -50,4 +50,6 @@ the pinned version or removing the documented workaround.
 
 No image build, live plugin lifecycle test, native desktop review, GitHub workflow
 execution, rollout or push was performed. Canvas desktop acceptance remains in
-its own open change. User review of this documentation change is pending.
+its own open change. The user accepted this documentation change on 2026-10-11:
+“Looks good, documentation accepted.” Implementation is committed in `f679a84`.
+This approval does not establish native Canvas acceptance or authorize deployment.

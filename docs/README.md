@@ -72,7 +72,7 @@ OPENSPEC_TELEMETRY=0 bun x --bun @fission-ai/openspec@1.14.1 archive <name> --sk
 Do not use automatic spec-update archive with this alias on 1.14.1. It fails
 its final delta fingerprint check. Creation, instructions, validation and
 archive **without** spec updates were exercised in isolated fixtures. See
-[review evidence](changes/review-spec-driven-documentation/evidence.md).
+[review evidence](changes/archive/2026-10-11-review-spec-driven-documentation/evidence.md).
 `--skip-specs` bypasses merging, not the requirement to merge and review behavior
 deltas first. Never use `--no-validate` to hide an archive failure.
 
