@@ -2,6 +2,7 @@
 // Usage: bun run preview   (PORT=8800 by default)
 import { build } from 'esbuild';
 import { mkdir, copyFile, cp } from 'node:fs/promises';
+import { resolve } from 'node:path';
 
 const out = 'preview/dist';
 await mkdir(out, { recursive: true });
@@ -20,6 +21,18 @@ await copyFile('panel/style.css', `${out}/style.css`);
 await copyFile('preview/index.html', `${out}/index.html`);
 await copyFile('preview/panel-review.html', `${out}/panel-review.html`);
 await Bun.write(`${out}/review-panel.html`, (await Bun.file('panel/index.html').text()).replace('main.js', 'review-panel.js'));
+if (process.argv.includes('--fault-injection')) {
+  await build({
+    entryPoints: ['src/panel.jsx'], outfile: `${out}/fault-panel.js`,
+    bundle: true, format: 'esm', platform: 'browser', target: 'es2022',
+    jsx: 'automatic', define: { 'process.env.NODE_ENV': '"production"' },
+    plugins: [{ name: 'review-mermaid-fault', setup(builder) {
+      builder.onResolve({ filter: /^mermaid$/ }, args => args.importer.endsWith('mermaid-fault.js')
+        ? undefined : { path: resolve('preview/mermaid-fault.js') });
+    } }],
+  });
+  await Bun.write(`${out}/fault-panel.html`, (await Bun.file('panel/index.html').text()).replace('main.js', 'fault-panel.js'));
+}
 if (process.argv.includes('--production-panel')) await cp('dist/panel', `${out}/production`, {recursive:true});
 
 const port = Number(process.env.PORT ?? 8800);

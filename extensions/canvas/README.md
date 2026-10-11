@@ -142,11 +142,11 @@ Rebuild served assets after edits with
 
 Charts encode every series twice. Series keep the single-hue accent ramp, and
 each one also carries a repeating pattern (solid, diagonal, dots, crosshatch,
-grid) that the legend repeats, so adjacent steps stay separable without relying
-on color. Past five series the ramp repeats and the pattern switches to a denser
-form of the same shape, so the sixth entry never copies the first. Single-series
-charts stay solid. Marks never exaggerate data: zero values draw nothing, an
-empty gauge has no ring, and a fractional rating shows a half star. `Diagram`
+grid, vertical bars) that the legend repeats, so adjacent steps stay separable
+without relying on color. Six patterns cycle against five ramp fills, producing
+30 distinct automatic fill/pattern pairs within the catalog limit. Single-series
+charts stay solid. Zero distribution values consume no colored extent, an
+empty gauge has no ring, and a fractional rating has proportionally clipped fill. `Diagram`
 renders wait for a rendered document, so a collapsed panel or hidden tab defers
 the render instead of failing it, and a transient Mermaid measurement failure is
 retried once. The wait is cancellable, not time-limited. Wide diagrams, tables,
@@ -154,6 +154,14 @@ heatmaps and code retain local keyboard-scrollable regions instead of shrinking
 their text to fit. Unchanged polling preserves local controls. Compatible content
 updates preserve the chosen horizon. A new selection or removed option uses its
 authored default.
+
+For retry diagnostics, build the review-only adapter with
+`sandbox run -- bun scripts/preview.mjs --build-only --fault-injection` and open
+`/panel-review.html?faults`. After rendering a diagram, the guest exposes
+`diagramProbe`: `failures` queues error messages, `hold` pauses a render until
+`release()` is called, and `calls`/`maxActive` record attempts and concurrency.
+Use `svg element not in render tree` for the transient retry branch. This adapter
+is never bundled by the production package command.
 
 Catalog 1 remains compatible with 0.1.0/0.2.0 components. Files written by
 older global Canvas versions stay on disk but are no longer displayed; do not
@@ -163,7 +171,7 @@ export its JSON elsewhere — the panel is a presentation surface, not storage.
 ## Build and install
 
 1. Run `bun install --frozen-lockfile`, `bun test`, then `bun run package` here.
-2. Install `dist/openchamber-generative-canvas-0.9.14.zip` through OpenChamber Extensions.
+2. Install `dist/openchamber-generative-canvas-0.9.15.zip` through OpenChamber Extensions.
 3. Review and approve the `/data/.db/openchamber/canvas/**` filesystem and `sessions` declarations.
 4. Reload the client to discover the updated Canvas entry. Canvas is panel-only;
    it declares no page surface.

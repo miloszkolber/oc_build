@@ -139,16 +139,16 @@ for zero data or hiding a single observation.
 - **WHEN** a gauge's value is zero
 - **THEN** it shows its track and value without a progress ring or cap artifact
 - **WHEN** a rating is fractional
-- **THEN** it draws full stars plus a partial star instead of rounding to a star it does not have
+- **THEN** it draws full stars plus a proportionally clipped partial star instead of rounding or dropping the fraction
 - **WHEN** a progress maximum is zero
 - **THEN** it reports the value alone rather than a percentage it cannot compute
 
 #### Scenario: Series beyond the ramp
 - **GIVEN** a component allows more series than the accent ramp has steps
 - **WHEN** the series index exceeds the ramp length
-- **THEN** it repeats the ramp fill with a denser form of the same pattern
+- **THEN** six patterns cycle against five automatic ramp fills, giving distinct pairs within the 30-entry catalog limit
 - **AND** the legend repeats that mark
-- **AND** index and index plus the ramp length never share a fill and pattern pair
+- **AND** explicit semantic tone overrides remain authored choices, not unique series colors
 
 ### Requirement: Readable panel-width layout
 Canvas content SHALL adapt to the containing panel width and keep wide data

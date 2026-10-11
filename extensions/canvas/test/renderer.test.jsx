@@ -108,6 +108,12 @@ test('a fractional rating draws the fraction instead of rounding a star it lacks
   const half = one('Rating',{label:'R',value:2.5,max:5});
   expect(half.match(/star on/g)).toHaveLength(2);
   expect(half).toContain('star-half-fill');
+  expect(half).toContain('width:50%');
+  for (const value of [0.1, 2.2, 2.75, 4.9]) {
+    const html = one('Rating',{label:'R',value,max:5});
+    expect((html.match(/star on/g) ?? []).length).toBe(Math.floor(value));
+    expect(html).toContain(`width:${(value - Math.floor(value)) * 100}%`);
+  }
   expect(one('Rating',{label:'R',value:0,max:5})).not.toContain('star on');
 });
 
@@ -120,15 +126,28 @@ test('a zero maximum reports the value instead of a misleading zero percent', ()
 test('a wrapped ramp stays separable past five series', () => {
   const segments = Array.from({length:6},(_,i)=>({label:`S${i+1}`,value:i+1}));
   const html = one('StackedBar',{title:'Six',segments});
-  expect(html).toContain('stacked-seg pat-1 dense');
+  expect(html).toContain('stacked-seg pat-6');
   expect(html.match(/class="legend"/)).toBeTruthy();
   // Index 5 must not reuse index 0's solid mark.
-  expect(html).toContain('pat-1 dense');
-  expect(one('StackedBar',{title:'One',segments:segments.slice(0,1)})).not.toContain('dense');
+  expect(html).toContain('pat-6');
   const donut = one('DonutChart',{title:'Six',data:segments});
-  expect(donut).toContain('-solid-dense');
+  expect(donut).toContain('-p6)');
   const series = one('StackedBarChart',{title:'Six',categories:['A'],series:segments.map(s=>({label:s.label,data:[s.value]}))});
-  expect(series).toContain('stack-seg pat-1 dense');
+  expect(series).toContain('stack-seg pat-6');
+});
+
+test('automatic fill and pattern pairs do not repeat within catalog limits', () => {
+  const data = Array.from({length:30},(_,i)=>({label:`S${i+1}`,value:i+1}));
+  const pairs = html => [...html.matchAll(/<i class="(pat-\d+)" style="background-color:([^";]+)/g)].map(m=>`${m[1]}:${m[2]}`);
+  for (const [type,props,count] of [
+    ['DonutChart',{title:'Thirty',data},30],
+    ['StackedBar',{title:'Twelve',segments:data.slice(0,12)},12],
+    ['StackedBarChart',{title:'Eight',categories:['A'],series:data.slice(0,8).map(s=>({label:s.label,data:[s.value]}))},8],
+  ]) {
+    const marks = pairs(one(type,props));
+    expect(marks).toHaveLength(count);
+    expect(new Set(marks).size).toBe(count);
+  }
 });
 
 test('numeric footer cells stay unbreakable like numeric body cells', () => {

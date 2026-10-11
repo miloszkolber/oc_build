@@ -2,7 +2,8 @@ import { gallery, costExplorer } from '../src/examples.js';
 import { boundaries, reviewTheme, statesReview } from './fixtures.js';
 
 const frame = document.querySelector('#panel');
-const panelUrl = new URLSearchParams(location.search).has('production') ? 'production/index.html' : 'review-panel.html';
+const params = new URLSearchParams(location.search);
+const panelUrl = params.has('production') ? 'production/index.html' : params.has('faults') ? 'fault-panel.html' : 'review-panel.html';
 frame.src = panelUrl;
 const select = document.querySelector('#scenario');
 const envelope = { channel:'openchamber.sdk', v:1 };

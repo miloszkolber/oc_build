@@ -1,5 +1,37 @@
 # Canvas verification
 
+## 0.9.15 gap closure — 2026-10-11
+
+The previous six-entry and half-star checks were insufficient. This release
+corrects two remaining mismatches: ratings outside the half-star interval lost
+their fraction, and entries 6 and 11 reused the same dense fill/pattern pair.
+Ratings now clip to the actual fraction. Six patterns cycle against five fills
+for 30 unique automatic pairs. Explicit semantic tone overrides are not unique
+series colors.
+
+- 55 tests pass with 316 assertions, including fractions 0.1, 2.2, 2.75 and 4.9
+  and unique pairs at the 30-entry, 12-segment and 8-series limits.
+- Production output inspected in MCP Chromium at 1280 × 900 and 390 × 900 in
+  light/dark. Page and canvas horizontal overflow were zero in all four cases.
+  All 30 donut legend pairs were unique with no missing SVG pattern references.
+  Fractional overlays retain a 16px glyph and clip its width, rather than scaling
+  it. These checks are not native host font or desktop acceptance.
+- A review-only adapter fault-injected the real Diagram effect and render queue.
+  One transient failure produced three calls for two diagrams and both rendered.
+  Two consecutive transient failures stopped after two attempts with an error.
+  A permanent failure made one attempt. Cancelling a held render on session
+  switch produced three calls: the cancelled old diagram and two replacement
+  diagrams, without an old retry. Maximum concurrency was one. Synthetic writes
+  remained zero.
+- The adapter replaces only the Mermaid module in a separate review bundle.
+  Production code has no diagnostic hook. The production ZIP remains 118 files.
+- Native desktop acceptance and actual host font/theme checks remain operator
+  gates in `openspec/changes/accept-canvas-panel-on-desktop/`. Earlier contrast
+  samples are historical, not measurements of this expanded fixture.
+
+See the scoped gap-closure evidence in OpenSpec for commands and installation
+parity. No service restart or remote push is part of this review.
+
 ## 0.9.14 independent review — 2026-10-11
 
 Previous sections are historical reports, not renewed acceptance. Independent
