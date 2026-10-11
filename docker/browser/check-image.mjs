@@ -48,6 +48,16 @@ try {
   assert.equal(tools.length,38); assert.equal(new Set(tools.map(tool=>tool.name)).size,38);
   for(const tool of tools) assert(tool.description.startsWith('Standalone Chromium (not OpenChamber native UI): '),tool.name);
   const nav=await rpc('tools/call',{name:'browser_navigate',arguments:{url:origin}});assert(!nav.isError,JSON.stringify(nav));
+  const fonts=await rpc('tools/call',{name:'browser_evaluate',arguments:{expression:`(() => {
+    const ctx=document.createElement('canvas').getContext('2d');
+    const families=['sans-serif','system-ui','ui-sans-serif','-apple-system','Segoe UI','Roboto','Helvetica Neue'];
+    return families.map(family=>{
+      ctx.font='20px '+(family.includes(' ')?JSON.stringify(family):family);
+      return {family,wide:ctx.measureText('WWWWWW').width,narrow:ctx.measureText('iiiiii').width};
+    });
+  })()`}});
+  const fontWidths=JSON.parse(fonts.content.find(c=>c.type==='text').text);
+  for(const row of fontWidths) assert(row.wide>row.narrow*1.5,`${row.family} resolved non-proportionally: ${JSON.stringify(row)}`);
   for(const [width,height,color_scheme] of [[390,844,'dark'],[1440,900,'light']]) {
     const sized=await rpc('tools/call',{name:'browser_set_viewport',arguments:{width,height,color_scheme}});assert(!sized.isError,JSON.stringify(sized));
     const measured=await rpc('tools/call',{name:'browser_evaluate',arguments:{expression:'JSON.stringify({width:innerWidth,height:innerHeight,dark:matchMedia("(prefers-color-scheme: dark)").matches})'}});

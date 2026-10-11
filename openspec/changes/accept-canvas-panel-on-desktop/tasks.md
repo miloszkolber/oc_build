@@ -15,6 +15,12 @@
 - [x] 2.2 Serve the conversation's exact JSON using the packaged Canvas entrypoint, without preview chrome or styling overrides.
 - [x] 2.3 Check source/artifact hashes, rendering and token values. Record the browser font-resolution limitation separately from CSS parity.
 
+## 3. Authorized browser font rollout
+
+- [x] 3.1 Build the font-repaired image and run the real Chromium image check, including proportional-family assertions.
+- [x] 3.2 Retain the prior image, recreate only the browser and verify the app's container identity and start time are unchanged.
+- [x] 3.3 Inspect the matched light/dark conversation preview and distinguish browser-font repair from native desktop acceptance.
+
 ## Workflow follow-up
 
 - Archive only after operator review. A new release is not automatically covered by an earlier acceptance.

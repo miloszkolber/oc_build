@@ -24,8 +24,8 @@ docker run --rm -i --network none --read-only --cap-drop ALL \
   --input-type=module < docker/browser/check-image.mjs
 ```
 
-The check exercises real Chromium, 38 MCP tools, responsive layout/color
-preference, authentication, navigation, screenshot, destination policy and
+The check exercises real Chromium, 38 MCP tools, proportional generic/system UI
+font resolution, responsive layout/color preference, authentication, navigation, screenshot, destination policy and
 cleanup. Runtime paths and image names remain unchanged.
 
 This package is the active Chromium MCP backend. The custom Agent Browser extension has been removed. This package has no guest service, panel, extension manifest, install ZIP or surface routes.
