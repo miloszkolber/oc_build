@@ -1,5 +1,25 @@
 # Canvas verification
 
+## 0.9.12
+
+- Layout-shift pass on state changes, requested explicitly: interactive states
+  no longer change font-weight. `segmented button.active`, `choice-option.selected`
+  and the checked `horizon label` differentiate by surface, border and color
+  only, so switching tabs, choices or horizon months never re-flows sibling
+  segments. Measured in the review browser: all three tab buttons and all
+  horizon labels keep identical widths and x positions before/after switching,
+  in light and dark. The one intentional exception is the empty-state copy
+  button, which occupies its own layer when it grows into the `Copied` pill.
+- Status chips (`trend-badge`, `badge`) bumped from 10.5px to 11px for
+  legibility.
+- Callout surfaces mix the tone toward the page surface instead of the
+  elevated surface, so a dark-theme warning stays a warm dark panel instead of
+  a luminous slab; borders ease to 26% / 55% mixes. Light theme unchanged
+  visually.
+- Re-verified light and dark over the gallery and cost explorer; 40 tests
+  pass. ZIP content unchanged at 118 files.
+- Production ZIP `openchamber-generative-canvas-0.9.12.zip`.
+
 ## 0.9.11
 
 - Visual system pass on `panel/style.css`, requested to remove the generic
