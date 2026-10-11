@@ -41,5 +41,6 @@ tests and future tool additions to the container. Inventory stays in image sourc
 
 This directory mirrors `/home/core/agents/skills/workspace`. Re-sync copies
 the master verbatim, then re-applies one transform: the two design-reference
-links in `references/canvas.md` become absolute `/home/core/...` paths,
-because the master's relative links only resolve inside the canonical tree.
+links in `references/canvas.md` become plain text with the canonical path,
+because neither the master's relative links nor host-absolute links resolve
+portably from this snapshot layout.
