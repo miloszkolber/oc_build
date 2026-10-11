@@ -128,10 +128,11 @@ pie, quadrant, requirement, gitGraph, C4, mindmap, timeline, sankey, xychart,
 block, packet, kanban, architecture, radar, treemap, venn, ishikawa, wardley and
 more. `HorizonControl` and `CostChart` share a planning horizon and compute
 upfront + monthly × months. Run `bun run preview` to serve a live gallery of
-every component (dark and light) for review. The preview applies synthetic theme
-snapshots through the SDK, including generic sans-serif and monospace fonts.
-The panel uses the actual host's font tokens. Preview matching does not establish
-native desktop parity. The preview also includes chart boundaries and 13 diagram
+every component (dark and light) for review. The preview defaults to captured
+Cursor Light/Dark guest-theme snapshots, including the host's system font stacks,
+through the SDK. The synthetic stress palette remains a separate fixture export.
+Snapshots do not track subsequent host preference changes and matching CSS does
+not establish native font resolution. The preview includes boundaries and 13 diagram
 families. `/panel-review.html` exercises the actual panel entrypoint with a
 synthetic SDK parent and disposable data, without reading or writing real files.
 
@@ -139,6 +140,16 @@ Development commands run in the agent sandbox. Serve the preview with
 `sandbox run --publish 8805:8805 -- sh -lc 'PORT=8805 bun run preview'`.
 Rebuild served assets after edits with
 `sandbox run -- bun scripts/preview.mjs --build-only`.
+
+For a like-for-like conversation review, build with
+`sandbox run -- bun scripts/preview.mjs --build-only --conversation-file <absolute-canvas-path>`.
+This validates and copies exactly that file, plus the packaged panel, into the
+preview output. Open `/conversation.html` for captured Cursor Light or
+`/conversation.html?theme=dark` for Cursor Dark. There is no gallery toolbar,
+preview stylesheet or separate renderer in this view. It loads the same packaged
+HTML, JS and CSS as the extension and supplies the copied JSON via a read-only
+SDK host. It never changes the conversation's file. Rebuild explicitly to refresh
+the snapshot. Only publish a conversation artifact the user approved for review.
 
 Charts encode every series twice. Series keep the single-hue accent ramp, and
 each one also carries a repeating pattern (solid, diagonal, dots, crosshatch,

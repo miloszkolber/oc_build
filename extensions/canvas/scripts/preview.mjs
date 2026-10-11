@@ -7,7 +7,7 @@ import { resolve } from 'node:path';
 const out = 'preview/dist';
 await mkdir(out, { recursive: true });
 await build({
-  entryPoints: [{ in: 'preview/entry.jsx', out: 'app' }, { in: 'src/panel.jsx', out: 'review-panel' }, { in: 'preview/review-host.js', out: 'review-host' }],
+  entryPoints: [{ in: 'preview/entry.jsx', out: 'app' }, { in: 'src/panel.jsx', out: 'review-panel' }, { in: 'preview/review-host.js', out: 'review-host' }, { in: 'preview/conversation-host.js', out: 'conversation-host' }],
   outdir: out,
   bundle: true,
   format: 'esm',
@@ -20,6 +20,17 @@ await build({
 await copyFile('panel/style.css', `${out}/style.css`);
 await copyFile('preview/index.html', `${out}/index.html`);
 await copyFile('preview/panel-review.html', `${out}/panel-review.html`);
+await copyFile('preview/conversation.html', `${out}/conversation.html`);
+const conversationIndex = process.argv.indexOf('--conversation-file');
+if (conversationIndex !== -1) {
+  const path = process.argv[conversationIndex + 1];
+  if (!path || path.startsWith('--')) throw new Error('--conversation-file requires an explicit Canvas JSON path');
+  const { parseArtifact } = await import('../src/catalog.js');
+  const content = await Bun.file(path).text();
+  parseArtifact(content);
+  await Bun.write(`${out}/conversation.canvas.json`, content);
+  await cp('dist/panel', `${out}/production`, { recursive: true });
+}
 await Bun.write(`${out}/review-panel.html`, (await Bun.file('panel/index.html').text()).replace('main.js', 'review-panel.js'));
 if (process.argv.includes('--fault-injection')) {
   await build({

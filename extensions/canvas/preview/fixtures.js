@@ -1,6 +1,10 @@
-// Synthetic review themes, not captured native desktop themes. Both review
-// surfaces apply them through the SDK, exactly as the production panel does.
-export function reviewTheme(dark = false) {
+import { hostThemes } from './host-themes.js';
+
+// Default review uses the user's captured host theme, through the real SDK.
+export const reviewTheme = (dark = false) => hostThemes[dark ? 'dark' : 'light'];
+
+// Retained as an explicit stress-test palette, not the parity-review default.
+export function syntheticReviewTheme(dark = false) {
   const [background, foreground, elevated, muted, border, primary, primaryText, success, successText, warning, warningText, error, errorText] = dark
     ? ['#151719','#e3e5ea','#1d2023','#949aa6','#2f3238','#6f9bff','#9db9ff','#4bbd97','#7fd4b6','#d8a53a','#e7c374','#e08494','#f4a6b5']
     : ['#ffffff','#242a36','#ffffff','#738096','#dde2eb','#3b6ef0','#2b57c8','#2f9e7a','#1f7a5d','#b8860b','#8a6408','#b83d4f','#a12d40'];
