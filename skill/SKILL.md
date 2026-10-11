@@ -22,7 +22,7 @@ description: "Use OpenChamber workspace surfaces and agent development container
 
 ## Boundaries
 
-- Real state lives outside the panel: conversations in `/data/.db/openchamber/chats`, canvases under `/data/.db/openchamber/canvas`, projects on disk. The panel is a view, not the source.
+- Real state lives outside the panel: conversations, canvases and projects on disk under the deployment's data directories. The panel is a view, not the source.
 - Never present the standalone Chromium MCP as the native desktop panel. Tabs, cookies and login state are not shared.
 - Importing a module here does not grant network, shell or model authority. Reporting and file access follow the extension's approved scope.
 - Panels that write files must write atomically and preserve unrelated content. Read-only panels must not mutate the source they display.

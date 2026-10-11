@@ -1,5 +1,13 @@
 # Repository workflow
 
+- Keep the repository host-neutral: no absolute host paths, deployment
+  hostnames, installed locations or environment-specific values in prose,
+  examples or guidance. Use repo-relative paths and role names
+  ("the configured canvas directory", "the local deployment docs").
+  Functional path constants in code and the spec scenarios that pin them are
+  exempt, as are frozen dated evidence ledgers (`extensions/canvas/VERIFICATION.md`,
+  `openspec/changes/history.md`). Host specifics belong in the local
+  deployment docs, not in any repository.
 - Read [openspec/README.md](openspec/README.md) and the affected capability spec before
   changing behavior. Confirm the contract against source and checks.
 - Use one scoped folder in `openspec/changes/` for nontrivial behavior changes:

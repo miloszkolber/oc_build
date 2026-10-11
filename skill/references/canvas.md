@@ -13,7 +13,7 @@ Use when creating, updating, inspecting or debugging an OpenChamber conversation
 
 One conversation owns one canvas. The panel follows the selected conversation, reads a single JSON file and renders it with trusted components. The panel never writes and never shows raw JSON.
 
-- File: `/data/.db/openchamber/canvas/<session-id>.canvas.json`.
+- File: `<canvas-dir>/<session-id>.canvas.json` under the configured canvas directory.
 - Session ids are normally safe filename segments. Unusual ids use `session-<16 hex>.canvas.json` (deterministic hash). The single source of truth is the extension's `src/session.js`.
 - Write atomically: write a temporary file, then replace. Never leave a half-written file.
 - A missing file is an empty canvas, not an error. Invalid JSON shows an error and keeps the last good render.
@@ -23,7 +23,7 @@ One conversation owns one canvas. The panel follows the selected conversation, r
 
 1. Resolve the exact destination from the panel request or known conversation context. Never guess a session ID from a remembered example. If the ID/path is unavailable, ask for the copied empty-state request.
 2. Read the existing artifact before editing. Preserve unrelated sections and use one writer for the conversation file. Keep a recoverable copy when replacing important content. The panel is not a versioned document store.
-3. Read the matching build's catalog and gallery example. Installed assets normally live under `/data/.db/openchamber/extensions/generative-canvas/`; source builds emit `extensions/canvas/dist/catalog.json` and `dist/examples/`. Locate them rather than assuming the development catalog is installed. Use exact props and limits, not the json-render playground catalog.
+3. Read the matching build's catalog and gallery example. Installed assets live under the installed extension directory; source builds emit `extensions/canvas/dist/catalog.json` and `dist/examples/`. Locate them rather than assuming the development catalog is installed. Use exact props and limits, not the json-render playground catalog.
 4. Choose components by the reading task, supply real labels/units and identify illustrative or estimated data. Compute arithmetic before authoring. `CostChart` alone calculates upfront + monthly × months.
 5. Validate a complete UTF-8 candidate before replacing the live file. In the extension source directory, run `sandbox run -- bun scripts/validate.mjs <candidate.canvas.json>`. If the validator is unavailable, check against the matching catalog and report that limit. JSON syntax alone is insufficient.
 6. Write the candidate to a unique temporary file in the destination directory and atomically rename it over the resolved file. Never expose a partial write. Use approved file access and do not widen permissions to bypass a denial.
@@ -80,7 +80,7 @@ A complete same-measure example (illustrative values, not live records):
 - Preserve honest geometry and data domains. Built-in chart data is nonnegative. Do not clamp negative values, replace missing values with zero or imply live measurements from example data. Use a labeled table or explain the unsupported view instead.
 - Keep structural diagrams technical: meaningful authored shapes, concise labels, restrained connections and host type. Do not rewrite topology just to resemble a screenshot. Charts inside Mermaid may use useful color without making structural nodes decorative.
 - Give each diagram a meaningful `title`. Put `accTitle:` and `accDescr:` after the Mermaid type line to name and explain relationships for assistive technology. Use `caption` for a visible takeaway. A family name or visual screenshot is not a relationship description.
-- If exact chart data is not readily available as text, include a compact `Table`/`KeyValue` or explanatory text alongside the visualization. Hover-only details are not a sufficient sole representation. For renderer changes, load the design accessibility and review procedures from the canonical tree (`/home/core/agents/skills/design/references/`) to check actual text and essential-mark contrast in both themes. (In-repo snapshot only: the master links these relatively; relative links cannot resolve from this snapshot layout, so they are plain text here. Re-sync must re-apply this transform.)
+- If exact chart data is not readily available as text, include a compact `Table`/`KeyValue` or explanatory text alongside the visualization. Hover-only details are not a sufficient sole representation. For renderer changes, load the design accessibility and review procedures from the canonical skill collection to check actual text and essential-mark contrast in both themes. (In-repo snapshot only: the master links these relatively; relative links cannot resolve from this snapshot layout, so they are plain text here. The snapshot also replaces host paths with role names; re-sync must re-apply both transforms.)
 
 ## User interaction and refresh
 

@@ -6,12 +6,8 @@ installed on the host. The standalone browser image (`../browser`) stays
 separate and distroless; this image is deliberately not distroless because a
 dev image needs a shell and package managers.
 
-Source lives here in `oc_build`. Host deployment is the `openchamber-sandbox`
-service in `/home/core/docker/openchamber/docker-compose.yaml` (build-only
-entry under the `build` profile, tagged `openchamber-sandbox:latest`) plus the
-`/usr/local/bin/sandbox` launcher installed from the `sandbox` wrapper in
-this directory. The former `docker/sandbox` host directory and cleanup timer
-are removed; run `sandbox clean` manually for leftovers.
+Source lives here in `oc_build`. Host deployment is the openchamber-sandbox
+Compose service plus the installed launcher; see the local deployment docs.
 
 ## Toolchains
 
@@ -69,10 +65,10 @@ fresh scratch directory. The container identity is pinned to uid/gid 1000
 
 Behaviour worth knowing:
 
-- The working directory must be under `/repo`, `/home/core` or
-  `/data/.db/openchamber`; anything else fails with a clear error instead of
+- The working directory must be under one of the launcher's configured
+  workspace roots; anything else fails with a clear error instead of
   silently running against the container's own filesystem.
-- All three roots are mounted read-write at their host paths.
+- All configured roots are mounted read-write at their host paths.
 - Containers run with `--init` (reaps orphans) and `no-new-privileges`.
 - `HOME` is the per-run scratch directory, so the host `~/.gitconfig` and
   `~/.npmrc` are reached through `GIT_CONFIG_GLOBAL` and `npm_config_userconfig`
@@ -90,7 +86,7 @@ The wrapper also mounts the **rootless** Docker socket
 (`/run/user/<SANDBOX_UID>/docker.sock`, read-only) and sets `DOCKER_HOST` when
 it exists, so the sandbox can build and run images without ever touching the
 host's rootful socket. The image does not include the wrapper; the installed
-copy is `/usr/local/bin/sandbox`.
+launcher copy holds the container-identity pin.
 
 ## Boundaries
 
@@ -101,7 +97,7 @@ Treat host credentials reachable under the mounted roots as exposed to whatever
 runs inside the sandbox.
 
 Host deployment (compose image entry, launcher install, rootless daemon) is
-documented in the host repository at `/home/core/docker/openchamber/README.md`.
+documented in the local openchamber deployment docs.
 
 ## Runtime routing and dev servers
 

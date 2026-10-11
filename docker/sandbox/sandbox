@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # Host launcher. The container's Docker endpoint is a separate rootless daemon.
 set -euo pipefail
-image="${SANDBOX_IMAGE:-openchamber-sandbox:latest}"
+image="${SANDBOX_IMAGE:-ghcr.io/miloszkolber/openchamber-sandbox:latest}"
 data="${SANDBOX_DATA:-/data/.db/openchamber/sandbox}"
 uid="${SANDBOX_UID:-1000}"
 gid="${SANDBOX_GID:-1000}"

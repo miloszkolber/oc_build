@@ -77,8 +77,8 @@ through what it can reach:
 The panel deliberately exposes no toolbar of its own; the request field lives
 only in the empty state.
 
-Core's shared `workspace` skill routes Canvas tasks to
-`/home/core/agents/skills/workspace/references/canvas.md`. It covers destination
+The host's shared `workspace` skill routes Canvas tasks to its Canvas
+reference. It covers destination
 resolution, catalog authoring, validation/atomic updates, chart/diagram choices,
 local controls and review. Other hosts can expose that contract through their
 agent instruction surface. A link alone does not load a skill or guarantee use.
@@ -86,9 +86,10 @@ The compose action remains available when no instruction was read.
 
 ## Agent contract
 
-Write a UTF-8 JSON document to the conversation file:
+Write a UTF-8 JSON document to the conversation file under the configured
+canvas directory:
 
-`/data/.db/openchamber/canvas/<session-id>.canvas.json`
+`<canvas-dir>/<session-id>.canvas.json`
 
 Prefer atomic replacement (write a temporary file, then rename). Session ids
 are normally safe filename segments, so `<session-id>.canvas.json` applies;
@@ -196,8 +197,8 @@ export its JSON elsewhere — the panel is a presentation surface, not storage.
 ## Build and install
 
 1. Run `bun install --frozen-lockfile`, `bun test`, then `bun run package` here.
-2. Install `dist/openchamber-generative-canvas-0.9.16.zip` through OpenChamber Extensions.
-3. Review and approve the `/data/.db/openchamber/canvas/**` filesystem and `sessions` declarations.
+2. Install `dist/openchamber-generative-canvas-0.9.17.zip` through OpenChamber Extensions.
+3. Review and approve the canvas data scope and `sessions` declarations.
 4. Reload the client to discover the updated Canvas entry. Canvas is panel-only;
    it declares no page surface.
 
@@ -212,7 +213,7 @@ bounds and malformed table rows. Files larger than the limit fail explicitly.
 
 ## Recovery and verification
 
-Back up `/data/.db/openchamber/canvas` with app data. Restore files without
+Back up the canvas data directory with app data. Restore files without
 renaming them. The store is independent of extension installation and project
 deletion. Before an upgrade, retain the prior ZIP/installed directory and data
 backup.
