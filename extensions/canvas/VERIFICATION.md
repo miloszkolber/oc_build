@@ -1,5 +1,16 @@
 # Canvas verification
 
+## Operator visual corrections — 2026-10-11
+
+Development source and rebuilt preview now use monochrome ordinary controls,
+top-right metric changes and a stronger heading. Charts keep the first five fills
+solid and add sparse patterns only when fills repeat. This supersedes the earlier
+always-textured chart direction below. Mermaid categorical surfaces are neutral
+and diagrams no longer upscale to fill cards. Tests: 56 passed, 320 assertions.
+Package and both generated examples passed. Native installed Canvas was not
+replaced. See [scoped evidence](../../openspec/changes/refine-canvas-visual-language/evidence.md)
+for executed browser checks and acceptance limits.
+
 ## 0.9.15 gap closure — 2026-10-11
 
 The previous six-entry and half-star checks were insufficient. This release

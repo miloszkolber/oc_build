@@ -30,6 +30,8 @@ function renderDiagram(id, code, dark, signal) {
         look: 'classic',
         theme: 'base',
         themeVariables: diagramThemeVariables(resolve, dark),
+        quadrantChart: { chartWidth: 360, chartHeight: 360, titleFontSize: 16 },
+        xyChart: { width: 520, height: 280 },
       });
       return await mermaid.render(id, code);
     } finally {
@@ -79,7 +81,13 @@ function Diagram({ props }) {
         if (!alive || !host.current) return;
         host.current.innerHTML = svg;
         const drawing = host.current.querySelector('svg');
-        if (drawing?.viewBox.baseVal.width) drawing.style.minWidth = `${drawing.viewBox.baseVal.width}px`;
+        if (/^\s*timeline\b/im.test(props.code)) drawing?.classList.add('mermaid-timeline');
+        if (drawing?.viewBox.baseVal.width) {
+          // Do not upscale Mermaid's width=100% drawings and their labels.
+          const width = `${drawing.viewBox.baseVal.width}px`;
+          drawing.style.width = width;
+          drawing.style.minWidth = width;
+        }
         setStatus('ready');
       }).catch(failure => {
         if (!alive) return;
@@ -165,11 +173,9 @@ function Table({ props }) {
 const TONE_COLORS = { neutral: 'var(--muted)', blue: 'var(--series-1)', green: 'var(--series-2)', amber: 'var(--series-3)', red: 'var(--oc-error, var(--series-5))' };
 const toneColor = (value, index) => TONE_COLORS[value] ?? colors[index % colors.length];
 const toneClass = value => `tone-${value ?? 'neutral'}`;
-// Series carry a pattern as well as a fill, so adjacent steps of the single-hue
-// ramp stay separable without relying on color alone. Pattern 1 stays solid.
-// Six patterns and five fills have coprime cycle lengths: no pair repeats
-// within the catalog's maximum of 30 entries.
-const patternOf = index => (index % 6) + 1;
+// The first ramp stays solid. Add a pattern only when the five fills repeat.
+// Six groups of five fills give 30 distinct pairs without texturing every mark.
+const patternOf = index => (Math.floor(index / colors.length) % 6) + 1;
 const PATTERNS = [
   null,
   <path key="diagonal" d="M-1 5L5-1M0 8L8 0" />,
@@ -325,7 +331,7 @@ const { registry } = defineRegistry(catalog, { components: {
   Heading: ({ props }) => <div className="dashboard-heading">{props.eyebrow && <p className="eyebrow">{props.eyebrow}</p>}<h1>{props.title}</h1>{props.subtitle && <p className="muted">{props.subtitle}</p>}</div>,
   Card: ({ props, children }) => <section className="card"><h2>{props.title}</h2>{props.description && <p className="muted">{props.description}</p>}{children}</section>,
   Text: ({ props }) => <p className={`plain-text${props.variant ? ` text-${props.variant}` : ''}`} style={props.align ? { textAlign: props.align } : undefined}>{props.text}</p>,
-  Metric: ({ props }) => <section className={`card metric-card ${toneClass(props.tone ?? 'blue')}`}><p className="metric-label">{props.label}</p><div className="metric-line"><strong className="metric">{props.value}</strong>{props.change && <span className="trend-badge">{props.change}</span>}</div>{props.detail && <p className="muted">{props.detail}</p>}</section>,
+  Metric: ({ props }) => <section className={`card metric-card ${toneClass(props.tone ?? 'blue')}`}><div className="metric-head"><p className="metric-label">{props.label}</p>{props.change && <span className="trend-badge">{props.change}</span>}</div><div className="metric-line"><strong className="metric">{props.value}</strong></div>{props.detail && <p className="muted">{props.detail}</p>}</section>,
   BarChart: ({ props }) => <Bars {...props} format={value => `${value.toLocaleString()}${props.unit ? ` ${props.unit}` : ''}`} />,
   LineChart, DonutChart, Diagram,
   Table,

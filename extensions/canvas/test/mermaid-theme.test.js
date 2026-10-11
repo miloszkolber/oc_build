@@ -53,6 +53,7 @@ test('themes object-shaped families rather than leaving hardcoded light defaults
   expect(vars.cynefin.complexBg).toBeTruthy();
   expect(typeof vars.wardley).toBe('object');
   expect(vars.wardley.backgroundColor).toBeTruthy();
+  expect(vars.xyChart.backgroundColor).toBe(vars.primaryColor);
 });
 
 test('builds a twelve-colour palette from --diagram-N', () => {

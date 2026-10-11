@@ -151,18 +151,19 @@ HTML, JS and CSS as the extension and supplies the copied JSON via a read-only
 SDK host. It never changes the conversation's file. Rebuild explicitly to refresh
 the snapshot. Only publish a conversation artifact the user approved for review.
 
-Charts encode every series twice. Series keep the single-hue accent ramp, and
-each one also carries a repeating pattern (solid, diagonal, dots, crosshatch,
-grid, vertical bars) that the legend repeats, so adjacent steps stay separable
-without relying on color. Six patterns cycle against five ramp fills, producing
-30 distinct automatic fill/pattern pairs within the catalog limit. Single-series
+Charts use a single-hue accent ramp with matching labeled legend marks and values.
+The first five series stay solid. Each later group of five adds a sparse pattern
+(diagonal, dots, crosshatch, grid, vertical bars), repeated in the legend.
+Six groups produce 30 distinct automatic fill/pattern pairs within the catalog limit. Single-series
 charts stay solid. Zero distribution values consume no colored extent, an
 empty gauge has no ring, and a fractional rating has proportionally clipped fill. `Diagram`
 renders wait for a rendered document, so a collapsed panel or hidden tab defers
 the render instead of failing it, and a transient Mermaid measurement failure is
 retried once. The wait is cancellable, not time-limited. Wide diagrams, tables,
 heatmaps and code retain local keyboard-scrollable regions instead of shrinking
-their text to fit. Unchanged polling preserves local controls. Compatible content
+their text to fit. Diagrams do not upscale to fill wide cards. Ordinary ratings,
+choices, checklists, steps and timeline dots use monochrome host foreground.
+Explicit status colors remain semantic. Unchanged polling preserves local controls. Compatible content
 updates preserve the chosen horizon. A new selection or removed option uses its
 authored default.
 

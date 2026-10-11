@@ -12,6 +12,12 @@ test('gallery renders every component without crashing', () => {
   expect(html).toContain('progress-track');
   expect(html).toContain('timeline');
 });
+test('metric trend belongs to its header rather than the value row', () => {
+  const artifact = parseArtifact({catalog_version:'1',title:'Metric',spec:{root:'r',elements:{r:{type:'Metric',props:{label:'Throughput',value:'1,024',change:'+12%'}}}}});
+  const html = renderToStaticMarkup(<Canvas artifact={artifact} months={12} setMonths={() => {}} />);
+  expect(html).toContain('class="metric-head"><p class="metric-label">Throughput</p><span class="trend-badge">+12%</span></div>');
+  expect(html).toContain('class="metric-line"><strong class="metric">1,024</strong></div>');
+});
 test('real registry renders deterministic 36-month chart and controls', () => {
   const html = renderToStaticMarkup(<Canvas artifact={parseArtifact(costExplorer)} months={36} setMonths={() => {}} />);
   expect(html).toContain('36 months');
@@ -36,7 +42,7 @@ test('line chart scales uniformly and the diagram announces a loading state', ()
   expect(html).toContain('Rendering diagram…');
   expect(html).toContain('aria-busy="true"');
 });
-test('multi-series charts pair every series with a non-color pattern', () => {
+test('first-ramp series stay solid with matching legend marks', () => {
   const artifact = parseArtifact({ catalog_version: '1', title: 'series', spec: { root: 'r', elements: {
     r: { type: 'Stack', props: {}, children: ['bars', 'comp', 'stack', 'donut'] },
     bars: { type: 'BarChart', props: { title: 'Bars', data: [{ label: 'a', value: 2 }, { label: 'b', value: 1 }, { label: 'c', value: 3 }] } },
@@ -45,10 +51,11 @@ test('multi-series charts pair every series with a non-color pattern', () => {
     donut: { type: 'DonutChart', props: { title: 'Donut', data: [{ label: 'p', value: 2 }, { label: 'q', value: 1 }, { label: 'r', value: 1 }] } },
   } } });
   const html = renderToStaticMarkup(<Canvas artifact={artifact} months={12} setMonths={() => {}} />);
-  expect(html).toContain('bar-fill pat-2');
-  expect(html).toContain('series-dot pat-3');
-  expect(html).toContain('stacked-seg pat-2');
-  expect(html).toContain('stack-seg pat-2');
+  expect(html).toContain('bar-fill pat-1');
+  expect(html).toContain('series-dot pat-1');
+  expect(html).toContain('stacked-seg pat-1');
+  expect(html).toContain('stack-seg pat-1');
+  expect(html).not.toContain('pat-2');
   expect(html).toContain('series-pattern');
   expect(html).toContain('donut-track');
   expect(html).toContain('Donut: p 50%, q 25%, r 25%');
@@ -126,14 +133,14 @@ test('a zero maximum reports the value instead of a misleading zero percent', ()
 test('a wrapped ramp stays separable past five series', () => {
   const segments = Array.from({length:6},(_,i)=>({label:`S${i+1}`,value:i+1}));
   const html = one('StackedBar',{title:'Six',segments});
-  expect(html).toContain('stacked-seg pat-6');
+  expect(html).toContain('stacked-seg pat-2');
   expect(html.match(/class="legend"/)).toBeTruthy();
   // Index 5 must not reuse index 0's solid mark.
-  expect(html).toContain('pat-6');
+  expect(html).toContain('pat-2');
   const donut = one('DonutChart',{title:'Six',data:segments});
-  expect(donut).toContain('-p6)');
+  expect(donut).toContain('-p2)');
   const series = one('StackedBarChart',{title:'Six',categories:['A'],series:segments.map(s=>({label:s.label,data:[s.value]}))});
-  expect(series).toContain('stack-seg pat-6');
+  expect(series).toContain('stack-seg pat-2');
 });
 
 test('automatic fill and pattern pairs do not repeat within catalog limits', () => {
