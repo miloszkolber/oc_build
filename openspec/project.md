@@ -3,20 +3,22 @@
 ## Scope
 
 `oc_build` packages an upstream OpenChamber web release, a standalone Chromium
-MCP server, a Canvas panel and a Rembric OpenCode V2 plugin. Repository renaming
-did not rename published products.
+MCP server, an agent development sandbox, a Canvas panel and a Rembric OpenCode
+V2 plugin. Repository renaming did not rename published products.
 
 | Deliverable | Source | Artifact |
 | --- | --- | --- |
 | Web app | `docker/openchamber/` | `ghcr.io/miloszkolber/openchamber` |
 | Browser MCP | `docker/browser/` | `ghcr.io/miloszkolber/openchamber-browser` |
+| Agent sandbox | `docker/sandbox/` | `ghcr.io/miloszkolber/openchamber-sandbox` |
 | Canvas | `extensions/canvas/` | `openchamber-generative-canvas-<version>.zip` |
 | Rembric plugin | `extensions/rembric/` | Self-contained `dist/rembric.js` |
 
-Agent sandbox work is owned by **artful-yak**, in `docker/sandbox/` and
-`.github/workflows/sandbox.yml`. Those paths are absent from this branch. Consult
-that branch's implementation and README instead of a competing plan here. Add its
-capability spec when integrating that work.
+The agent sandbox in `docker/sandbox/` provides container toolchains, shared
+dependency caches and per-run scratch so development does not depend on the host
+toolchain. Its contract is
+[specs/agent-sandbox/spec.md](specs/agent-sandbox/spec.md). Writable workspace
+mounts and rootless Docker are trust grants, not hostile-code isolation.
 
 ## Goals and boundaries
 

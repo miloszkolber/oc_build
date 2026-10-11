@@ -6,7 +6,6 @@ approved. Start a change only when its scope and authority are settled.
 | Area | State | Next evidence or decision |
 | --- | --- | --- |
 | Canvas desktop acceptance | Open | [Acceptance tasks](changes/accept-canvas-panel-on-desktop/tasks.md). MCP rendering is not native acceptance |
-| Agent sandbox | Owned by artful-yak | Review `docker/sandbox/README.md` on that branch. Do not plan a competing image or host-root Docker socket |
 | External OpenCode integration | Next investigation | Inventory actually advertised tools. Native app flags do not prove injection into externally managed OpenCode |
 | Base-image updates | Maintenance gap | Dependabot covers Bun packages and Actions, not Docker base versions. Weekly image rebuilds refresh mutable layers but do not detect major-version drift. Choose a mechanism only for a demonstrated need |
 | Native search | Disabled host feature | [Projection blocker and acceptance](references/runtime.md#search-projection-blocker). Requires a supported pre-serialization reader and rollout authorization |
