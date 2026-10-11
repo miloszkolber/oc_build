@@ -62,10 +62,8 @@ bun run deploy      # or: sh install.sh
 sh install.sh [plugin-dir]   # default: ${XDG_CONFIG_HOME:-$HOME/.config}/opencode/plugins
 ```
 
-On this host the deployed files are:
-
-- `/home/core/.config/opencode/plugins/rembric.js`
-- `/home/core/.config/opencode/plugins/rembric.NOTICE`
+On the host the deployed files are the plugin file and its NOTICE under the
+OpenCode plugin directory (see local deployment docs).
 
 OpenCode discovers `*.js` files directly under the plugin directory and reloads on change, so no `opencode.jsonc` plugin entry is needed. The Rembric MCP server is configured separately, pointing at the `/mcp` endpoint of the same origin:
 
@@ -74,9 +72,9 @@ OpenCode discovers `*.js` files directly under the plugin directory and reloads 
   "mcp": {
     "rembric": {
       "type": "remote",
-      "url": "https://core.mewa.sh:8787/mcp",
+      "url": "https://<rembric-host>:8787/mcp",
       "oauth": false,
-      "headers": { "Authorization": "Bearer {file:/etc/opencode-server/rembric.token}" }
+      "headers": { "Authorization": "Bearer {file:<token-file>}" }
     }
   }
 }
@@ -98,7 +96,8 @@ A `.rembric` file is dotenv-style and read from the session's working directory:
 PROJECT_SLUG=my-project
 ```
 
-The variables reach the OpenCode service through `EnvironmentFile=/etc/opencode-server/rembric.env`. A missing server URL or token never fails a session: the plugin disables its hooks and writes a `[rembric]` line to stderr.
+The variables reach the OpenCode service through its environment file (see
+local deployment docs). A missing server URL or token never fails a session: the plugin disables its hooks and writes a `[rembric]` line to stderr.
 
 ## Verification
 

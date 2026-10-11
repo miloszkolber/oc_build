@@ -19,7 +19,7 @@ Each workflow runs its own isolated image check before publication. This directo
 
 Pure distroless without any OS tools is not compatible with native terminals, Git SSH remotes, shebang scripts or terminal process cleanup. These small, explicitly consumed tools are the deliberate exception. Project language/package toolchains and optional integration credentials are not all bundled into the web server.
 
-Upstream rejects repositories rooted at the user's home directory even when Git itself detects them. The image applies `home-repository.patch`: `OPENCHAMBER_ALLOWED_HOME_REPOSITORY` opts in to exactly one existing home-root checkout, such as Core's `/home/core`. This is a local image setting, not an upstream environment variable. Unset/mismatched paths stay rejected. Filesystem-root detection and home/root VCS initialization guards remain unchanged. Restricted image checks cover the opt-in and both guards. The strict patch fails the build if the upstream implementation changes.
+Upstream rejects repositories rooted at the user's home directory even when Git itself detects them. The image applies `home-repository.patch`: `OPENCHAMBER_ALLOWED_HOME_REPOSITORY` opts in to exactly one existing home-root checkout, such as the deployment's own home repository. This is a local image setting, not an upstream environment variable. Unset/mismatched paths stay rejected. Filesystem-root detection and home/root VCS initialization guards remain unchanged. Restricted image checks cover the opt-in and both guards. The strict patch fails the build if the upstream implementation changes.
 
 Publishing does not itself deploy a container. Watchtower or an explicit host rollout does that.
 
@@ -52,7 +52,7 @@ Set `EXPECTED_VERSION` to the baked upstream version. No named build context or 
 
 Use read-only root, UID 1000, dropped capabilities, no-new-privileges, an init process, bounded executable `/tmp` tmpfs and 512 MB shared memory. Mount only browser configuration, not workspaces or app state. The isolated Chromium sandbox exception remains explicit through `OPENCHAMBER_BROWSER_NO_SANDBOX=1`.
 
-`OPENCHAMBER_BROWSER_MCP_TOKEN` is mandatory. Core uses authenticated loopback MCP on 3002 and its `/health` on the same port. The former guest API on 3001 is removed. Caddy exposes `https://core.mewa.sh:3003/mcp` with the same bearer token. Native OpenCode's MCP key is `browser`.
+`OPENCHAMBER_BROWSER_MCP_TOKEN` is mandatory. Deployments use authenticated loopback MCP on 3002 and its `/health` on the same port. The former guest API on 3001 is removed. Caddy exposes `https://<public-host>:3003/mcp` with the same bearer token. Native OpenCode's MCP key is `browser`.
 
 One temporary profile survives across MCP actions. Shutdown, crash recovery and 30-minute idle expiry remove it. Login persistence is not enabled. Existing destination grants remain enforced. Never put tokens in image layers, source, URLs or logs.
 

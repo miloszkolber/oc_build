@@ -8,9 +8,8 @@ about the newest upstream release.
 ## External OpenCode paths
 
 Containerized OpenChamber and native OpenCode must see workspace paths at the
-same absolute location. Core uses `/data/.db/openchamber` for state,
-`/data/.db/openchamber/chats` for managed Chats, and `/home/core` for home.
-The `/repo` and `/home/core` mounts remain important. Managed worktrees must use
+same absolute location. Deployments use a state directory with managed Chats
+beneath it, plus a home directory. The repo and home mounts remain important. Managed worktrees must use
 shared durable XDG data, not a container-only temporary directory.
 
 A healthy app and successful container-local file operation do not prove native

@@ -47,8 +47,8 @@ upstream package resolutions mean builds are **not bit-reproducible**.
 | Proposed behavior, tasks and evidence | One scoped folder in `openspec/changes/` |
 | Build/install/configuration commands | The affected package README |
 | Canvas render history | `extensions/canvas/VERIFICATION.md` |
-| Host deployment, credentials, recovery | `/home/core/docker/openchamber/` in the host repository |
-| Host agent guidance | `/home/core/agents/` |
+| Host deployment, credentials, recovery | Local deployment docs, outside this repository |
+| Host agent guidance | Host agent guidance collection, outside this repository |
 | Upstream app and desktop behavior | `openchamber/openchamber`, not this build repository |
 
 Publication does not itself deploy. Watchtower or an authorized host rollout
