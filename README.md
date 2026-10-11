@@ -14,3 +14,7 @@ This repository builds the OpenChamber web image and standalone distroless `open
 ## Build and release
 
 See [`docker/openchamber/README.md`](docker/openchamber/README.md) for image contents, release behavior, verification and local commands. Package-level build and install instructions are in each extension's README.
+
+## Documentation
+
+[`docs/`](docs/README.md) holds the specification-driven documentation set: current behavior in [`docs/specs/`](docs/specs/), proposed work in [`docs/changes/`](docs/changes/), and analysis in [`docs/explorations/`](docs/explorations/). Start at [`docs/README.md`](docs/README.md).
