@@ -6,9 +6,12 @@ installed on the host. The standalone browser image (`../browser`) stays
 separate and distroless; this image is deliberately not distroless because a
 dev image needs a shell and package managers.
 
-Source lives here in `oc_build`. Host deployment (launcher install, rootless
-Docker endpoint, cleanup timer) lives in the host repository under
-`docker/sandbox`.
+Source lives here in `oc_build`. Host deployment is the `openchamber-sandbox`
+service in `/home/core/docker/openchamber/docker-compose.yaml` (build-only
+entry under the `build` profile, tagged `openchamber-sandbox:latest`) plus the
+`/usr/local/bin/sandbox` launcher installed from the `sandbox` wrapper in
+this directory. The former `docker/sandbox` host directory and cleanup timer
+are removed; run `sandbox clean` manually for leftovers.
 
 ## Toolchains
 
@@ -97,8 +100,8 @@ host paths as uid 1000 — that is the intended price of building images there.
 Treat host credentials reachable under the mounted roots as exposed to whatever
 runs inside the sandbox.
 
-Host deployment (launcher install, rootless daemon, cleanup timer) is in the
-host repository at `/home/core/docker/sandbox`.
+Host deployment (compose image entry, launcher install, rootless daemon) is
+documented in the host repository at `/home/core/docker/openchamber/README.md`.
 
 ## Runtime routing and dev servers
 

@@ -57,7 +57,7 @@ sandbox run -- docker build -t project:check .
 5. Update this reference only if invocation changes. The tool inventory belongs
    to the image source and README, not a competing skill inventory.
 
-Commands and deployment: `/repo/oc_build/docker/sandbox/README.md` and
-`/home/core/docker/sandbox/README.md`. If source/image or the rootless endpoint
+Commands and deployment: `/repo/oc_build/docker/sandbox/README.md` and the
+`openchamber-sandbox` service section of `/home/core/docker/openchamber/README.md`. If source/image or the rootless endpoint
 is missing, report and repair through those owners. Do not fall back to
 installing development tooling on the host.
