@@ -5,7 +5,7 @@
 Provide container-owned development toolchains, reusable package caches and
 run-scoped temporary state without requiring new development tools on the host.
 Source and commands: [sandbox package](../../../docker/sandbox/README.md).
-Checks: image check, launcher regressions and dated change evidence. Writable
+Checks: image check and dated change evidence. Writable
 host mounts grant host-user access, not hostile-code isolation.
 
 ## Requirements
