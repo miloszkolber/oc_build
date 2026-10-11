@@ -1,91 +1,54 @@
-# Project: oc_build
+# Project context
 
-## Goals
+## Scope
 
-These are the outcomes the repository exists to produce, and the standard a
-change is measured against.
+`oc_build` packages an upstream OpenChamber web release, a standalone Chromium
+MCP server, a Canvas panel and a Rembric OpenCode V2 plugin. Repository renaming
+did not rename published products.
 
-| Goal | What it means in practice |
-| --- | --- |
-| One self-hosted OpenChamber shared by a solo operator and coding agents, on one host | Nothing here assumes a fleet, a second operator or a multi-tenant deployment |
-| Native desktop surfaces for browsing, review and agent-presented data | Reuse the client's own panels rather than building parallel ones |
-| Lean, reproducible images whose dependencies are monitored | Small images, watched base versions and a Dependabot surface that actually covers what the builds consume |
-| Agents can build, test and verify without hand-holding | A task's outcome depends on the repository, not on whatever toolchain happens to be installed |
-
-## What this repository is
-
-`oc_build` builds and publishes four deliverables from one repository:
-
-| Deliverable | Source | Published as |
+| Deliverable | Source | Artifact |
 | --- | --- | --- |
-| OpenChamber web app image | [`docker/openchamber/`](../docker/openchamber/) | `ghcr.io/miloszkolber/openchamber` |
-| Standalone browser MCP image | [`docker/browser/`](../docker/browser/) | `ghcr.io/miloszkolber/openchamber-browser` |
-| Canvas panel extension | [`extensions/canvas/`](../extensions/canvas/) | `openchamber-generative-canvas-<version>.zip` |
-| Rembric OpenCode V2 plugin | [`extensions/rembric/`](../extensions/rembric/) | `dist/rembric.js`, deployed into OpenCode's plugin directory |
+| Web app | `docker/openchamber/` | `ghcr.io/miloszkolber/openchamber` |
+| Browser MCP | `docker/browser/` | `ghcr.io/miloszkolber/openchamber-browser` |
+| Canvas | `extensions/canvas/` | `openchamber-generative-canvas-<version>.zip` |
+| Rembric plugin | `extensions/rembric/` | Self-contained `dist/rembric.js` |
 
-The repository was renamed from `openchamber` to `oc_build`. Product image and
-package names deliberately did not change, so published artifacts keep their
-identity across the rename.
+Agent sandbox work is owned by **artful-yak**, in `docker/sandbox/` and
+`.github/workflows/sandbox.yml`. Those paths are absent from this branch. Consult
+that branch's implementation and README instead of a competing plan here. Add its
+capability spec when integrating that work.
 
-## Layout
+## Goals and boundaries
 
-| Path | Purpose |
+- Support one self-hosted OpenChamber shared by an operator and coding agents.
+- Reuse native workspace/browser surfaces rather than adding another orchestrator.
+- Keep lean images, explicit dependencies and independently runnable build checks.
+- Make future changes reviewable through requirements, scenarios and evidence.
+
+The app consumes an **external** OpenCode service. It does not own OpenCode's
+native APIs, the desktop client or their feature guarantees. The browser MCP
+controls separate Chromium and shares no desktop tabs, cookies or login state.
+Canvas presents agent-authored files and never writes them. The Rembric package
+is an OpenCode plugin, not an OpenChamber guest extension.
+
+App and browser use distroless Node 22 at UID/GID 1000. The app adds explicit
+shell/Git/SSH/process tools. The browser adds Chromium and its dependency closure.
+Bun and esbuild are build tooling. Exact versions live in Dockerfiles, manifests,
+lockfiles and workflows, not a second inventory here. Mutable base tags, apt and
+upstream package resolutions mean builds are **not bit-reproducible**.
+
+## Owners
+
+| Subject | Owner |
 | --- | --- |
-| `docker/openchamber/` | App image, release automation, image checks and local build instructions |
-| `docker/browser/` | Active standalone Chromium MCP package, no extension panel or guest API |
-| `extensions/canvas/` | File-backed json-render Canvas panel, charts and interactive quick tools |
-| `extensions/rembric/` | Rembric OpenCode V2 plugin and its standalone build and install scripts |
-| `.github/workflows/` | App, browser and extension publication, plus the plugin bundle job |
-| `docs/` | This documentation set: [specs](specs/), [changes](changes/), [explorations](explorations/) |
+| Implemented behavior | `docs/specs/<capability>/spec.md` alongside source |
+| Proposed behavior, tasks and evidence | One scoped folder in `docs/changes/` |
+| Build/install/configuration commands | The affected package README |
+| Canvas render history | `extensions/canvas/VERIFICATION.md` |
+| Host deployment, credentials, recovery | `/home/core/docker/openchamber/` in the host repository |
+| Host agent guidance | `/home/core/agents/` |
+| Upstream app and desktop behavior | `openchamber/openchamber`, not this build repository |
 
-## Stack and toolchain
-
-| Concern | Current value |
-| --- | --- |
-| App and browser base | `gcr.io/distroless/nodejs22-debian12`, UID and GID 1000 |
-| Build toolchain | Bun 1.4.x, Node's built-in test runner, esbuild (build only) |
-| App runtime tools | Bash, Git, one BusyBox, SSH client and `ps`, each with its library closure |
-| CI | GitHub Actions, every action pinned to a commit SHA, `persist-credentials: false` |
-| Base-image pulls | Google's public `mirror.gcr.io` Docker Hub cache |
-| Dependency updates | Dependabot, weekly, for the two Bun directories and GitHub Actions |
-
-Builds are not bit-reproducible. Base images and transitive dependencies
-resolve at build time, so record the source revision and the deployed image IDs
-with every release.
-
-## Boundaries
-
-These are the constraints any change in this repository has to respect.
-
-| Boundary | Statement |
-| --- | --- |
-| One operator, one host | Core is a single self-hosted deployment shared by one operator and coding agents. Nothing here assumes a fleet. |
-| External OpenCode | The app image serves the web bundle and talks to OpenCode over HTTP. It never bundles OpenCode. |
-| Path parity | Workspace paths must exist at the same absolute path inside the container and on the host. See [specs/host-runtime](specs/host-runtime/spec.md). |
-| No second orchestrator | Reuse native OpenChamber and existing OpenCode agents. A change that adds a daemon, queue or always-on service needs a concrete unmet need. |
-| Browser separation | The standalone Chromium MCP never shares tabs, cookies or logins with the desktop browser panel. |
-| Agent surface, not storage | The Canvas panel presents data the agent writes. It never becomes an artifact library. |
-| Extensions are not sandboxes | Guest permissions are not an OS sandbox. Chromium and agent QA stay in the separate browser image. |
-| Authored data has owners | Lockfiles, designs, canvas files and chat data keep durable owners. Disposable profiles and caches do not replace them. |
-| No secrets in artifacts | Tokens never enter image layers, source, URLs or logs. |
-| Publication is not deployment | Publishing to GHCR does not deploy a container. Watchtower or an explicit host rollout does. |
-
-## Standing constraints on changes
-
-| Constraint | Reason |
-| --- | --- |
-| A new abstraction, option or dependency needs a current consumer | This repository stays lean; unused surface is a maintenance cost. |
-| Prefer surgical edits over surrounding rewrites | Four deliverables share CI conventions, and drift is expensive. |
-| Verification belongs with the work that needs it | Each change's `tasks.md` states how its tasks are checked. A final catch-up group hides gaps. |
-| Keep commands runnable locally and in Actions | CI parity is a requirement, not an aspiration. |
-
-## How documentation grows
-
-Specs describe the system as it is today. When a change lands, its delta specs
-merge into `specs/` and the change folder moves to `changes/archive/`. Analysis
-that has not become a decision lives in `explorations/`, and moves into a change
-folder only when it is authorized.
-
-The practical consequence: `specs/` starts complete for the capabilities that
-already exist and grows by delta. There is no bulk back-fill pass for code that
-nobody is changing, because nothing would keep it honest.
+Publication does not itself deploy. Watchtower or an authorized host rollout
+does. Keep tokens out of source, artifacts, URLs and diagnostics. Host mounts,
+integration permissions and sandbox access are trust grants, not OS isolation.

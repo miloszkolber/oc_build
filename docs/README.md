@@ -1,173 +1,89 @@
-# oc_build documentation
+# Documentation
 
-This documentation set follows [OpenSpec](https://github.com/Fission-AI/OpenSpec)
-principles. Two directories carry the weight: `specs/` states how the system works
-today, and `changes/` holds one folder per proposed modification. Completing a change
-merges its delta specs into `specs/` and moves the folder into `changes/archive/`
-with a date stamp. `explorations/` holds thinking that has not become a change yet.
+This repository uses [OpenSpec](https://github.com/Fission-AI/OpenSpec) to keep
+implemented behavior, proposed changes and verification separate. Start with
+[project.md](project.md) for scope and ownership.
 
-The four principles that shape every file here:
-
-```
-fluid not rigid         — update an artifact whenever reality changes, no phase gates
-iterative not waterfall — specs grow from real changes, not from an initial dump
-easy not complex        — the lightest form that stays verifiable
-brownfield-first        — deltas describe what changes, never the whole system
-```
-
-## Pick your path
-
-| I need to… | Go to |
+| Location | Maintained content |
 | --- | --- |
-| Understand what this repository builds and why | [project.md](project.md) |
-| See what is being worked on right now | [Status by change](#status-by-change) below |
-| Learn how a component actually behaves today | [`specs/`](specs/) |
-| Review a plan before any code is written | [`changes/<name>/proposal.md`](changes/) |
-| Build, run or verify something | the package README in [Document owners](#document-owners) |
-| Judge a tool or approach we have not adopted | [`explorations/`](explorations/) |
-| Write a new spec or change | [Conventions](#conventions) below |
+| [specs/](specs/) | Implemented repository contracts, grouped by capability |
+| [changes/](changes/) | Scoped work with intent, tasks and evidence. Behavior changes also carry requirement deltas |
+| [backlog.md](backlog.md) | Deferred work and branch ownership, not implementation authorization |
+| [references/runtime.md](references/runtime.md) | Host integration boundaries and the historical search blocker |
+| [config.yaml](config.yaml) | Context and rules for OpenSpec artifact instructions |
 
-## The map
+## Capability map
 
-```text
-docs/
-├── README.md                     # this file: the index, status and conventions
-├── project.md                    # what the repository is, its layout and its boundaries
-├── config.yaml                   # context and rules injected into every new artifact
-├── specs/                        # source of truth — how the system works today
-│   ├── app-image/spec.md         # OpenChamber web image and its tool exception set
-│   ├── browser-mcp/spec.md       # standalone distroless Chromium MCP image
-│   ├── canvas-panel/spec.md      # per-conversation read-only presentation panel
-│   ├── rembric-plugin/spec.md    # Rembric OpenCode V2 plugin
-│   ├── release-pipeline/spec.md  # GitHub Actions, GHCR publication and dependency monitoring
-│   ├── host-runtime/spec.md      # external OpenCode boundaries and the search blocker
-│   └── visual-coding/spec.md     # agent-surface parity contract and safeguards
-├── changes/                      # proposed modifications — one folder per change
-│   ├── <change-name>/
-│   │   ├── proposal.md           # why, what, impact
-│   │   ├── specs/<capability>/spec.md   # delta: ADDED / MODIFIED / REMOVED requirements
-│   │   ├── design.md             # technical approach (optional)
-│   │   ├── tasks.md              # implementation checklist
-│   │   └── .openspec.yaml        # schema and change metadata
-│   └── archive/
-│       └── YYYY-MM-DD-<name>/    # completed changes, deltas already merged
-└── explorations/                 # thinking that is not yet an authorized change
-    ├── visual-coding-phases.md   # P2–P6 phase contracts and their authorization gates
-    └── visual-tooling-survey.md  # tools reviewed and their disposition
-```
-
-## Status by change
-
-Status is a property of a change, not of a folder in `specs/`. An archived change
-carries no status: its deltas are already part of the truth.
-
-The vocabulary is fixed, so a status means the same thing in every change:
-
-| Status | Meaning |
-| --- | --- |
-| In progress | Active now |
-| Next | Agreed and unblocked |
-| Paused | Needs fresh authorization before it starts |
-| Complete | Done, merged and archived |
-
-A status only appears on an open change. Once a change is archived its deltas
-are in `specs/`, and the archive entry keeps the reasoning rather than a status.
-
-| Change | Capability | Status |
+| Capability | Implementation and commands | Verification owner |
 | --- | --- | --- |
-| [accept-canvas-panel-on-desktop](changes/accept-canvas-panel-on-desktop/proposal.md) | canvas-panel | In progress — operator acceptance |
-| [app-image-base-version-monitoring](changes/app-image-base-version-monitoring/proposal.md) | release-pipeline | Next |
-| [agent-development-container](changes/agent-development-container/proposal.md) | host-runtime | Next |
-| [native-agent-integration](changes/native-agent-integration/proposal.md) | host-runtime | Next |
-| [visual-qa-handoff](changes/visual-qa-handoff/proposal.md) | visual-coding | Paused — needs authorization |
-| [native-search-projection-repair](changes/native-search-projection-repair/proposal.md) | host-runtime | Paused — blocked on an upstream projection |
-| [artifact-evidence-retention](changes/artifact-evidence-retention/proposal.md) | release-pipeline | Paused |
+| [App image](specs/app-image/spec.md) | [docker/openchamber](../docker/openchamber/README.md) | Entrypoint regression and app image check |
+| [Browser MCP](specs/browser-mcp/spec.md) | [docker/browser](../docker/browser/README.md) | Real Chromium image check |
+| [Canvas panel](specs/canvas-panel/spec.md) | [extensions/canvas](../extensions/canvas/README.md) | Unit tests, example validation, [render evidence](../extensions/canvas/VERIFICATION.md) |
+| [Rembric plugin](specs/rembric-plugin/spec.md) | [extensions/rembric](../extensions/rembric/README.md) | Bundle export check. Lifecycle needs a running OpenCode/Rembric integration |
+| [Release pipeline](specs/release-pipeline/spec.md) | [.github/workflows](../.github/workflows/) | Release/latest tests and pre-publication image checks |
 
-### Standing obligations
+Specs state the contract, not a claim that every scenario has been executed.
+Each spec identifies source and checks. Keep runtime evidence dated and scoped.
+MCP Chromium checks do not establish native desktop acceptance.
 
-These are not projects and do not get a change folder. They are conditions that
-stay true while the repository lives, and they are enforced by the specs that
-state them.
+## Working a change
 
-| Obligation | Owner |
-| --- | --- |
-| Recheck cached base-image availability whenever a base version changes | [specs/app-image](specs/app-image/spec.md), [specs/browser-mcp](specs/browser-mcp/spec.md). Monitoring mechanism proposed in [app-image-base-version-monitoring](changes/app-image-base-version-monitoring/proposal.md) |
-| Extend agent guidance only when a new panel genuinely needs agent-facing rules | [specs/visual-coding](specs/visual-coding/spec.md) |
-| Revisit native search only with a supported pre-serialization projection | [specs/host-runtime](specs/host-runtime/spec.md), with the acceptance gate in [native-search-projection-repair](changes/native-search-projection-repair/proposal.md) |
+1. Read the affected spec and implementation. Use memory as a lead, not proof.
+2. For behavior changes, create `changes/<name>/proposal.md` with why, scope,
+   affected capabilities and status. Add `specs/<capability>/spec.md` deltas.
+3. Add technical design only for consequential choices. Track small, verifiable
+   tasks in `tasks.md`. Keep verification and documentation with the work they check.
+4. Review scope before implementation. Revise artifacts as evidence changes.
+   A proposal is not permission to deploy, restart services or begin paused work.
+5. Verify implementation against scenarios. Record commands, results and gaps
+   in `evidence.md`. A checkbox or structural validation is not runtime acceptance.
+6. Merge completed deltas into main specs, preserving unaffected requirements.
+   Validate the merged specs, then archive with `--skip-specs` under
+   `changes/archive/YYYY-MM-DD-<name>/` after review.
 
-## Document owners
+Use `## Purpose`, `## Requirements`, `### Requirement: Name`, and
+`#### Scenario: Name` in main specs. Requirements use SHALL or MUST and describe
+observable outcomes. Scenarios use **GIVEN**, **WHEN**, **THEN** and **AND**.
+Delta sections are ADDED, MODIFIED, REMOVED or RENAMED Requirements. MODIFIED
+replaces the **whole** requirement, including its retained scenarios.
 
-One owner per subject. A file outside `docs/` owns the commands for its own
-component; `docs/specs/` owns what that component must do.
+For acceptance-only or documentation-only work, use `skip_specs: true` in
+`.openspec.yaml` rather than inventing a behavior change. Small corrections need
+only a reviewed diff and checks. Do not manufacture archive history retrospectively.
 
-| Path | Owns |
-| --- | --- |
-| `docs/specs/**/spec.md` | Current behavior of one capability |
-| `docs/changes/**` | One proposed modification and its checklist |
-| `docs/explorations/**` | Analysis and options that are not yet a decision |
-| `docs/project.md` | Repository identity, layout and boundaries |
-| [`docker/openchamber/README.md`](../docker/openchamber/README.md) | App image contents, build commands, browser operation |
-| [`docker/browser/README.md`](../docker/browser/README.md) | Browser image build and MCP tool routing |
-| [`extensions/canvas/README.md`](../extensions/canvas/README.md) | Canvas catalog, agent contract, build and install |
-| [`extensions/canvas/VERIFICATION.md`](../extensions/canvas/VERIFICATION.md) | Executed Canvas checks per version |
-| [`extensions/rembric/README.md`](../extensions/rembric/README.md) | Plugin build, install, configuration and rollback |
-| [`README.md`](../README.md) | Repository entry point and layout |
+## Tooling
 
-External owners that this repository does not control, and that its specs must
-stay consistent with:
+OpenSpec discovers a root `openspec/` directory. The tracked `openspec -> docs`
+symlink exposes these same files to the CLI without a second documentation tree.
+Run from the repository root:
 
-| Owner | Owns |
-| --- | --- |
-| `/home/core/docker/openchamber/` | Core deployment, credentials, operation and recovery |
-| `/home/core/agents/AGENTS.md` | Always-loaded agent routing and the evidence boundary |
-| `upstream openchamber/openchamber` | The app the image bakes, and its patch points |
-
-## Conventions
-
-Requirements and scenarios follow the OpenSpec format so a reader can tell a
-contract from prose at a glance.
-
-| Element | Rule |
-| --- | --- |
-| `## Purpose` | One or two sentences on what the capability is for |
-| `### Requirement: <Name>` | One observable behavior, stated with SHALL, MUST, SHOULD or MAY |
-| `#### Scenario: <Name>` | A concrete case, with GIVEN, WHEN, THEN and AND steps |
-| Deltas | `## ADDED Requirements`, `## MODIFIED Requirements`, `## REMOVED Requirements` |
-
-Writing rules that apply to every file here:
-
-- State behavior, not implementation. Class names, library choices and execution order belong in `design.md`, `tasks.md` or the package README.
-- Keep one behavior per requirement. If a requirement needs three "and also" clauses, it is three requirements.
-- Name the case in the scenario title, so a reviewer sees what is covered at a glance.
-- Use RFC 2119 strength deliberately. SHALL and MUST are non-negotiable. SHOULD allows a justified exception. MAY is optional.
-- Keep the lightest form that stays verifiable. Cross-boundary, security, migration and publication changes earn more detail.
-- Right-size a change. One intent stated in a sentence. If the proposal reads like a list of unrelated features, split it.
-- Update in place instead of adding a parallel file. This set has one owner per subject.
-- Write in plain technical language with sentence-case headings and single-level lists.
-
-### Working a change
-
-```text
-explore        write or read exploration notes, no code
-propose        create changes/<name>/ with proposal.md and its delta specs
-review         read the proposal and the deltas before any code is written
-apply          work tasks.md, checking items off as they land
-sync           merge the deltas into specs/ while the change stays open
-archive        move the folder to changes/archive/YYYY-MM-DD-<name>/
+```sh
+bun scripts/check-docs.mjs
+OPENSPEC_TELEMETRY=0 bun x --bun @fission-ai/openspec@1.14.1 list --specs
+OPENSPEC_TELEMETRY=0 bun x --bun @fission-ai/openspec@1.14.1 validate --all --strict
 ```
 
-Dependencies between artifacts are enablers, not gates. Discover during
-implementation that the design was wrong, edit `design.md` and keep going.
-Realize the scope should shrink, update the proposal. Nothing locks.
+After review and **manual delta merge**, archive with:
 
-When a change is genuinely different work rather than a refinement, start a new
-folder instead of patching the old one. The test is simple: same intent and
-more than half the scope overlapping means update. A changed problem, an
-exploded scope, or an original that can be marked done on its own means start
-fresh.
+```sh
+OPENSPEC_TELEMETRY=0 bun x --bun @fission-ai/openspec@1.14.1 archive <name> --skip-specs
+```
 
-## Related documentation
+Do not use automatic spec-update archive with this alias on 1.14.1. It fails
+its final delta fingerprint check. Creation, instructions, validation and
+archive **without** spec updates were exercised in isolated fixtures. See
+[review evidence](changes/review-spec-driven-documentation/evidence.md).
+`--skip-specs` bypasses merging, not the requirement to merge and review behavior
+deltas first. Never use `--no-validate` to hide an archive failure.
 
-- [OpenSpec concepts](https://github.com/Fission-AI/OpenSpec/blob/main/docs/concepts.md) — the model this set follows
-- [OpenSpec writing guide](https://github.com/Fission-AI/OpenSpec/blob/main/docs/writing-specs.md) — what a strong requirement and scenario look like
-- [OpenSpec existing projects](https://github.com/Fission-AI/OpenSpec/blob/main/docs/existing-projects.md) — why specs grow one change at a time
+The lightweight check verifies local links, scenario structure, change metadata
+and task numbering. The upstream CLI checks its own parsing and validation rules.
+Neither verifies implementation. OpenSpec is development tooling, not an image
+dependency. No global installation or generated chat commands are required.
+The [documentation workflow](../.github/workflows/docs.yml) runs these checks and
+their regression tests for relevant documentation and implementation changes.
+
+To scaffold a behavior change with the CLI, run `openspec new change <name>` using
+the same pinned `bun x` invocation, then request `instructions proposal --change
+<name> --json`. Read `planningHome.root` from that response. Do not assume a
+local path if a future store is configured.

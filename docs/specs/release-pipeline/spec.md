@@ -1,277 +1,143 @@
-# Release pipeline specification
+# Release pipeline
 
 ## Purpose
 
-The release pipeline is the set of GitHub Actions workflows and monitoring
-configuration that discovers upstream releases, builds and checks images, and
-publishes them to GHCR. Its contract is that nothing is published without a real
-image check, that canonical tags stay immutable, that only the serialized
-`latest` job may publish the mutable alias, and that published provenance is
-verifiable after the fact.
+Discover eligible upstream releases, build/check independent deliverables and
+publish traceable artifacts while separating publication from host deployment.
 
-Source of truth for the workflows themselves: [`.github/workflows/`](../../../.github/workflows/).
+Source: [workflows](../../../.github/workflows/),
+[release discovery](../../../docker/openchamber/releases.mjs),
+[latest promotion](../../../docker/openchamber/latest.mjs),
+[Dependabot](../../../.github/dependabot.yml).
+Checks: [release tests](../../../docker/openchamber/releases.test.mjs),
+[latest tests](../../../docker/openchamber/latest.test.mjs) and image checks.
+No GitHub publication is established by running local unit tests.
 
 ## Requirements
 
-### Requirement: Workflow isolation
-
-Each deliverable SHALL be published by a workflow that runs only for the sources
-it needs.
-
-#### Scenario: App workflow triggers
-
-- GIVEN a push to `main`
-- WHEN the Build workflow's path filters are evaluated
-- Then it runs for app image sources, the Rembric plugin and the workflow file
-- And it does not run for browser-only or Canvas-only changes
-
-#### Scenario: Browser workflow triggers
-
-- GIVEN a push to `main`
-- WHEN the Browser image workflow's path filters are evaluated
-- Then it runs for `docker/browser/**` or the workflow file alone
-
-#### Scenario: Canvas workflow triggers
-
-- GIVEN a push or pull request
-- WHEN the Canvas extension workflow's path filters are evaluated
-- Then it runs for `extensions/canvas/**` or the workflow file
-- And it runs on pull requests as well as pushes
-
-#### Scenario: Scheduled and manual runs
-
-- GIVEN a schedule or manual dispatch
-- WHEN a workflow is triggered
-- Then the Build workflow runs hourly at minute 17 and weekly on Monday at 04:37
-- And the Browser workflow runs weekly on Monday at 04:37
-- And every workflow accepts manual dispatch
-
-### Requirement: Runner hardening
-
-Every workflow step SHALL minimize the credentials and permissions it carries.
-
-#### Scenario: Checkout hardening
-
-- GIVEN a workflow checks out the repository
-- WHEN `actions/checkout` runs
-- Then it is pinned to a full commit SHA
-- And `persist-credentials` is `false`
-
-#### Scenario: Least privilege
-
-- GIVEN a job runs
-- WHEN its permissions are read
-- Then each job declares only the permissions it needs
-- And the default at workflow level is `contents: read`
-
-### Requirement: Upstream release discovery
-
-The Build workflow SHALL discover every eligible upstream release rather than
-building a hardcoded list.
-
-#### Scenario: Discovery output
-
-- GIVEN discovery runs
-- WHEN it completes
-- Then it emits a build matrix and a count
-- And the image job is skipped when the count is zero
-
-#### Scenario: Newest-release rebuild
-
-- GIVEN a push to `main` or the weekly Monday 04:37 schedule fires
-- WHEN discovery runs
-- Then the newest app release is rebuilt even if a tag already exists
-
-#### Scenario: Release cutoff
-
-- GIVEN an upstream release published before the configured cutoff
-- WHEN discovery runs
-- Then it is not selected for building
-
-#### Scenario: Bootstrap seed
-
-- GIVEN an empty package cannot grant GHCR pull scope
-- WHEN an operator authorizes the bootstrap input
-- Then only the initial seed release is published
-
-#### Scenario: Recovery paths
-
-- GIVEN an operator needs read-only or rebuild recovery
-- WHEN they dispatch with the matching input
-- Then `verify_digest` reconciles a published tag without building or overwriting it
-- And `rebuild` republishes an already-published release with the current Dockerfile
-- And `release_id` scopes either operation to one release
-
-### Requirement: Canonical tag shape
-
-Published app images SHALL carry a version-scoped canonical tag that never
-changes once published.
-
-#### Scenario: Canonical tag
-
-- GIVEN an upstream release with version `2.2.0` and release id `395994070`
-- WHEN the image is built
-- Then it is tagged `2.2.0-r395994070`
-
-#### Scenario: Immutability
-
-- GIVEN a canonical tag has been published
-- WHEN a later job runs
-- Then the canonical tag's bytes are not replaced
-
-### Requirement: Latest promotion
-
-Only the serialized `latest` job SHALL publish the `latest` alias, and it SHALL
-promote exact registry bytes rather than rebuilding.
-
-#### Scenario: Candidate selection
-
-- GIVEN the `latest` job runs after acquiring its concurrency group
-- WHEN it selects a candidate
-- Then it selects the highest eligible stable release
-- And a prerelease is never a candidate
-
-#### Scenario: Exact promotion
-
-- GIVEN a candidate is selected
-- WHEN promotion runs
-- Then the exact registry bytes are promoted by digest
-- And the canonical tag is not rebuilt
-
-#### Scenario: Concurrency
-
-- GIVEN the `latest` job runs
-- WHEN it publishes
-- Then it holds a dedicated concurrency group with `cancel-in-progress: false`
-- And no other job may publish the alias
-
-#### Scenario: Prereleases excluded
-
-- GIVEN the newest upstream release is a prerelease
-- WHEN the candidate is selected
-- Then it is skipped and `latest` keeps pointing at the previous stable release
-
-#### Scenario: Failure recording
-
-- GIVEN promotion setup fails
-- WHEN the job exits
-- Then a setup failure is recorded with the recorded digest rather than silently continuing
-
-### Requirement: Build-origin verification
-
-Every published image SHALL have its provenance verified before and after
-publication.
-
-#### Scenario: Pre-push verification
-
-- GIVEN a built image
-- WHEN the build step finishes
-- Then its labels are inspected and verified against the release version and source commit
-- And the image check container runs before publication
-
-#### Scenario: Post-push verification
-
-- GIVEN an image was just pushed
-- WHEN the digest is known
-- Then the published manifest, package and repository privacy are verified
-
-#### Scenario: Published-image verification
-
-- GIVEN a published manifest digest
-- WHEN verification runs
-- Then the image is pulled by digest and its config labels are verified without starting it
-
-#### Scenario: Rename-era images
-
-- GIVEN an image published before the repository was renamed to `oc_build`
-- WHEN its source label is verified
-- Then the former source URL is accepted as equivalent provenance
-
-### Requirement: Plugin bundle job
-
-A push that touches the Rembric plugin SHALL verify the bundle before any
-artifact is retained.
-
-#### Scenario: Bundle verification
-
-- GIVEN the `plugin` job runs on a push
-- WHEN the bundle is built
-- Then its export contract is checked
-- And the notice, licences and digests are placed beside it
-- And `dist/build.json` records the build provenance
-
-#### Scenario: Retention failure
-
-- GIVEN the bundle directory is missing after the build
-- WHEN the artifact upload runs
-- Then the job fails with `if-no-files-found: error`
-
-### Requirement: Extension CI
-
-Canvas changes SHALL pass tests, packaging and example validation before an
-artifact is produced.
-
-#### Scenario: Canvas pipeline steps
-
-- GIVEN a Canvas change on a push or pull request
-- WHEN the Canvas workflow runs
-- Then it installs with `--frozen-lockfile`
-- And it runs `bun test`
-- And it runs the package step
-- And it validates every emitted example in `dist/examples/`
-- And only then does it upload the ZIP artifact
-
-#### Scenario: Pinned toolchain
-
-- GIVEN a workflow installs Bun
-- WHEN it runs
-- Then the Bun version is pinned explicitly
-- And the setup action is pinned to a commit SHA
-
-### Requirement: Artifact retention
-
-Published artifacts SHALL be traceable to the run that produced them.
-
-#### Scenario: Artifact naming
-
-- GIVEN a workflow uploads an artifact
-- WHEN it is stored
-- Then the name identifies the deliverable and the source commit
-- And the retained path is the built output directory
-
-### Requirement: Dependency monitoring
-
-Dependencies and actions SHALL be kept current by Dependabot with scoped update
-sets.
-
-#### Scenario: Bun ecosystems
-
-- GIVEN Dependabot configuration
-- WHEN it opens pull requests
-- Then it covers `/extensions/canvas` and `/docker/browser` weekly
-- And each directory is limited to five open pull requests
-- And each commit message carries a directory-specific prefix
-
-#### Scenario: Actions
-
-- GIVEN Dependabot configuration
-- WHEN it opens pull requests for GitHub Actions
-- Then it covers the repository root weekly with a `deps(actions)` prefix
-- And merging one keeps the SHA-pinned actions current
-
-#### Scenario: Merge path
-
-- GIVEN a Dependabot pull request is merged
-- WHEN CI runs
-- Then the normal tests and the package step run, so an update cannot land unverified
-
-### Requirement: Known reproducibility limits
-
-The pipeline SHALL document that its builds are not bit-reproducible.
-
-#### Scenario: Recorded metadata
-
-- GIVEN a build completes
-- When it is recorded
-- Then the source revision and the deployed image IDs are recorded alongside the release
-- And the documentation states that mutable base and dependency resolutions prevent bit-reproducibility
+### Requirement: Scoped workflow triggers
+Workflows SHALL build only their configured deliverables for relevant source changes.
+
+#### Scenario: Trigger matrix
+- **WHEN** workflow events are evaluated
+- **THEN** the following configured behavior applies
+
+| Workflow | Source trigger | Schedule (UTC) | Artifact |
+| --- | --- | --- | --- |
+| Build | `main` pushes matching app/Rembric paths | Hourly `:17`, Monday `04:37` | App image and push-only plugin artifact |
+| Browser | `main` pushes matching browser paths | Monday `04:37` | Browser image |
+| Canvas | Matching pushes to `main` and pull requests | None | Extension ZIP |
+| Documentation contracts | Matching pushes to `main` and pull requests | None | Local checker/tests and upstream strict validation |
+
+All four accept manual dispatch. App/browser workflows have no pull-request
+trigger. Do not infer pre-merge coverage for their dependency updates.
+
+### Requirement: Least-privilege automation
+Jobs SHALL use SHA-pinned actions, credential-free checkout and scoped permissions.
+
+#### Scenario: Build authority
+- **WHEN** a job checks out source
+- **THEN** `persist-credentials` is false and action references are full commit SHAs
+- **AND** package write access belongs only to publishing jobs, with default `contents: read`
+
+### Requirement: Complete eligible release discovery
+App discovery SHALL enumerate eligible releases without silently truncating a
+matrix or interpreting registry authorization failure as an absent image.
+
+#### Scenario: Eligibility and recovery
+- **WHEN** discovery runs normally
+- **THEN** it applies the cutoff/asset/version rules, skips verified completed releases and emits a matrix/count
+- **AND** zero candidates skip the image job
+- **WHEN** explicit bootstrap is authorized
+- **THEN** its exceptional seed is release `395994070` / `2.0.1` only
+
+#### Scenario: Deliberate rebuild
+- **WHEN** a relevant push or weekly rebuild runs
+- **THEN** the newest eligible stable release may be rebuilt
+- **AND** manual `rebuild` requires an explicit release ID
+- **AND** prepare rechecks version/asset identity before building
+
+### Requirement: Canonical app tag identity
+App publication SHALL identify upstream release/version with `<version>-r<releaseId>` tags.
+
+#### Scenario: Ordinary completion and rebuild
+- **WHEN** an already verified release is found in normal polling
+- **THEN** it is skipped
+- **WHEN** an explicit/forced rebuild is selected
+- **THEN** the same canonical tag may receive newly built bytes
+- **AND** a digest, not that tag alone, identifies an immutable artifact
+
+### Requirement: Checked app publication
+App publication SHALL verify the built image before pushing and verify the
+published digest/provenance afterward.
+
+#### Scenario: Publication sequence
+- **WHEN** an app candidate builds
+- **THEN** its labels identify source revision and upstream release, and the real image check passes before push
+- **AND** the pushed manifest digest, expected public package/repository visibility and pulled config labels are verified afterward
+- **AND** the former repository source URL remains accepted for rename-era images
+
+#### Scenario: Read-only recovery
+- **WHEN** `verify_digest` is dispatched with release ID and original source commit
+- **THEN** recovery checks the recorded published artifact without rebuilding or overwriting it
+
+### Requirement: Serialized stable latest promotion
+Only the app `latest` job SHALL promote the highest eligible stable app candidate
+to `latest` using the exact verified registry manifest bytes.
+
+#### Scenario: Promotion
+- **WHEN** the dedicated non-cancelling concurrency group is acquired
+- **THEN** candidate selection excludes prereleases and rechecks retained provenance
+- **AND** promotion uses the selected digest without rebuilding the canonical image
+- **AND** setup/promotion failures are reported instead of treated as success
+
+### Requirement: Independent browser publication
+Browser publication SHALL use its own build context and pass its real image
+check before pushing version/commit and latest tags.
+
+#### Scenario: Browser build
+- **WHEN** its workflow runs on `main`
+- **THEN** `<package-version>-<source-commit>` and `latest` are published after the image check
+- **AND** app release discovery, privacy reconciliation and serialized app promotion are not implied for this separate pipeline
+
+### Requirement: Checked extension artifacts
+Canvas and Rembric SHALL pass their declared local build contracts before CI retains artifacts.
+
+#### Scenario: Canvas package
+- **WHEN** the Canvas workflow runs
+- **THEN** frozen install, tests, packaging and every emitted example's validation precede ZIP upload
+- **AND** its artifact name is `openchamber-generative-canvas`, not a commit-suffixed name
+
+#### Scenario: Plugin package
+- **WHEN** the push-only plugin job runs
+- **THEN** release/latest/entrypoint checks and the plugin export contract run
+- **AND** the commit-named plugin artifact includes digest/provenance and fails upload if files are absent
+
+### Requirement: Scoped dependency monitoring
+Dependabot SHALL propose weekly Bun and Actions updates for its configured directories.
+
+#### Scenario: Update scope
+- **WHEN** Dependabot evaluates configuration
+- **THEN** it covers Canvas/browser Bun dependencies (five open PRs each) and root Actions (ten)
+- **AND** package dependencies remain exactly pinned
+- **AND** Docker base-version bumps are not covered by this configuration
+
+Image builds resolve mutable base/package inputs and are not bit-reproducible.
+Record source revision and deployed digests for recovery. Publication alone is
+not rollout, native-client acceptance or a passing host integration check.
+
+### Requirement: Documentation contract validation
+Documentation CI SHALL check the single planning tree with local structural
+checks and the pinned upstream OpenSpec validator.
+
+#### Scenario: Reviewable failure
+- **WHEN** a relevant push or pull request changes docs or implementation
+- **THEN** local link/scenario/metadata checks, their regression tests and upstream
+  `validate --all --strict` must pass
+- **AND** a missing scenario or implicit no-delta change fails instead of being accepted as complete
+
+#### Scenario: One planning home
+- **WHEN** OpenSpec resolves the repository's planning files
+- **THEN** `openspec` resolves to `docs`, including project configuration
+- **AND** validation creates no second copy of the specifications
+- **AND** structural success does not claim implemented behavior or native-client acceptance

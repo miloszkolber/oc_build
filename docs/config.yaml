@@ -1,61 +1,26 @@
 schema: spec-driven
 
 context: |
-  Repository: oc_build. Builds the OpenChamber web image, the standalone distroless
-  openchamber-browser MCP image, the Rembric OpenCode V2 plugin and the Canvas panel
-  extension. Formerly named openchamber; image and package names did not change.
-
-  Host: Core, one operator, one self-hosted deployment. OpenChamber runs
-  containerised from /opt/openchamber; OpenCode runs natively on the host. State
-  root is /data/.db/openchamber on both sides.
-
-  Stack: distroless Node 22 images at UID/GID 1000, Bun 1.4.x, Node's test runner,
-  esbuild build-only, GitHub Actions with every action pinned to a commit SHA.
-  Base images and the Dockerfile frontend pull from Google's public mirror.gcr.io
-  Docker Hub cache.
-
-  Known boundaries:
-  - The app image bundles only the OS tools the app genuinely uses: Bash, Git, one
-    BusyBox, SSH client and ps, each with its library closure. No package manager,
-    no Chromium, no guest browser provider.
-  - The standalone browser MCP controls its own Chromium. It never controls
-    OpenChamber's native Preview, terminal, sessions or worktrees.
-  - Canvas is a read-only presentation surface. The agent owns the JSON file; the
-    panel never writes it.
-  - Native search indexing stays disabled until upstream supports a bounded
-    content projection. See specs/host-runtime.
-  - Workspace paths must exist at the same absolute path in the container and on
-    the host.
-  - Publication is not deployment. Publishing to GHCR never rolls out a container.
-
-  Documentation language:
-  - Write requirements as observable behavior. Put internal mechanics in design.md,
-    tasks.md or the package README unless the mechanism is itself the contract.
-  - Prefer a positive statement of the user-facing outcome over a
-    implementation-negative SHALL.
-  - Requirements in this repository describe images, workflows and extension
-    contracts, so the mechanism often is the contract. State it as behavior with
-    evidence, not as a class diagram.
-
-  Style: plain technical language, sentence-case headings, single-level lists,
-  short tables for inventories. Separate independent clauses into sentences
-  instead of joining them with semicolons.
+  oc_build packages the upstream OpenChamber web app, standalone browser MCP,
+  Canvas panel and Rembric OpenCode V2 plugin. See docs/project.md for boundaries,
+  docs/specs/ for implemented contracts and package READMEs for commands.
+  Agent sandbox development is owned by artful-yak. Do not recreate its plan.
+  OpenCode and host deployment are external owners. Browser MCP is standalone
+  Chromium, not the native desktop client. Publication is not deployment.
 
 rules:
+  proposal:
+    - Name affected capabilities, scope, status and required authorization.
+    - Distinguish source-confirmed behavior from memory, proposals and live evidence.
   specs:
-    - Every requirement states one observable behavior with SHALL, MUST, SHOULD or MAY
-    - Every requirement carries at least one scenario that actually exercises it
-    - Cover the failure and boundary cases, not only the happy path
-    - Name the case in the scenario title
-    - Do not duplicate a package README's build commands; link to the owner instead
-    - Keep a gap or blocker as an explicit requirement with its current state, never as a silent omission
-  tasks:
-    - State how each task is verified: a test, a command or an observable result
-    - Land the tests and documentation a task group needs inside that group
-    - Include the CI parity check when a change touches a build or publication path
-    - Record the rollback step when a change touches deployed artifacts or host state
+    - Use observable SHALL or MUST requirements with concrete boundary scenarios.
+    - MODIFIED replaces a whole requirement. Preserve unaffected scenarios.
+    - Add source and verification pointers without duplicating build runbooks.
+    - Keep host configuration, historical incidents and unimplemented ideas out of main specs.
   design:
-    - Record the alternatives considered and why the chosen one won
-    - Call out anything that is deliberately not done, and why
-    - Note the rollback for each change that touches a published image or host state
-    - Keep published tag and digest names exact; they are the contract
+    - Record only consequential decisions, alternatives, risks and rollback.
+    - Do not select speculative tooling or widen host authority without approval.
+  tasks:
+    - Number checkboxes and state how completion is verified in each task.
+    - Keep tests and documentation with their implementation task group.
+    - Separate executed checks from source review and pending operator acceptance.
