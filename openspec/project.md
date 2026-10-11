@@ -18,7 +18,7 @@ The agent sandbox in `docker/sandbox/` provides container toolchains, shared
 dependency caches and per-run scratch so development does not depend on the host
 toolchain. Its contract is
 [specs/agent-sandbox/spec.md](specs/agent-sandbox/spec.md). Writable workspace
-mounts and rootless Docker are trust grants, not hostile-code isolation.
+mounts are trust grants, not hostile-code isolation.
 
 ## Goals and boundaries
 

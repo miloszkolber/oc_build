@@ -103,5 +103,16 @@ Added `skill/` to the repository (entry, maintainer guide, Canvas/browser/
 sandbox references), listed it in the root README layout and covered it with
 the documentation check. Documentation/layout change only; no capability
 requirement changed, no deployment authorized. The in-repo copy is a snapshot
-of the canonical `/home/core/agents/skills/workspace` guidance and must be
-re-synced when the master changes.
+of the canonical workspace guidance and must be re-synced when the master changes.
+
+## Sandbox drops Docker (2026-10-11)
+
+The sandbox is for reproducible development toolchains, not container builds.
+Removed the Docker CLI, compose and buildx from the image and from its check
+(the check now asserts their absence), and dropped `DOCKER_HOST` and the
+rootless socket bind mount from the launcher while keeping explicit host-runtime
+selection. Retired the host rootless Docker user unit, its socket and its 7 GB
+data root; the host rootful daemon and `default` context are unchanged. Verified
+with the image check, 9 launcher regressions (including a new "no Docker endpoint
+reaches the container" case), the documentation checks and a pulled GHCR image.
+Container builds now run on the host runtime directly.
