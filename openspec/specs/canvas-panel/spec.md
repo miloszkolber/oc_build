@@ -103,8 +103,8 @@ changes.
 #### Scenario: Redundant series encoding
 - **GIVEN** a chart component with more than one series
 - **WHEN** it renders
-- **THEN** each series carries a repeating pattern in addition to its fill
-- **AND** the legend uses the same pattern per series
+- **THEN** series have matching labeled legend marks and textual values
+- **AND** sparse patterns distinguish repeated automatic fills beyond the first five series
 - **AND** single-series charts stay solid
 
 #### Scenario: Scrollable region stability
@@ -146,7 +146,7 @@ for zero data or hiding a single observation.
 #### Scenario: Series beyond the ramp
 - **GIVEN** a component allows more series than the accent ramp has steps
 - **WHEN** the series index exceeds the ramp length
-- **THEN** six patterns cycle against five automatic ramp fills, giving distinct pairs within the 30-entry catalog limit
+- **THEN** each group of five fills uses the next of six patterns, giving distinct pairs within the 30-entry catalog limit
 - **AND** the legend repeats that mark
 - **AND** explicit semantic tone overrides remain authored choices, not unique series colors
 
@@ -181,4 +181,39 @@ The manifest SHALL declare only the panel, session capability and scoped filesys
 
 Canvas files have a durable owner independent of extension installation. Agents
 should replace them atomically and back them up with app data. Native desktop
-acceptance remains tracked in the [open change](../../changes/accept-canvas-panel-on-desktop/proposal.md).
+acceptance is recorded in the [archived acceptance](../../changes/archive/2026-10-11-accept-canvas-panel-on-desktop/evidence.md).
+
+### Requirement: Restrained visual encoding
+Canvas SHALL use neutral host foreground and surfaces for ordinary controls and
+diagram structure, reserving semantic hues for explicit meaning or state.
+
+#### Scenario: Ordinary display controls
+- **WHEN** ratings, choices, checklists, steps and timeline dots render
+- **THEN** they use monochrome marks with shape, surface and text distinguishing states
+- **AND** callouts have no decorative left stripe
+- **AND** metric changes occupy the top-right header without overlapping their labels
+
+#### Scenario: Chart textures
+- **WHEN** automatic chart series render
+- **THEN** the first five fills remain solid
+- **AND** sparse patterns distinguish later repetitions of the five-fill ramp
+- **AND** legends match chart marks and values remain available as text
+
+#### Scenario: Same-measure comparisons
+- **WHEN** BarChart or CostChart compares directly labeled values of the same measure
+- **THEN** the bars share one solid fill without category swatches or repeating textures
+- **AND** every row exposes its label and numeric value as semantic text
+- **AND** lengths keep their common zero baseline and proportional scale
+
+#### Scenario: Technical diagrams versus charts
+- **WHEN** structural Mermaid diagrams render
+- **THEN** connectors and frames are restrained and labels use consistent host typography
+- **WHEN** Mermaid pie charts render
+- **THEN** a quiet accent/neutral chart palette may distinguish parts from each other
+- **AND** chart labels and structure remain readable without applying UI semantic colors to categories
+
+#### Scenario: Diagram scale
+- **WHEN** a Mermaid diagram renders in a wide panel
+- **THEN** it does not upscale its intrinsic geometry to fill the card
+- **AND** categorical node surfaces are neutral rather than unrelated semantic hues
+- **AND** narrow panels preserve readable labels with local scrolling

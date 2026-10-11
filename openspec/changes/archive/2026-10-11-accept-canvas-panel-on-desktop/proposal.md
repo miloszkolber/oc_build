@@ -15,12 +15,12 @@ proposed. This acceptance-only change uses `skip_specs: true`.
 
 Check host theme, conversation/ancestor selection, controls, empty/error handling
 and file read-only behavior. Record results in `evidence.md`, distinguishing the
-native review from the existing [MCP evidence](../../../extensions/canvas/VERIFICATION.md).
+native review from the existing [MCP evidence](../../../../extensions/canvas/VERIFICATION.md).
 Confirmed defects need a scoped behavior delta or a separate fix change.
 
 ## Recovery
 
 Retain the prior installed extension and canvas backup. Restore that installation
 if necessary without deleting authored canvases. Installation and grants follow
-the [package README](../../../extensions/canvas/README.md). Do not reinstall or
+the [package README](../../../../extensions/canvas/README.md). Do not reinstall or
 change host state solely to perform this documentation review.

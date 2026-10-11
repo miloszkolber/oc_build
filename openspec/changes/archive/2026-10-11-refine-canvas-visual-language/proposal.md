@@ -14,6 +14,16 @@ Use solid fills for the first chart ramp and sparse patterns only when fills rep
 Keep Mermaid at intrinsic size, with neutral diagram surfaces and compact chart geometry.
 Preserve the read-only surface, catalog and rendering lifecycle.
 
+## What Changes
+
+- Renderer: top-right metric changes, stronger headings, uniform callout borders,
+  monochrome ordinary marks, single-measure bars in one solid accent, sparse
+  patterns only for repeated fills, restrained technical Mermaid styling with a
+  separate quiet pie palette (deltas in `specs/canvas-panel/spec.md`).
+- Release: approved source installed as Canvas 0.9.16.
+- Guidance: shared workspace module covers authoring, interaction and justified
+  chart color; not a spec change and owned by `/home/core/agents`.
+
 ## Status
 
 Implementation and visual verification complete. Operator grants visual and native

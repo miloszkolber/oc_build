@@ -9,7 +9,10 @@
 - [x] 1.7 Refine technical diagram connectors/type and separate chart fills from node surfaces.
 - [x] 1.8 Verify the second iteration and record accessibility evidence and limitations.
 - [x] 2.1 Record operator visual and native approval, including permission for justified chart color.
-- [ ] 2.2 Prepare a versioned release/install separately. Preserve the approval scope and do not infer upgraded asset parity.
+- [x] 2.2 Prepare a versioned release/install separately. Preserve the approval scope and do not infer upgraded asset parity.
+  - Installed 0.9.16 on 2026-10-11: 118-file ZIP, installed copy recursively
+    identical to `dist/`, manifest authority unchanged, 0.9.15 backup retained,
+    authored canvases untouched. Client reload to discover is operator-side.
 
 ## 3. Agent guidance
 

@@ -1,5 +1,23 @@
 # Canvas verification
 
+## 0.9.16 release — 2026-10-11
+
+Approved visual source installed as version 0.9.16 at
+`/data/.db/openchamber/extensions/generative-canvas/`. Version bumped from
+0.9.15 in `package.json`; README install step names the 0.9.16 ZIP.
+
+- 59 tests pass with 334 assertions. Package: 118 files.
+- ZIP SHA-256:
+  `04fbfedc176ad7404650536e088703978a818d6c101bb5e6c1fbe7cc25e1b00b`.
+  Panel main bundle SHA-256:
+  `27f5d11db4a4b55e8f60b1ec85733c9c785910287db79b42dd2b8e0678244979`.
+- Installed copy is recursively identical to `dist/` (excluding the ZIP).
+  Manifest authority (`openchamber` block) is identical to the 0.9.15 backup.
+  Backup: `/data/.db/openchamber/extension-backups/generative-canvas-0.9.15-final/`.
+- No authored canvas touched: the approved conversation artifact still hashes to
+  `86847c6e26c2e346164188223600d3c3b0b26777cf8438749337af94fccddf64`.
+  No service restarted. The client must be reloaded to discover the new version.
+
 ## Operator visual corrections — 2026-10-11
 
 Second iteration: simple BarChart/CostChart comparisons use one solid fill and
@@ -14,8 +32,8 @@ top-right metric changes and a stronger heading. Charts keep the first five fill
 solid and add sparse patterns only when fills repeat. This supersedes the earlier
 always-textured chart direction below. Mermaid categorical surfaces are neutral
 and diagrams no longer upscale to fill cards. Tests: 56 passed, 320 assertions.
-Package and both generated examples passed. Native installed Canvas was not
-replaced. See [scoped evidence](../../openspec/changes/refine-canvas-visual-language/evidence.md)
+Package and both generated examples passed. The approved source is now
+installed as 0.9.16 (see above). See [scoped evidence](../../openspec/changes/archive/2026-10-11-refine-canvas-visual-language/evidence.md)
 for executed browser checks and acceptance limits.
 
 ## 0.9.15 gap closure — 2026-10-11
