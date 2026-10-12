@@ -32,6 +32,11 @@ docker compose -f <deployment compose> run --rm -w "$PWD" openchamber-sandbox sh
 docker compose -f <deployment compose> run --rm -w "$PWD" openchamber-sandbox uv run --python 3.12 python -m unittest discover
 ```
 
+A deployment helper supports only its documented options. One that binds ports
+to loopback should reject unsupported leading options rather than forward them
+unchecked. Use Compose directly for advanced run options and explicitly bind
+published ports to loopback.
+
 ## Storage and boundaries
 
 - Package caches persist at `/cache`. Project dependency trees, virtual
