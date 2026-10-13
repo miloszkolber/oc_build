@@ -25,6 +25,7 @@ go version | grep -qE 'go1\.2[5-9]' || fail "unexpected go ($(go version))"
 gofmt -h >/dev/null 2>&1 || fail "gofmt missing"
 
 OPENSPEC_TELEMETRY=0 openspec --version | grep -qx '1.14.1' || fail "OpenSpec version"
+pnpm --version | grep -qx '11.28.5' || fail "pnpm version"
 
 [ "$BUN_INSTALL_CACHE_DIR" = /cache/bun ] || fail "bun cache env"
 [ "$GOMODCACHE" = /cache/go/mod ] || fail "GOMODCACHE env"

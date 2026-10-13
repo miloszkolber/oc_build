@@ -110,7 +110,7 @@ cp NOTICE dist/
 (cd dist && sha256sum rembric.js > SHA256SUMS)
 ```
 
-The same job also writes `dist/build.json` with the recorded OpenCode API version (`2.0.24`), the bun version and the bundle SHA-256. At runtime, `rembric.lifecycle` should be `active` under `GET /api/plugin`; the plugin was last load-verified against OpenCode 2.0.24 with Rembric 0.28.17.
+The same job also writes `dist/build.json` with the recorded OpenCode API version (`2.0.24`), the bun version and the bundle SHA-256. At runtime, `rembric.lifecycle` should be `active` under `GET /api/plugin`; the adapter was last load-verified against OpenCode 2.0.24 with Rembric 0.28.17. The vendored `core/` files were re-synced from Rembric plugin v0.34.0, whose breaking change replaces the single `memory.*` MCP tools with the `_batch` forms; live re-verification against the current Rembric server remains pending.
 
 ## Rollback
 

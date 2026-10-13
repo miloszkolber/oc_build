@@ -7,7 +7,9 @@ approved. Start a change only when its scope and authority are settled.
 | --- | --- | --- |
 | Canvas desktop acceptance | Accepted 2026-10-11 | [Acceptance record](changes/history.md#native-desktop-acceptance-2026-10-11). Operator-reported approval; detailed native checks explicitly waived |
 | External OpenCode integration | Next investigation | Inventory actually advertised tools. Native app flags do not prove injection into externally managed OpenCode |
-| Base-image updates | Maintenance gap | Dependabot covers Bun packages and Actions, not Docker base versions. Weekly image rebuilds refresh mutable layers but do not detect major-version drift. Choose a mechanism only for a demonstrated need |
+| Base-image updates | Mechanism active 2026-10-13 | A scheduled dependency-maintenance pass, configured by the operator outside this repository, reviews Docker base images, upstream release assets and vendored packages that Dependabot does not cover and keeps a high-water mark. Demonstrated need: [2026-10-13 found Bun and pnpm security drift](changes/maintenance-dependency-refresh/proposal.md) |
+| Rembric plugin live check | Deferred | [2026-10-13 re-vendored the protocol core to Rembric v0.34.0](changes/maintenance-dependency-refresh/evidence.md). Re-verify registration, recall and reporting against the running OpenCode/Rembric pair before relying on the batch-only tool names |
+| pnpm major refresh | Deferred | Sandbox stays on pnpm 11.28.5, which closes the current advisories. Evaluate pnpm 12 only when a consumer needs it |
 | Native search | Disabled host feature | [Projection blocker and acceptance](references/runtime.md#search-projection-blocker). Requires a supported pre-serialization reader and rollout authorization |
 | Disposable evidence cleanup | Deferred | Establish disposable paths and operator-approved limits before adding cleanup. Never remove authored data or selected exports |
 
