@@ -1,5 +1,5 @@
 # syntax=mirror.gcr.io/docker/dockerfile:1
-FROM mirror.gcr.io/oven/bun:1.4.2 AS bun-runtime
+FROM mirror.gcr.io/oven/bun:1.4.3 AS bun-runtime
 FROM mirror.gcr.io/library/debian:bookworm-slim AS build
 ARG OPENCHAMBER_SOURCE_REVISION=unknown
 RUN apt-get update \

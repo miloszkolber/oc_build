@@ -16,10 +16,10 @@ for them:
 
 | Runtime | Source | Why |
 | --- | --- | --- |
-| Bun 1.4.2 | `oven/bun:1.4.2` | doop, mewa_ui, oc_build extensions, mewa_sh |
+| Bun 1.4.3 | `oven/bun:1.4.3` | doop, mewa_ui, oc_build extensions, mewa_sh |
 | Go 1.25 | `golang:1.25-bookworm` | `toolkit/*` services, uncanny_lab |
 | Node 22 + npm | `node:22-bookworm-slim` base | OpenChamber bundle, rembric, QA tooling |
-| pnpm 11.1.2 | `npm install -g` at build | rembric monorepo (turbo) |
+| pnpm 11.28.5 | `npm install -g` at build | rembric monorepo (turbo) |
 | uv 0.13.0 + uvx | `ghcr.io/astral-sh/uv:0.13.0` | Python env/deps, uncanny_lab |
 | OpenSpec 1.14.1 | `@fission-ai/openspec@1.14.1` | spec-driven change validation |
 

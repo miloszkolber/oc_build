@@ -44,7 +44,7 @@ RUN set -eu; \
 # --- stage 2: the few host tools OpenChamber actually uses ---------------------
 # Collected with their shared-library closure so the runtime stage needs no
 # package manager. bash keeps the web terminal usable; git backs source control.
-FROM mirror.gcr.io/oven/bun:1.4.2 AS bun-runtime
+FROM mirror.gcr.io/oven/bun:1.4.3 AS bun-runtime
 
 FROM mirror.gcr.io/library/debian:bookworm-slim AS tools
 

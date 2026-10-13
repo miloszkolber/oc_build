@@ -1,6 +1,6 @@
 export const POST_TIMEOUT_MS = 3000;
 // Turn-START path: it must resolve before the model's first token, so its budget is a fraction of the background POST timeout.
-const RECALL_HINTS_TIMEOUT_MS = 200;
+const RECALL_HINTS_TIMEOUT_MS = 500;
 // The client cuts first: what never leaves the process cannot leak.
 const RECALL_PROMPT_MAX_CHARS = 500;
 const IDLE_DEBOUNCE_MS = 500;
@@ -17,13 +17,13 @@ export const FIRST_PROMPT_NUDGE =
 export const SESSION_ID_NUDGE_TEMPLATE =
   'rembric: sessionId="{{SESSION_ID}}" — pass it explicitly to memory.save/memory.session_summary/memory.save_prompt now, to guarantee correct attachment; never guess a different one.';
 export const RESUMED_READ_NUDGE =
-  'rembric: this session existed before this process attached to it — call memory.session_get before your next memory.session_summary write.';
+  'rembric: Resumed session: read memory.session_get_batch({ ids: [sessionId] }) / sessions[0] in full before writing memory.session_summary.';
 export const SESSION_OPENING_NUDGE_CORE =
   'New session — before you finish this turn, call memory.session_summary with a title and a single `## Goal` section describing what this session is for; the other five canonical headings are intentionally left out.';
 export const SESSION_OPENING_NUDGE = `rembric: ${SESSION_OPENING_NUDGE_CORE}`;
 export const POST_COMPACT_NUDGE_CORE =
   'Resumed from a compaction. BEFORE continuing:\n' +
-  '1. Call memory.session_get to read the stored summary.\n' +
+  '1. Call memory.session_get_batch({ ids: [sessionId] }) and read sessions[0] in full.\n' +
   '2. Call memory.session_summary({title, summary}) with the CURRENT COMPLETE state: sent `##` sections REPLACE their stored counterpart; omitted ones STAY.\n' +
   '   - title: ≤100 chars, not the cwd.\n' +
   '   - summary: ≤10000 chars. Use exactly these six Markdown level-2 headings, in this order, each on its own line (never one flat paragraph):\n## Goal\n## Accomplished\n## Decisions+why\n## Verified+how\n## Unfinished+why\n## Files\n' +
