@@ -17,8 +17,7 @@ Panel main bundle SHA-256:
 
 ## 0.9.16 release — 2026-10-11
 
-Approved visual source installed as version 0.9.16 at
-`/data/.db/openchamber/extensions/generative-canvas/`. Version bumped from
+Approved visual source packaged as version 0.9.16. Version bumped from
 0.9.15 in `package.json`; README install step names the 0.9.16 ZIP.
 
 - 59 tests pass with 334 assertions. Package: 118 files.
@@ -28,7 +27,7 @@ Approved visual source installed as version 0.9.16 at
   `27f5d11db4a4b55e8f60b1ec85733c9c785910287db79b42dd2b8e0678244979`.
 - Installed copy is recursively identical to `dist/` (excluding the ZIP).
   Manifest authority (`openchamber` block) is identical to the 0.9.15 backup.
-  Backup: `/data/.db/openchamber/extension-backups/generative-canvas-0.9.15-final/`.
+  Deployment backup locations are recorded outside this repository.
 - No authored canvas touched: the approved conversation artifact still hashes to
   `86847c6e26c2e346164188223600d3c3b0b26777cf8438749337af94fccddf64`.
   No service restarted. The client must be reloaded to discover the new version.
@@ -290,9 +289,8 @@ do not establish real-client fidelity or grant behavior.
 - Verified in MCP Chromium with a harness that mounts the real `panel.jsx`
   against a stubbed host: empty state in light and dark, the "Copied" state, and
   the expand/scroll/collapse reset (scrollTop 120 → 0).
-- Preview canvas written to
-  `/data/.db/openchamber/canvas/ses_edcc27679ffer6jLb9pJBgVkjS.canvas.json`
-  (validated) so the conversation shows the result.
+- Preview canvas validated. Conversation-specific artifact locations belong in
+  the deployment's records, not this package history.
 - 37 Bun tests pass; production ZIP `openchamber-generative-canvas-0.9.6.zip`.
 
 ## 0.9.5
@@ -361,9 +359,6 @@ do not establish real-client fidelity or grant behavior.
   handlers are still blocked. Front-matter and `%%{init}%%` remain rejected.
 - `Diagram` honours Mermaid `accTitle`/`accDescr` for its accessible name and
   description.
-- Worktree initialisation fixed separately on the host: `XDG_DATA_HOME` moved off
-  the container tmpfs to `/data/.db/openchamber/xdg-data` so the host OpenCode can
-  see the worktree directory (operator confirmed worktrees now come up).
 - 36 Bun tests pass, and the production ZIP
   `openchamber-generative-canvas-0.9.4.zip` builds (118 files). Checks are MCP
   Chromium, not native desktop acceptance.

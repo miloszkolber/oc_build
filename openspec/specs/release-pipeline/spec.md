@@ -2,16 +2,9 @@
 
 ## Purpose
 
-Discover eligible upstream releases, build/check independent deliverables and
-publish traceable artifacts while separating publication from host deployment.
+Discover eligible upstream releases, build/check independent deliverables and publish traceable artifacts while separating publication from host deployment.
 
-Source: [workflows](../../../.github/workflows/),
-[release discovery](../../../docker/openchamber/releases.mjs),
-[latest promotion](../../../docker/openchamber/latest.mjs),
-[Dependabot](../../../.github/dependabot.yml).
-Checks: [release tests](../../../docker/openchamber/releases.test.mjs),
-[latest tests](../../../docker/openchamber/latest.test.mjs) and image checks.
-No GitHub publication is established by running local unit tests.
+Source: [workflows](../../../.github/workflows/), [release discovery](../../../docker/openchamber/releases.mjs), [latest promotion](../../../docker/openchamber/latest.mjs), [Dependabot](../../../.github/dependabot.yml). Checks: [release tests](../../../docker/openchamber/releases.test.mjs), [latest tests](../../../docker/openchamber/latest.test.mjs) and image checks. No GitHub publication is established by running local unit tests.
 
 ## Requirements
 
@@ -30,8 +23,7 @@ Workflows SHALL build only their configured deliverables for relevant source cha
 | Canvas | Matching pushes to `main` and pull requests | None | Extension ZIP |
 | Documentation contracts | Matching pushes to `main` and pull requests | None | Local checker/tests and upstream strict validation |
 
-All five accept manual dispatch. App/browser workflows have no pull-request
-trigger. Do not infer pre-merge coverage for their dependency updates.
+All five accept manual dispatch. App/browser workflows have no pull-request trigger. Do not infer pre-merge coverage for their dependency updates.
 
 ### Requirement: Least-privilege automation
 Jobs SHALL use SHA-pinned actions, credential-free checkout and scoped permissions.
@@ -42,8 +34,7 @@ Jobs SHALL use SHA-pinned actions, credential-free checkout and scoped permissio
 - **AND** package write access belongs only to publishing jobs, with default `contents: read`
 
 ### Requirement: Complete eligible release discovery
-App discovery SHALL enumerate eligible releases without silently truncating a
-matrix or interpreting registry authorization failure as an absent image.
+App discovery SHALL enumerate eligible releases without silently truncating a matrix or interpreting registry authorization failure as an absent image.
 
 #### Scenario: Eligibility and recovery
 - **WHEN** discovery runs normally
@@ -69,8 +60,7 @@ App publication SHALL identify upstream release/version with `<version>-r<releas
 - **AND** a digest, not that tag alone, identifies an immutable artifact
 
 ### Requirement: Checked app publication
-App publication SHALL verify the built image before pushing and verify the
-published digest/provenance afterward.
+App publication SHALL verify the built image before pushing and verify the published digest/provenance afterward.
 
 #### Scenario: Publication sequence
 - **WHEN** an app candidate builds
@@ -83,8 +73,7 @@ published digest/provenance afterward.
 - **THEN** recovery checks the recorded published artifact without rebuilding or overwriting it
 
 ### Requirement: Serialized stable latest promotion
-Only the app `latest` job SHALL promote the highest eligible stable app candidate
-to `latest` using the exact verified registry manifest bytes.
+Only the app `latest` job SHALL promote the highest eligible stable app candidate to `latest` using the exact verified registry manifest bytes.
 
 #### Scenario: Promotion
 - **WHEN** the dedicated non-cancelling concurrency group is acquired
@@ -93,8 +82,7 @@ to `latest` using the exact verified registry manifest bytes.
 - **AND** setup/promotion failures are reported instead of treated as success
 
 ### Requirement: Independent browser publication
-Browser publication SHALL use its own build context and pass its real image
-check before pushing version/commit and latest tags.
+Browser publication SHALL use its own build context and pass its real image check before pushing version/commit and latest tags.
 
 #### Scenario: Browser build
 - **WHEN** its workflow runs on `main`
@@ -123,18 +111,14 @@ Dependabot SHALL propose weekly Bun and Actions updates for its configured direc
 - **AND** package dependencies remain exactly pinned
 - **AND** Docker base-version bumps are not covered by this configuration
 
-Image builds resolve mutable base/package inputs and are not bit-reproducible.
-Record source revision and deployed digests for recovery. Publication alone is
-not rollout, native-client acceptance or a passing host integration check.
+Image builds resolve mutable base/package inputs and are not bit-reproducible. Record source revision and deployed digests for recovery. Publication alone is not rollout, native-client acceptance or a passing host integration check.
 
 ### Requirement: Documentation contract validation
-Documentation CI SHALL check the single planning tree with local structural
-checks and the pinned upstream OpenSpec validator.
+Documentation CI SHALL check the single planning tree with local structural checks and the pinned upstream OpenSpec validator.
 
 #### Scenario: Reviewable failure
 - **WHEN** a relevant push or pull request changes docs or implementation
-- **THEN** local link/scenario/metadata checks, their regression tests and upstream
-  `validate --all --strict` must pass
+- **THEN** local link/scenario/metadata checks, their regression tests and upstream `validate --all --strict` must pass
 - **AND** a missing scenario or implicit no-delta change fails instead of being accepted as complete
 
 #### Scenario: One planning home

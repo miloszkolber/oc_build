@@ -1,7 +1,6 @@
 # Deferred work and ownership
 
-These entries preserve useful direction without pretending a design has been
-approved. Start a change only when its scope and authority are settled.
+These entries preserve useful direction without pretending a design has been approved. Start a change only when its scope and authority are settled.
 
 | Area | State | Next evidence or decision |
 | --- | --- | --- |
@@ -9,15 +8,14 @@ approved. Start a change only when its scope and authority are settled.
 | External OpenCode integration | Next investigation | Inventory actually advertised tools. Native app flags do not prove injection into externally managed OpenCode |
 | Base-image updates | Mechanism active 2026-10-13 | A scheduled dependency-maintenance pass, configured by the operator outside this repository, reviews Docker base images, upstream release assets and vendored packages that Dependabot does not cover and keeps a high-water mark. Demonstrated need: [2026-10-13 found Bun and pnpm security drift](changes/maintenance-dependency-refresh/proposal.md) |
 | Rembric plugin live check | Deferred | [2026-10-13 re-vendored the protocol core to Rembric v0.34.0](changes/maintenance-dependency-refresh/evidence.md). Re-verify registration, recall and reporting against the running OpenCode/Rembric pair before relying on the batch-only tool names |
+| Portable runtime defaults | Source limitation | The Rembric adapter still has a deployment-specific origin fallback, and Canvas has a fixed filesystem root and matching manifest grant. Documentation now requires an explicit Rembric origin and refers to the Canvas root symbolically. A separate behavior change must coordinate configuration, permissions and tests rather than pretending those constants are already portable |
 | pnpm major refresh | Deferred | Sandbox stays on pnpm 11.28.5, which closes the current advisories. Evaluate pnpm 12 only when a consumer needs it |
 | Native search | Disabled host feature | [Projection blocker and acceptance](references/runtime.md#search-projection-blocker). Requires a supported pre-serialization reader and rollout authorization |
 | Disposable evidence cleanup | Deferred | Establish disposable paths and operator-approved limits before adding cleanup. Never remove authored data or selected exports |
 
 ## Visual tooling direction
 
-These phases remain paused. Existing Doop and native OpenChamber surfaces are
-preferred. Prior tool surveys were source reviews, not usability or license
-guarantees. Recheck current capabilities and terms only when a concrete need arises.
+These phases remain paused. Choose the available design and native OpenChamber surfaces for the target deployment. Prior tool surveys were source reviews, not usability or license guarantees. Recheck current capabilities and terms only when a concrete need arises.
 
 | Phase | Acceptance boundary | Rollback |
 | --- | --- | --- |
@@ -27,7 +25,4 @@ guarantees. Recheck current capabilities and terms only when a concrete need ari
 | Reversible tuning | Token-backed CSS/text/layout preview with Reset and reviewed Apply to code. Remove overrides, reload and check responsive/keyboard/error states. Preserve the target framework | Discard experiment changes only |
 | Durable collaboration | Consider Penpot only if Doop/OpenPencil leave durable libraries/comments or collaboration unmet. Prove restart persistence, intended-board access, export and backup/restore. Inventory external calls | Export documents, retain backup, stop trial stack |
 
-Do not add an always-on orchestrator, Redis, duplicate HTML canvas or proprietary
-editor SDK to solve an unspecified gap. Tool-specific adapters need a real
-consumer. Snapshot HTML is not live component identity. Retain the target's
-anti-framing policy and keep design, preview and Git histories distinct.
+Do not add an always-on orchestrator, Redis, duplicate HTML canvas or proprietary editor SDK to solve an unspecified gap. Tool-specific adapters need a real consumer. Snapshot HTML is not live component identity. Retain the target's anti-framing policy and keep design, preview and Git histories distinct.

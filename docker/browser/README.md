@@ -2,17 +2,9 @@
 
 ## Independent image build
 
-Base images and the Dockerfile frontend use Google's public `mirror.gcr.io`
-Docker Hub cache. This avoids anonymous GitHub-runner HTTP 429 pulls without
-new credentials or dependency-version changes. Bun, Debian and frontend
-manifest digests matched Docker Hub when switched. Distroless is unchanged.
-Cache availability is not guaranteed; a miss fails explicitly. Recheck cached
-base versions when upgrading them.
+Base images and the Dockerfile frontend use Google's public `mirror.gcr.io` Docker Hub cache. This avoids anonymous GitHub-runner HTTP 429 pulls without new credentials or dependency-version changes. Bun, Debian and frontend manifest digests matched Docker Hub when switched. Distroless is unchanged. Cache availability is not guaranteed; a miss fails explicitly. Recheck cached base versions when upgrading them.
 
-This directory owns the browser Dockerfile, build context and image check.
-It does not require the app Dockerfile, upstream web bundle or host shell tools.
-`.github/workflows/browser.yml` publishes browser tags on browser-only changes,
-weekly rebuilds and manual dispatch. App changes do not trigger a browser build.
+This directory owns the browser Dockerfile, build context and image check. It does not require the app Dockerfile, upstream web bundle or host shell tools. `.github/workflows/browser.yml` publishes browser tags on browser-only changes, weekly rebuilds and manual dispatch. App changes do not trigger a browser build.
 
 From the repository root:
 
@@ -24,9 +16,7 @@ docker run --rm -i --network none --read-only --cap-drop ALL \
   --input-type=module < docker/browser/check-image.mjs
 ```
 
-The check exercises real Chromium, 38 MCP tools, proportional generic/system UI
-font resolution, responsive layout/color preference, authentication, navigation, screenshot, destination policy and
-cleanup. Runtime paths and image names remain unchanged.
+The check exercises real Chromium, 38 MCP tools, proportional generic/system UI font resolution, responsive layout/color preference, authentication, navigation, screenshot, destination policy and cleanup. Runtime paths and image names remain unchanged.
 
 This package is the active Chromium MCP backend. The custom Agent Browser extension has been removed. This package has no guest service, panel, extension manifest, install ZIP or surface routes.
 

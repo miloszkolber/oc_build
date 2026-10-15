@@ -62,8 +62,7 @@ bun run deploy      # or: sh install.sh
 sh install.sh [plugin-dir]   # default: ${XDG_CONFIG_HOME:-$HOME/.config}/opencode/plugins
 ```
 
-On the host the deployed files are the plugin file and its NOTICE under the
-OpenCode plugin directory (see local deployment docs).
+On the host the deployed files are the plugin file and its NOTICE under the OpenCode plugin directory (see local deployment docs).
 
 OpenCode discovers `*.js` files directly under the plugin directory and reloads on change, so no `opencode.jsonc` plugin entry is needed. The Rembric MCP server is configured separately, pointing at the `/mcp` endpoint of the same origin:
 
@@ -84,7 +83,7 @@ OpenCode discovers `*.js` files directly under the plugin directory and reloads 
 
 | Variable | Meaning |
 | --- | --- |
-| `REMBRIC_SERVER_URL` | Rembric origin, no `/mcp` suffix. Default `https://core.mewa.sh:8787` |
+| `REMBRIC_SERVER_URL` | Set the Rembric origin explicitly, without `/mcp`, e.g. `http://127.0.0.1:8787`. The adapter's legacy built-in fallback is deployment-specific, not a portable default |
 | `REMBRIC_API_TOKEN` | Bearer token. Without it the plugin loads but stays disabled and logs why |
 | `REMBRIC_PROJECT_SLUG` | Fallback project slug; a `.rembric` file in the session directory wins |
 | `REMBRIC_INJECT_ALWAYS` | `1` rebuilds the injected context every turn instead of caching it per session |
@@ -96,8 +95,7 @@ A `.rembric` file is dotenv-style and read from the session's working directory:
 PROJECT_SLUG=my-project
 ```
 
-The variables reach the OpenCode service through its environment file (see
-local deployment docs). A missing server URL or token never fails a session: the plugin disables its hooks and writes a `[rembric]` line to stderr.
+The variables reach the OpenCode service through its environment file (see local deployment docs). An unset server variable currently uses the adapter's legacy fallback. A missing required value after resolution disables the hooks and writes a `[rembric]` line to stderr instead of failing a session. Configure the origin explicitly rather than relying on that fallback.
 
 ## Verification
 

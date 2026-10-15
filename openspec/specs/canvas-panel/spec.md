@@ -2,27 +2,19 @@
 
 ## Purpose
 
-Render agent-authored, catalog-validated data for the selected conversation in
-a read-only OpenChamber panel without executing code supplied by the document.
+Render agent-authored, catalog-validated data for the selected conversation in a read-only OpenChamber panel without executing code supplied by the document.
 
-Source: [panel](../../../extensions/canvas/src/panel.jsx),
-[catalog](../../../extensions/canvas/src/catalog.js),
-[renderer](../../../extensions/canvas/src/renderer.jsx),
-[session paths](../../../extensions/canvas/src/session.js).
-Commands and component inventory: [README](../../../extensions/canvas/README.md).
-Checks: [tests](../../../extensions/canvas/test/), example validator and
-[render evidence](../../../extensions/canvas/VERIFICATION.md).
+Source: [panel](../../../extensions/canvas/src/panel.jsx), [catalog](../../../extensions/canvas/src/catalog.js), [renderer](../../../extensions/canvas/src/renderer.jsx), [session paths](../../../extensions/canvas/src/session.js). Commands and component inventory: [README](../../../extensions/canvas/README.md). Checks: [tests](../../../extensions/canvas/test/), example validator and [render evidence](../../../extensions/canvas/VERIFICATION.md).
 
 ## Requirements
 
 ### Requirement: Conversation-scoped file selection
-The panel SHALL read the resolved conversation's canvas and discard stale reads
-after a session switch.
+The panel SHALL read the resolved conversation's canvas and discard stale reads after a session switch.
 
 #### Scenario: Direct session path
 - **GIVEN** a safe nonempty session ID
 - **WHEN** the panel resolves its file
-- **THEN** it reads `/data/.db/openchamber/canvas/<id>.canvas.json`
+- **THEN** it reads `<canvas-root>/<id>.canvas.json`, using the runtime's `CANVAS_ROOT` constant
 - **AND** an unusual ID uses the deterministic `session-<16 hex>.canvas.json` fallback from `session.js`
 
 #### Scenario: Ancestor resolution
@@ -37,8 +29,7 @@ after a session switch.
 - **AND** late reads from a previous selection are discarded
 
 ### Requirement: Bounded trusted document
-The parser SHALL accept only the versioned Canvas schema within its size and
-structural limits.
+The parser SHALL accept only the versioned Canvas schema within its size and structural limits.
 
 #### Scenario: Valid artifact
 - **WHEN** UTF-8 JSON has `catalog_version: "1"`, `title` and `spec` with `root`/`elements`
@@ -46,8 +37,7 @@ structural limits.
 - **AND** the generated catalog, request-field vocabulary and examples derive from `catalog.js`
 
 #### Scenario: Rejected artifact
-- **WHEN** a file exceeds 256 KiB or has unknown types/props, actions, expressions,
-  events, invalid graph links, numeric bounds or malformed table rows
+- **WHEN** a file exceeds 256 KiB or has unknown types/props, actions, expressions, events, invalid graph links, numeric bounds or malformed table rows
 - **THEN** it fails explicitly instead of being partially interpreted
 - **AND** Mermaid directives/unsafe input are restricted before rendering with strict security settings
 
@@ -81,9 +71,7 @@ The empty state SHALL provide a copyable or insertable request targeting the res
 - **AND** insertion appends to the composer without automatically sending
 
 ### Requirement: Host-derived visual presentation
-Rendering SHALL follow host theme tokens and preserve readable component states,
-encoding meaning in more than color alone and holding layout while content
-changes.
+Rendering SHALL follow host theme tokens and preserve readable component states, encoding meaning in more than color alone and holding layout while content changes.
 
 #### Scenario: Theme and async diagrams
 - **WHEN** light/dark tokens change
@@ -122,8 +110,7 @@ changes.
 - **THEN** exactly one focus indicator is drawn, owned by the search field wrapper
 
 ### Requirement: Faithful chart boundaries
-Chart geometry SHALL represent validated values without inventing nonzero marks
-for zero data or hiding a single observation.
+Chart geometry SHALL represent validated values without inventing nonzero marks for zero data or hiding a single observation.
 
 #### Scenario: Zero and tiny distributions
 - **WHEN** distribution or stacked data includes zero or tiny positive values
@@ -151,8 +138,7 @@ for zero data or hiding a single observation.
 - **AND** explicit semantic tone overrides remain authored choices, not unique series colors
 
 ### Requirement: Readable panel-width layout
-Canvas content SHALL adapt to the containing panel width and keep wide data
-locally scrollable without forcing the entire canvas to scroll horizontally.
+Canvas content SHALL adapt to the containing panel width and keep wide data locally scrollable without forcing the entire canvas to scroll horizontally.
 
 #### Scenario: Narrow panel in a wide host
 - **WHEN** the containing canvas is narrower than its layout breakpoint
@@ -175,17 +161,14 @@ The manifest SHALL declare only the panel, session capability and scoped filesys
 
 #### Scenario: Install surface
 - **WHEN** the extension manifest is inspected
-- **THEN** it declares `sessions` and `/data/.db/openchamber/canvas/**`
+- **THEN** it declares `sessions` and the canvas-root file glob used by the runtime
 - **AND** no service, page, model key or network authority is declared
 - **AND** host filesystem enforcement, not this panel, owns canonical-path permission checks
 
-Canvas files have a durable owner independent of extension installation. Agents
-should replace them atomically and back them up with app data. Native desktop
-acceptance is recorded in the [change history](../../changes/history.md#native-desktop-acceptance-2026-10-11).
+Canvas files have a durable owner independent of extension installation. Agents should replace them atomically and back them up with app data. Native desktop acceptance is recorded in the [change history](../../changes/history.md#native-desktop-acceptance-2026-10-11).
 
 ### Requirement: Restrained visual encoding
-Canvas SHALL use neutral host foreground and surfaces for ordinary controls and
-diagram structure, reserving semantic hues for explicit meaning or state.
+Canvas SHALL use neutral host foreground and surfaces for ordinary controls and diagram structure, reserving semantic hues for explicit meaning or state.
 
 #### Scenario: Ordinary display controls
 - **WHEN** ratings, choices, checklists, steps and timeline dots render

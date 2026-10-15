@@ -1,71 +1,30 @@
 # Canvas
 
-OpenChamber 2.2.0+ panel extension for agent-presented data visualization. One
-conversation owns one canvas: the panel follows the currently selected
-conversation and renders its JSON with trusted components. JSON never supplies
-JavaScript or HTML, and the panel never shows JSON to the user. Uses
-json-render 0.21.0 and OpenChamber SDK 2.2.0.
+OpenChamber 2.2.0+ panel extension for agent-presented data visualization. One conversation owns one canvas: the panel follows the currently selected conversation and renders its JSON with trusted components. JSON never supplies JavaScript or HTML, and the panel never shows JSON to the user. Uses json-render 0.21.0 and OpenChamber SDK 2.2.0.
 
-Styling is derived entirely from the host theme variables written by
-`applyHostReady` (`--oc-bg`, `--oc-fg`, `--oc-elevated`, `--oc-muted`,
-`--oc-border`, `--oc-hover`, `--oc-primary`, `--oc-radius`, `--oc-font`, the
-`--oc-*` status colours and the `--oc-*-text` aliases). Visual language: cards
-carry hairline borders on elevated surfaces, one accent is reserved for
-selection and active states, host status colours mark state, and chart series
-read as a single accent-tinted ramp. Cards, tables, badges and controls use the
-same radius, borders and type scale as the rest of OpenChamber, so a canvas
-looks like part of the app rather than a dropped-in website. Mermaid diagrams
-are themed from the same tokens across their diagram types, so they too follow
-the host in light and dark. The panel renders its own empty state, error notice
-and controls from those tokens, matching the app's control metrics and focus
-treatment rather than embedding the imperative SDK UI kit.
+Styling is derived entirely from the host theme variables written by `applyHostReady` (`--oc-bg`, `--oc-fg`, `--oc-elevated`, `--oc-muted`, `--oc-border`, `--oc-hover`, `--oc-primary`, `--oc-radius`, `--oc-font`, the `--oc-*` status colours and the `--oc-*-text` aliases). Visual language: cards carry hairline borders on elevated surfaces, one accent is reserved for selection and active states, host status colours mark state, and chart series read as a single accent-tinted ramp. Cards, tables, badges and controls use the same radius, borders and type scale as the rest of OpenChamber, so a canvas looks like part of the app rather than a dropped-in website. Mermaid diagrams are themed from the same tokens across their diagram types, so they too follow the host in light and dark. The panel renders its own empty state, error notice and controls from those tokens, matching the app's control metrics and focus treatment rather than embedding the imperative SDK UI kit.
 
 ## Use
 
-Open Canvas from the rail. The panel is a read-only presentation: it renders
-the conversation's canvas and nothing else. There is no toolbar and no menu.
-Raw JSON is never shown, and the panel never writes the agent's file.
+Open Canvas from the rail. The panel is a read-only presentation: it renders the conversation's canvas and nothing else. There is no toolbar and no menu. Raw JSON is never shown, and the panel never writes the agent's file.
 
-An empty conversation shows a sparkle icon and the request the agent needs, as a
-read-only field: collapsed with a fade, expandable to a scrollable view, with a
-copy button that briefly confirms **Copied** and a neutral **Insert into
-composer** button below. Nothing is sent automatically — copy it or insert it,
-then send it yourself. There are no toasts; a read failure appears as a
-floating notice that does not move the canvas.
+An empty conversation shows a sparkle icon and the request the agent needs, as a read-only field: collapsed with a fade, expandable to a scrollable view, with a copy button that briefly confirms **Copied** and a neutral **Insert into composer** button below. Nothing is sent automatically — copy it or insert it, then send it yourself. There are no toasts; a read failure appears as a floating notice that does not move the canvas.
 
-Interaction is local and transient: horizon controls, table search and sort,
-and diagram rendering. The panel never writes back, so a change made here never
-rewrites the agent's file. To tell the agent where to write, expand the request
-field in the empty state and copy or insert it.
+Interaction is local and transient: horizon controls, table search and sort, and diagram rendering. The panel never writes back, so a change made here never rewrites the agent's file. To tell the agent where to write, expand the request field in the empty state and copy or insert it.
 
-Tables filter/sort locally. Charts, metric trends and responsive grids render
-with a dedicated sans-serif visualization hierarchy. Examples in
-`dist/examples/` are illustrative data, not live records.
+Tables filter/sort locally. Charts, metric trends and responsive grids render with a dedicated sans-serif visualization hierarchy. Examples in `dist/examples/` are illustrative data, not live records.
 
 ## Conversation context
 
-The SDK supplies the selected conversation in `onReady(context.session)` and
-publishes changes through `host.onSession(listener)`. The snapshot carries
-`id`, `title`, `busy` and optional `model`/`agent`; `null` means no
-conversation is selected. No message history is exposed.
+The SDK supplies the selected conversation in `onReady(context.session)` and publishes changes through `host.onSession(listener)`. The snapshot carries `id`, `title`, `busy` and optional `model`/`agent`; `null` means no conversation is selected. No message history is exposed.
 
-The panel polls the session file every three seconds while visible, plus on
-focus and on every conversation switch. Late reads after a switch are
-discarded. A missing file is an empty canvas, not an error. Invalid JSON shows
-an error banner and keeps the last good rendering for that conversation.
+The panel polls the session file every three seconds while visible, plus on focus and on every conversation switch. Late reads after a switch are discarded. A missing file is an empty canvas, not an error. Invalid JSON shows an error banner and keeps the last good rendering for that conversation.
 
-A subagent runs in a child session. With the `sessions` capability granted, the
-panel resolves the current session's ancestors once per switch and shows the
-top-level conversation's canvas, so a subagent task displays the canvas it is
-working for. If the capability is not granted, or the lookup fails, the panel
-falls back to the current session's own file. The agent request draft targets
-the same resolved file.
+A subagent runs in a child session. With the `sessions` capability granted, the panel resolves the current session's ancestors once per switch and shows the top-level conversation's canvas, so a subagent task displays the canvas it is working for. If the capability is not granted, or the lookup fails, the panel falls back to the current session's own file. The agent request draft targets the same resolved file.
 
 ## Advertising to agents
 
-The contract above only helps an agent that already knows Canvas exists. OpenChamber
-extensions cannot contribute skills or instruction files, so the panel advertises
-through what it can reach:
+The contract above only helps an agent that already knows Canvas exists. OpenChamber extensions cannot contribute skills or instruction files, so the panel advertises through what it can reach:
 
 | Mechanism | Who sees it | Behaviour |
 | --- | --- | --- |
@@ -74,47 +33,25 @@ through what it can reach:
 | `contributes.commands` / `actions` | User | Not used: a slash command resolves to an attach chip, not a prompt, so it cannot carry the contract cleanly |
 | Host skill or `AGENTS.md` | Agent | Outside the extension. Strongest autonomous discovery; recommended as a small follow-up |
 
-The panel deliberately exposes no toolbar of its own; the request field lives
-only in the empty state.
+The panel deliberately exposes no toolbar of its own; the request field lives only in the empty state.
 
-The host's shared `workspace` skill routes Canvas tasks to its Canvas
-reference. It covers destination
-resolution, catalog authoring, validation/atomic updates, chart/diagram choices,
-local controls and review. Other hosts can expose that contract through their
-agent instruction surface. A link alone does not load a skill or guarantee use.
-The compose action remains available when no instruction was read.
+The host's shared `workspace` skill routes Canvas tasks to its Canvas reference. It covers destination resolution, catalog authoring, validation/atomic updates, chart/diagram choices, local controls and review. Other hosts can expose that contract through their agent instruction surface. A link alone does not load a skill or guarantee use. The compose action remains available when no instruction was read.
 
 ## Agent contract
 
-Write a UTF-8 JSON document to the conversation file under the configured
-canvas directory:
+Write a UTF-8 JSON document to the conversation file under the configured canvas directory:
 
 `<canvas-dir>/<session-id>.canvas.json`
 
-Prefer atomic replacement (write a temporary file, then rename). Session ids
-are normally safe filename segments, so `<session-id>.canvas.json` applies;
-for anything unusual the panel reads `session-<16 hex>.canvas.json` using a
-deterministic FNV-1a hash — see `src/session.js`, the single source of truth.
-Nothing else in the directory is read by the panel.
+Prefer atomic replacement (write a temporary file, then rename). Session ids are normally safe filename segments, so `<session-id>.canvas.json` applies; for anything unusual the panel reads `session-<16 hex>.canvas.json` using a deterministic FNV-1a hash — see `src/session.js`, the single source of truth. Nothing else in the directory is read by the panel.
 
-Include exactly `catalog_version: "1"`, `title`, and
-`spec: { "root": "id", "elements": { ... } }`. Elements contain `type`, `props`
-and optional `children`.
+Include exactly `catalog_version: "1"`, `title`, and `spec: { "root": "id", "elements": { ... } }`. Elements contain `type`, `props` and optional `children`.
 
-Build emits `dist/catalog.json`, `dist/examples/cost-explorer.canvas.json`
-(interactive tools) and `dist/examples/gallery.canvas.json` (every component
-once). The gallery is the fastest pattern reference for agents. Validate with
-`bun scripts/validate.mjs <file.canvas.json>`. Source of truth: `src/catalog.js`.
+Build emits `dist/catalog.json`, `dist/examples/cost-explorer.canvas.json` (interactive tools) and `dist/examples/gallery.canvas.json` (every component once). The gallery is the fastest pattern reference for agents. Validate with `bun scripts/validate.mjs <file.canvas.json>`. Source of truth: `src/catalog.js`.
 
-This table is the whole Canvas vocabulary, not a subset of json-render. The
-authoritative inventory is the generated `dist/catalog.json`, and the panel's
-request field lists the same set. json-render is schema-agnostic, so the
-playground's sample components and actions are not a Canvas requirement; Canvas
-defines display components only and no actions, which keeps canvases read-only.
+This table is the whole Canvas vocabulary, not a subset of json-render. The authoritative inventory is the generated `dist/catalog.json`, and the panel's request field lists the same set. json-render is schema-agnostic, so the playground's sample components and actions are not a Canvas requirement; Canvas defines display components only and no actions, which keeps canvases read-only.
 
-Dependencies are pinned exactly. Dependabot opens weekly update pull requests
-for `/extensions/canvas`; merging one runs the normal tests, package step and
-ZIP artifact. No custom scanner is needed.
+Dependencies are pinned exactly. Dependabot opens weekly update pull requests for `/extensions/canvas`; merging one runs the normal tests, package step and ZIP artifact. No custom scanner is needed.
 
 | Group | Components |
 | --- | --- |
@@ -125,107 +62,40 @@ ZIP artifact. No custom scanner is needed.
 | Collections | Table, Checklist, Timeline, Steps |
 | Diagram and quick tools | Diagram, HorizonControl, CostChart |
 
-`Diagram` renders Mermaid DSL: flowchart, sequence, class, state, ER, gantt,
-pie, quadrant, requirement, gitGraph, C4, mindmap, timeline, sankey, xychart,
-block, packet, kanban, architecture, radar, treemap, venn, ishikawa, wardley and
-more. `HorizonControl` and `CostChart` share a planning horizon and compute
-upfront + monthly × months. Run `bun run preview` to serve a live gallery of
-every component (dark and light) for review. The preview defaults to captured
-Cursor Light/Dark guest-theme snapshots, including the host's system font stacks,
-through the SDK. The synthetic stress palette remains a separate fixture export.
-Snapshots do not track subsequent host preference changes and matching CSS does
-not establish native font resolution. The preview includes boundaries and 13 diagram
-families. `/panel-review.html` exercises the actual panel entrypoint with a
-synthetic SDK parent and disposable data, without reading or writing real files.
+`Diagram` renders Mermaid DSL: flowchart, sequence, class, state, ER, gantt, pie, quadrant, requirement, gitGraph, C4, mindmap, timeline, sankey, xychart, block, packet, kanban, architecture, radar, treemap, venn, ishikawa, wardley and more. `HorizonControl` and `CostChart` share a planning horizon and compute upfront + monthly × months. Run `bun run preview` to serve a live gallery of every component (dark and light) for review. The preview defaults to captured Cursor Light/Dark guest-theme snapshots, including the host's system font stacks, through the SDK. The synthetic stress palette remains a separate fixture export. Snapshots do not track subsequent host preference changes and matching CSS does not establish native font resolution. The preview includes boundaries and 13 diagram families. `/panel-review.html` exercises the actual panel entrypoint with a synthetic SDK parent and disposable data, without reading or writing real files.
 
-Development commands run in the agent sandbox. Examples below write
-`sandbox <command>` for a sandbox run; the workspace sandbox reference covers
-the Compose invocation and the optional alias. Serve the preview by publishing
-a loopback port before the service name:
+Development commands run in the agent sandbox. Examples below write `sandbox <command>` for a sandbox run; the workspace sandbox reference covers the Compose invocation and the optional alias. Serve the preview by publishing a loopback port before the service name:
 
 ```sh
 docker compose -f <deployment compose> run --rm -w "$PWD" \
   -p 127.0.0.1:8805:8805 openchamber-sandbox sh -lc 'PORT=8805 bun run preview'
 ```
 
-Rebuild served assets after edits with
-`sandbox bun scripts/preview.mjs --build-only`.
+Rebuild served assets after edits with `sandbox bun scripts/preview.mjs --build-only`.
 
-For a like-for-like conversation review, build with
-`sandbox bun scripts/preview.mjs --build-only --conversation-file <absolute-canvas-path>`.
-This validates and copies exactly that file, plus the packaged panel, into the
-preview output. Open `/conversation.html` for captured Cursor Light or
-`/conversation.html?theme=dark` for Cursor Dark. There is no gallery toolbar,
-preview stylesheet or separate renderer in this view. It loads the same packaged
-HTML, JS and CSS as the extension and supplies the copied JSON via a read-only
-SDK host. It never changes the conversation's file. Rebuild explicitly to refresh
-the snapshot. Only publish a conversation artifact the user approved for review.
+For a like-for-like conversation review, build with `sandbox bun scripts/preview.mjs --build-only --conversation-file <absolute-canvas-path>`. This validates and copies exactly that file, plus the packaged panel, into the preview output. Open `/conversation.html` for captured Cursor Light or `/conversation.html?theme=dark` for Cursor Dark. There is no gallery toolbar, preview stylesheet or separate renderer in this view. It loads the same packaged HTML, JS and CSS as the extension and supplies the copied JSON via a read-only SDK host. It never changes the conversation's file. Rebuild explicitly to refresh the snapshot. Only publish a conversation artifact the user approved for review.
 
-Simple BarChart and CostChart rows compare one measure: they use one solid accent,
-direct labels and exact values, without per-row color keys or textures.
-Chart color is allowed when justified by series/category identification, ordered
-magnitude, intentional highlighting or semantic state. It is not decoration and
-need not be monochrome. Use supported encodings and readable labels/values, not
-invented palette props. Status hues should not imply meaning absent from the data.
-Stacked and part-to-whole charts use a single-hue accent ramp with matching labeled legend marks and values.
-The first five series stay solid. Each later group of five adds a sparse pattern
-(diagonal, dots, crosshatch, grid, vertical bars), repeated in the legend.
-Six groups produce 30 distinct automatic fill/pattern pairs within the catalog limit. Single-series
-charts stay solid. Zero distribution values consume no colored extent, an
-empty gauge has no ring, and a fractional rating has proportionally clipped fill. `Diagram`
-renders wait for a rendered document, so a collapsed panel or hidden tab defers
-the render instead of failing it, and a transient Mermaid measurement failure is
-retried once. The wait is cancellable, not time-limited. Wide diagrams, tables,
-heatmaps and code retain local keyboard-scrollable regions instead of shrinking
-their text to fit. Diagrams do not upscale to fill wide cards. Ordinary ratings,
-choices, checklists, steps and timeline dots use monochrome host foreground.
-Explicit status colors remain semantic. Unchanged polling preserves local controls. Compatible content
-updates preserve the chosen horizon. A new selection or removed option uses its
-authored default.
+Simple BarChart and CostChart rows compare one measure: they use one solid accent, direct labels and exact values, without per-row color keys or textures. Chart color is allowed when justified by series/category identification, ordered magnitude, intentional highlighting or semantic state. It is not decoration and need not be monochrome. Use supported encodings and readable labels/values, not invented palette props. Status hues should not imply meaning absent from the data. Stacked and part-to-whole charts use a single-hue accent ramp with matching labeled legend marks and values. The first five series stay solid. Each later group of five adds a sparse pattern (diagonal, dots, crosshatch, grid, vertical bars), repeated in the legend. Six groups produce 30 distinct automatic fill/pattern pairs within the catalog limit. Single-series charts stay solid. Zero distribution values consume no colored extent, an empty gauge has no ring, and a fractional rating has proportionally clipped fill. `Diagram` renders wait for a rendered document, so a collapsed panel or hidden tab defers the render instead of failing it, and a transient Mermaid measurement failure is retried once. The wait is cancellable, not time-limited. Wide diagrams, tables, heatmaps and code retain local keyboard-scrollable regions instead of shrinking their text to fit. Diagrams do not upscale to fill wide cards. Ordinary ratings, choices, checklists, steps and timeline dots use monochrome host foreground. Explicit status colors remain semantic. Unchanged polling preserves local controls. Compatible content updates preserve the chosen horizon. A new selection or removed option uses its authored default.
 
-Mermaid structure uses neutral frames, restrained connectors and consistent host
-type. Chart fills are separate: pies can use quiet accent/neutral differentiation
-while their labels and boundaries retain contrast. Prefer direct labels and
-authored data context over decorative color keys. Structural diagram styling
-does not imply that all charts must be monochrome.
+Mermaid structure uses neutral frames, restrained connectors and consistent host type. Chart fills are separate: pies can use quiet accent/neutral differentiation while their labels and boundaries retain contrast. Prefer direct labels and authored data context over decorative color keys. Structural diagram styling does not imply that all charts must be monochrome.
 
-For retry diagnostics, build the review-only adapter with
-`sandbox bun scripts/preview.mjs --build-only --fault-injection` and open
-`/panel-review.html?faults`. After rendering a diagram, the guest exposes
-`diagramProbe`: `failures` queues error messages, `hold` pauses a render until
-`release()` is called, and `calls`/`maxActive` record attempts and concurrency.
-Use `svg element not in render tree` for the transient retry branch. This adapter
-is never bundled by the production package command.
+For retry diagnostics, build the review-only adapter with `sandbox bun scripts/preview.mjs --build-only --fault-injection` and open `/panel-review.html?faults`. After rendering a diagram, the guest exposes `diagramProbe`: `failures` queues error messages, `hold` pauses a render until `release()` is called, and `calls`/`maxActive` record attempts and concurrency. Use `svg element not in render tree` for the transient retry branch. This adapter is never bundled by the production package command.
 
-Catalog 1 remains compatible with 0.1.0/0.2.0 components. Files written by
-older global Canvas versions stay on disk but are no longer displayed; do not
-delete other files in the directory. To preserve something important, copy or
-export its JSON elsewhere — the panel is a presentation surface, not storage.
+Catalog 1 remains compatible with 0.1.0/0.2.0 components. Files written by older global Canvas versions stay on disk but are no longer displayed; do not delete other files in the directory. To preserve something important, copy or export its JSON elsewhere — the panel is a presentation surface, not storage.
 
 ## Build and install
 
 1. Run `bun install --frozen-lockfile`, `bun test`, then `bun run package` here.
 2. Install `dist/openchamber-generative-canvas-0.9.17.zip` through OpenChamber Extensions.
 3. Review and approve the canvas data scope and `sessions` declarations.
-4. Reload the client to discover the updated Canvas entry. Canvas is panel-only;
-   it declares no page surface.
+4. Reload the client to discover the updated Canvas entry. Canvas is panel-only; it declares no page surface.
 
-There is no extension service, background process, model key, generated-code
-execution or network authority. The panel reads and the agent writes through
-the host file API and the approved filesystem scope; canonical paths are
-compared so symlinks cannot widen it. The built-in browser is unchanged.
+There is no extension service, background process, model key, generated-code execution or network authority. The panel reads and the agent writes through the host file API and the approved filesystem scope; canonical paths are compared so symlinks cannot widen it. The built-in browser is unchanged.
 
-Canvases are bounded to 256 KiB of UTF-8. Structural validation rejects
-unknown props/types, actions/expressions/events, invalid graphs, numeric
-bounds and malformed table rows. Files larger than the limit fail explicitly.
+Canvases are bounded to 256 KiB of UTF-8. Structural validation rejects unknown props/types, actions/expressions/events, invalid graphs, numeric bounds and malformed table rows. Files larger than the limit fail explicitly.
 
 ## Recovery and verification
 
-Back up the canvas data directory with app data. Restore files without
-renaming them. The store is independent of extension installation and project
-deletion. Before an upgrade, retain the prior ZIP/installed directory and data
-backup.
+Back up the canvas data directory with app data. Restore files without renaming them. The store is independent of extension installation and project deletion. Before an upgrade, retain the prior ZIP/installed directory and data backup.
 
-See `VERIFICATION.md` for executed checks and the MCP Chromium/native desktop
-boundary. MCP Apps, arbitrary documents and simulations remain separate future
-capabilities.
+See `VERIFICATION.md` for executed checks and the MCP Chromium/native desktop boundary. MCP Apps, arbitrary documents and simulations remain separate future capabilities.

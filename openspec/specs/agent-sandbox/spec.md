@@ -2,19 +2,12 @@
 
 ## Purpose
 
-Provide container-owned development toolchains, reusable package caches and
-run-scoped temporary state without requiring new development tools on the host.
-Source and commands: [sandbox package](../../../docker/sandbox/README.md).
-Checks: image check and dated change evidence. Writable
-host mounts grant host-user access, not hostile-code isolation.
+Provide container-owned development toolchains, reusable package caches and run-scoped temporary state without requiring new development tools on the host. Source and commands: [sandbox package](../../../docker/sandbox/README.md). Checks: image check and dated change evidence. Writable host mounts grant host-user access, not hostile-code isolation.
 
 ## Requirements
 
 ### Requirement: Explicit container execution
-Development commands SHALL run through the deployment's Compose service as a
-non-root identity, from a mounted working directory. The sandbox container
-SHALL NOT receive a Docker endpoint, socket or the Docker CLI. Docker is a
-host-installed tool: container builds and Docker commands run on the host.
+Development commands SHALL run through the deployment's Compose service as a non-root identity, from a mounted working directory. The sandbox container SHALL NOT receive a Docker endpoint, socket or the Docker CLI. Docker is a host-installed tool: container builds and Docker commands run on the host.
 
 #### Scenario: Run a development command
 - **WHEN** a caller runs the sandbox service with a command
@@ -39,9 +32,7 @@ host-installed tool: container builds and Docker commands run on the host.
 - **AND** no other port is published.
 
 ### Requirement: Run-owned temporary state
-Each run SHALL receive a private temporary filesystem. Temporary files SHALL
-not persist between runs or survive container removal, and the sandbox SHALL
-not require host-side scratch directories, locks or stale-run scanning.
+Each run SHALL receive a private temporary filesystem. Temporary files SHALL not persist between runs or survive container removal, and the sandbox SHALL not require host-side scratch directories, locks or stale-run scanning.
 
 #### Scenario: Interrupted command
 - **WHEN** a run is interrupted
@@ -59,9 +50,7 @@ not require host-side scratch directories, locks or stale-run scanning.
 - **AND** no cleanup process can disturb another run.
 
 ### Requirement: Persistent dependency caches
-The image SHALL direct Bun, npm, pnpm, Go and uv dependency caches into /cache.
-Project dependency trees and authored outputs SHALL remain project-owned. The
-sandbox SHALL NOT own Docker or BuildKit caches.
+The image SHALL direct Bun, npm, pnpm, Go and uv dependency caches into /cache. Project dependency trees and authored outputs SHALL remain project-owned. The sandbox SHALL NOT own Docker or BuildKit caches.
 
 #### Scenario: Repeated build
 - **WHEN** a second run builds the same locked project
@@ -69,11 +58,7 @@ sandbox SHALL NOT own Docker or BuildKit caches.
 - **AND** each run has independent temporary state.
 
 ### Requirement: Recorded tool ownership
-New development tools SHALL be recorded in the sandbox image source, its
-README and verification rather than installed globally on the host. Agents
-SHALL use the workspace sandbox reference to build and test with those tools.
-Container-image build tooling is out of scope for this image: a task that needs
-to build or run containers uses host-installed Docker directly, not the sandbox.
+New development tools SHALL be recorded in the sandbox image source, its README and verification rather than installed globally on the host. Agents SHALL use the workspace sandbox reference to build and test with those tools. Container-image build tooling is out of scope for this image: a task that needs to build or run containers uses host-installed Docker directly, not the sandbox.
 
 #### Scenario: Missing development runtime
 - **WHEN** an agent needs a runtime absent from the image
@@ -86,8 +71,7 @@ to build or run containers uses host-installed Docker directly, not the sandbox.
 - **AND** the sandbox image is not extended with container-engine tooling.
 
 ### Requirement: Reviewed image publication
-CI SHALL build and check the image before publishing. Pull-request validation
-SHALL not publish images. Publication SHALL not imply deployment.
+CI SHALL build and check the image before publishing. Pull-request validation SHALL not publish images. Publication SHALL not imply deployment.
 
 #### Scenario: Proposed image change
 - **WHEN** a pull request changes docker/sandbox
