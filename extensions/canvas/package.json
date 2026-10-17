@@ -32,7 +32,7 @@
     "preview": "bun scripts/preview.mjs"
   },
   "dependencies": {
-    "@json-render/core": "0.21.0",
+    "@json-render/core": "0.21.1",
     "@json-render/react": "0.21.0",
     "@openchamber/sdk": "2.2.0",
     "mermaid": "12.1.0",
