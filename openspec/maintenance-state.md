@@ -31,6 +31,17 @@ Local revision reviewed: `d308ce4` (`main`). Environment: host Docker for image 
 - GHSA-vfj7-8cjw-p6xm (`braces`) reached the sandbox only through `@fission-ai/openspec@1.14.1` → `fast-glob`; the 1.14.3 dependency set removes it.
 - pnpm: the 11.28.6 security entry above. The 11.1.2 advisories closed on 2026-10-13 remain closed.
 
+### Published and merged in this run
+
+| Item | Reference |
+| --- | --- |
+| Local revision reviewed | `d308ce4` (`main` before this run) |
+| Routine fix commit | `08e03f6` on `main` |
+| Checklist in CI | Documentation contracts run `39198568876`, Sandbox image run `39198568981`, both `push` and successful |
+| Republished sandbox image | `ghcr.io/<owner>/openchamber-sandbox:sha-08e03f69a7516a525a0d59ddf5e103fc8f38819c` and `:latest`, manifest digest `sha256:baf1f9c70e012c51596b9e03a3bca39c886bfe69a2da0308d87e014fb90b0742` |
+| App image, promoted by the pipeline | `2.4.0-r415482841`, manifest digest `sha256:ba91239d711b9ed0184a65de4a228cb7857ce1003b476d1092cf9689e85e29c8` |
+| Held for operator input | `maintenance/go-toolchain-line-2026-10-19`, commit `9f5725d`, local only, not pushed |
+
 ### Failed or inaccessible sources
 
 - The GHCR and GCR registry HTTP APIs answer 401 without a token; image manifests were read with `docker manifest inspect` / `docker buildx imagetools inspect` instead.
