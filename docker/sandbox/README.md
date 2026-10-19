@@ -13,9 +13,9 @@ Copied from pinned upstream images so the runtime needs no package downloader fo
 | Bun 1.4.3 | `oven/bun:1.4.3` | doop, mewa_ui, oc_build extensions, mewa_sh |
 | Go 1.25 | `golang:1.25-bookworm` | `toolkit/*` services, uncanny_lab |
 | Node 22 + npm | `node:22-bookworm-slim` base | OpenChamber bundle, rembric, QA tooling |
-| pnpm 11.28.5 | `npm install -g` at build | rembric monorepo (turbo) |
-| uv 0.13.0 + uvx | `ghcr.io/astral-sh/uv:0.13.0` | Python env/deps, uncanny_lab |
-| OpenSpec 1.14.1 | `@fission-ai/openspec@1.14.1` | spec-driven change validation |
+| pnpm 11.28.6 | `npm install -g` at build | rembric monorepo (turbo) |
+| uv 0.13.1 + uvx | `ghcr.io/astral-sh/uv:0.13.1` | Python env/deps, uncanny_lab |
+| OpenSpec 1.14.3 | `@fission-ai/openspec@1.14.3` | spec-driven change validation |
 
 These are versioned tags, not immutable digest pins. Mutable tags and Debian package resolution mean the build is not bit-reproducible. The build inventory records the versions actually assembled.
 
@@ -100,8 +100,6 @@ New reusable development tools belong in this Dockerfile, README and image check
 docker build -t openchamber-sandbox:check docker/sandbox
 docker run --rm -i --network none --entrypoint bash openchamber-sandbox:check \
   /usr/local/share/sandbox/check-image.sh
-docker run --rm --network none --volume "$PWD:/repo" --workdir /repo \
-  --entrypoint node openchamber-sandbox:check --test docker/sandbox/sandbox.test.mjs
 docker run --rm --network none --volume "$PWD:/repo" --workdir /repo \
   --entrypoint bun openchamber-sandbox:check test scripts/check-docs.test.mjs
 docker run --rm --network none --volume "$PWD:/repo" --workdir /repo \
