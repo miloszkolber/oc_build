@@ -41,22 +41,25 @@ Cursor advanced from 2026-10-19 to this run. OpenChamber 2.5.0 and 2.5.1 were no
 | Item | Reference |
 | --- | --- |
 | Local revision reviewed | `7be9e49` (`main` before this run) |
-| Routine fix commit | recorded after merge in the change history entry |
+| Routine fix commit | `00fc2e5` on `main` |
 | App image, promoted by the pipeline before this run | `2.5.1-r421325791`, digest `sha256:8ef4ddde1d3876fa19b149c4f900ea64b41356135291eed5041712b985f5607a` (`latest`) |
-| 2.5.2 publication | Pending the poll after the adapted patch was pushed; recorded below once the workflow reports |
-| Held for operator input | Node runtime line and the Go toolchain line; see the backlog |
+| App image 2.5.2 | Tag `2.5.2-r423752016` and `latest`, manifest digest `sha256:427350131a938ec34718c8efaf2804ff3dd7deea604e24ee588b4f94c7caefe4`, from Build run `40273116782` |
+| Republished sandbox image | `sha-00fc2e55c326ad49f586f9d877fd8790c2922814` and `latest`, digest `sha256:3a15a5795d6e6d5a3dea8afe4abf5758f111d14f5b69f89dc2013e7d93d34898`, from Sandbox image run `40273116735` |
+| Republished browser image | `1.1.2-00fc2e55c326ad49f586f9d877fd8790c2922814` and `latest`, digest `sha256:d33e1ace0749dd3ce44c67aa23349a5d076f0335aca2480ffc8cd1ee2218b0c7`, Chromium 156.0.8078.47, from Browser image run `40273116728` |
+| Held for operator input | Node runtime line (local branch `maintenance/node-runtime-line-2026-10-26`, commit `b3ac93e`, not pushed) and the Go toolchain line (branch `maintenance/go-toolchain-line-2026-10-19`); see the backlog |
 
 ### Failed or inaccessible sources
 
 - The GHCR and GCR registry HTTP APIs answer 401 without a token; image manifests were read with `docker buildx imagetools inspect` instead.
 - `vuln.go.dev` module index paths return 404 for `stdlib`; Go advisories were not re-queried this run because the toolchain line did not change.
+- `mirror.gcr.io/docker/dockerfile:1` failed three times while fetching one 14.28 MB frontend layer ("not found") between 05:14 and 05:17 UTC, failing the Build, Sandbox image and Browser image runs at the frontend pull. The blob then served normally over HTTP and the same runs passed on rerun with no repository change. The existing contract is to fail explicitly rather than fall back to a rate-limited Docker Hub pull; no workflow change was made.
 
 ### Pending checks
 
 - Rembric live lifecycle (registration, recall, reporting) against the running OpenCode/Rembric pair. Bundle contract only; see [backlog](backlog.md).
 - Consumer builds under a Go 1.26 line, which the held 2026-10-19 branch prepares.
 - App image under a Node 24 runtime line, which the held 2026-10-26 branch prepares.
-- Chromium 156.0.8078.47 publication by the next weekly browser rebuild. The scheduled windows are not punctual: the 2026-10-19 window ran at 10:00 and 10:12 UTC for the sandbox and browser jobs rather than 04:23 and 04:37.
+- Further Chromium patch pick-up by the weekly browser rebuilds. This run's browser build already published Chromium 156.0.8078.47. The scheduled windows are not punctual: the 2026-10-19 window ran at 10:00 and 10:12 UTC for the sandbox and browser jobs rather than 04:23 and 04:37.
 
 ## Run 2026-10-19
 
