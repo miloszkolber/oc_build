@@ -2,6 +2,10 @@
 
 Completed OpenSpec changes, consolidated from per-change archive directories into this single record. Each entry summarizes the decision and outcome; the full proposals, tasks and evidence remain recoverable from git history prior to the consolidation commit. Main specs carry the merged contract; this file carries the reasoning.
 
+## Legacy session archive warning (2026-10-26)
+
+An app startup archive request returned 500 because a legacy session's location was inaccessible to the unprivileged OpenCode service. After operator authorization, the session was exported and deleted through the OpenCode API. Both the direct API and app proxy returned 404 for that session afterward, and app health remained good. No filesystem permissions were changed. A subsequent app startup has not been tested, so disappearance of the startup warning is not yet verified.
+
 ## Go 1.27 sandbox toolchain line (2026-10-26)
 
 The sandbox copied Go from `golang:1.25-bookworm` (go1.25.14), the last 1.25 patch. Go supports only its two newest lines, and the twelve `stdlib` advisories from 2026-10-08 were never backported to 1.25, so binaries built in the sandbox linked unfixed code. The operator chose the latest supported line. The branch prepared on 2026-10-19 was rebased, retargeted from 1.26 to `golang:1.27-bookworm` (go1.27.3) and resolved against the newer Bun/uv/pnpm/OpenSpec pins, leaving those untouched. An OSV query reports 14 advisories affecting go1.25.14 and none affecting go1.27.3. Verification went past the earlier `go build`/`go vet` evidence: all seven consumer modules — `linkie`, `magpie/server`, `cuddler/server`, `moonwalk/server`, `submarine/server`, `llama_build`, `uncanny_lab` — pass their own `go test ./...` and `go vet ./...` under the new line with clean working trees. `skip_specs: true`. Merged as `7344068`; the sandbox image rebuilt and published as `sha-7344068…` and `latest`, digest `sha256:3d989f32…`, verified by `go version go1.27.3` and the image check in the published bytes (Sandbox image run `40374689086`). Each consumer still runs its own CI under the new line before its next deployment; that follow-through belongs to its owner.
