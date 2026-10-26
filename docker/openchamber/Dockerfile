@@ -103,7 +103,7 @@ RUN set -eu; \
     cp -a --parents /usr/share/doc/git/copyright /rootfs
 
 # --- stage 3: distroless runtime ----------------------------------------------
-FROM gcr.io/distroless/nodejs22-debian12 AS app
+FROM gcr.io/distroless/nodejs24-debian12 AS app
 
 ARG OPENCHAMBER_VERSION
 

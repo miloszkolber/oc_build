@@ -6,7 +6,7 @@ This directory owns the app image, release automation and app runtime checks. Th
 
 - `app`: upstream OpenChamber web release, external OpenCode, Bash/Git, a single BusyBox for basic commands, SSH client and `ps` for terminal cleanup, with their library closure. A UID/GID 1000 `core` identity supports SSH and user lookup. No package manager, Chromium or Agent Browser extension.
 - `browser`: standalone `docker/browser` MCP package at `/opt/browser`, Chromium and its library/font/certificate closure. No OpenChamber app, shell, Git, guest service, panel, extension manifest, ZIP or surface API.
-- Both use distroless Node 22, UID 1000 and build-time dependency installation. No runtime downloads.
+- Both use distroless Node 24 (`nodejs24-debian12`), UID 1000 and build-time dependency installation. No runtime downloads.
 - Upstream OpenChamber 2.5.1 and later require OpenCode 2.1.0 or newer, and the 2.5.2 diagnostics memory snapshot needs 2.1.4. The entrypoint only probes `/api/info` and connects; OpenCode's version and lifecycle stay with the deployment.
 - The custom Agent Browser extension and its unused panel/surface patches have been removed. Neither image packages a guest browser provider. The built-in browser panel runs in the desktop client.
 

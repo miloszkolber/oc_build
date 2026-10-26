@@ -90,7 +90,7 @@ RUN set -eu; \
         > /browser-rootfs/usr/share/openchamber/browser-build.json; \
     mkdir -p /browser-rootfs/usr/bin; \
     ln -s /usr/lib/chromium/chromium /browser-rootfs/usr/bin/chromium
-FROM gcr.io/distroless/nodejs22-debian12 AS browser
+FROM gcr.io/distroless/nodejs24-debian12 AS browser
 LABEL org.opencontainers.image.title="openchamber-browser" \
       org.opencontainers.image.description="Standalone browser MCP and Chromium"
 COPY --from=build /browser-rootfs/ /

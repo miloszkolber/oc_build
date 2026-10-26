@@ -3,7 +3,7 @@ import { existsSync, readFileSync, readdirSync } from 'node:fs';
 import { spawnSync } from 'node:child_process';
 import { createRequire } from 'node:module';
 assert.notEqual(process.getuid(), 0);
-assert.equal(process.versions.node.split('.')[0], '22');
+assert.equal(process.versions.node.split('.')[0], '24');
 const run = (command, args) => {
   const result = spawnSync(command, args, { encoding: 'utf8', timeout: 30000 });
   assert.equal(result.status, 0, result.stderr || result.error?.message);
