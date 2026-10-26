@@ -10,12 +10,12 @@ Copied from pinned upstream images so the runtime needs no package downloader fo
 
 | Runtime | Source | Why |
 | --- | --- | --- |
-| Bun 1.4.3 | `oven/bun:1.4.3` | doop, mewa_ui, oc_build extensions, mewa_sh |
+| Bun 1.4.4 | `oven/bun:1.4.4` | doop, mewa_ui, oc_build extensions, mewa_sh |
 | Go 1.25 | `golang:1.25-bookworm` | `toolkit/*` services, uncanny_lab |
 | Node 22 + npm | `node:22-bookworm-slim` base | OpenChamber bundle, rembric, QA tooling |
-| pnpm 11.28.6 | `npm install -g` at build | rembric monorepo (turbo) |
-| uv 0.13.1 + uvx | `ghcr.io/astral-sh/uv:0.13.1` | Python env/deps, uncanny_lab |
-| OpenSpec 1.14.3 | `@fission-ai/openspec@1.14.3` | spec-driven change validation |
+| pnpm 11.28.8 | `npm install -g` at build | rembric monorepo (turbo) |
+| uv 0.13.5 + uvx | `ghcr.io/astral-sh/uv:0.13.5` | Python env/deps, uncanny_lab |
+| OpenSpec 1.15.0 | `@fission-ai/openspec@1.15.0` | spec-driven change validation |
 
 These are versioned tags, not immutable digest pins. Mutable tags and Debian package resolution mean the build is not bit-reproducible. The build inventory records the versions actually assembled.
 

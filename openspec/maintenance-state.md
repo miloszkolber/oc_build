@@ -2,6 +2,62 @@
 
 High-water mark for the scheduled dependency-maintenance pass over this repository. Each entry records what was actually read and its disposition. A reviewed revision is not a claim that every scenario was executed, and a missing cursor means unseen history, not "current".
 
+## Run 2026-10-26
+
+Local revision reviewed: `7be9e49` (`main`). Environment: host Docker for image builds; development checks run in the rebuilt workspace sandbox image.
+
+Cursor advanced from 2026-10-19 to this run. OpenChamber 2.5.0 and 2.5.1 were not reviewed by the previous entry; they were reviewed here from their release bodies, the 2.4.0 to 2.5.2 bundle diff and the published tags, together with 2.5.2.
+
+### Reviewed revisions
+
+| Component | Pinned or resolved in this repository | Reviewed revision | Source | Disposition |
+| --- | --- | --- | --- | --- |
+| Upstream OpenChamber app release | `latest` resolved at build | 2.5.0 (release `417488689`), 2.5.1 (`421325791`), 2.5.2 (`423752016`, published 2026-10-26T00:48:10Z) | Release bodies for 2.5.0-2.5.2, `openchamber-web-*.tgz` package manifests and trees, strict patch dry-runs | 2.5.0 and 2.5.1 were built, checked and promoted by the pipeline (tags `2.5.0-r417488689` digest `sha256:e1ef77edb23236aa83f4900922ca471878ebc32a4ce5e90b4b4a4a4578b20dd0`; `2.5.1-r421325791` digest `sha256:8ef4ddde1d3876fa19b149c4f900ea64b41356135291eed5041712b985f5607a` as `latest`). 2.5.2 broke `home-repository.patch`: upstream replaced `isGitRepository` with a combined `probeRepository`. Patch adapted and verified; see the merged fix. Bundle layout unchanged (bin, dist, package.json, public, README.md, server). Dependency delta: `@openchamber/sdk` 2.4.0 to 2.5.2, `@opencode/client`/`@opencode/schema` 2.0.32 to 2.1.4, `bun-pty` `^0.4.5` to exact `0.5.1`; nothing else. 2.5.1 requires OpenCode 2.1.0 or newer; 2.5.2's diagnostics memory snapshot needs 2.1.4. Host OpenCode is 2.1.4. New external commands in the bundle (`git-annex`, `sqlite3`, `lsof`, `systemd-run`) are optional or pre-existing, and upstream's dev-server scan falls back to `/proc` when `lsof` is absent |
+| Node runtime floor | `gcr.io/distroless/nodejs22-debian12` (Node 22) | upstream `engines.node` for 2.2.0, 2.3.1, 2.4.0 and 2.5.2 is `>=24.14.0`; `.nvmrc` is `lts/krypton` | npm package manifests in each `openchamber-web` tarball, upstream root `package.json` at `v2.5.2`, bundle imports (`node:sqlite` in `server/lib/spaces/places/escape-suite.js`) | Held for operator input: the app declares Node 24 LTS while both images run distroless Node 22. Working in practice on the deployed 2.5.1 container, but outside the declared floor. Branch `maintenance/node-runtime-line-2026-10-26` carries evidence; not merged |
+| Canvas `@openchamber/sdk` | `2.2.0` | 2.5.2 | `@openchamber/sdk` 2.2.0 and 2.5.2 tarballs (`API.md`, `dist/*.d.ts`), OpenChamber API.md diff | Additive: late `generate` answers, `links` on session records, status sections the app draws, source-control providers, 8 MB response cap, `GUEST_UI_LOOK_CSS`. `connectHost`, `applyHostReady`, `parseManifest` and the manifest schema used by the Canvas build are unchanged. Dependabot PR #7 still sits at 2.3.2; Dependabot-owned |
+| Canvas other Bun packages | lockfile | `@json-render/*` 0.21.3, mermaid 12.2.0, zod 4.6.7, react/react-dom 19.3.1, esbuild 0.28.2, fflate 0.8.3 | npm dist-tags and release bodies for json-render 0.21.1-0.21.3, mermaid 12.2.0, zod 4.6.6/4.6.7 | All patches or one opt-in mermaid option; no semantic breakage found. Open Dependabot PRs #6-#10 have green Canvas and documentation CI and stay with Dependabot |
+| Browser Bun packages | `ws` 8.22.0, esbuild 0.28.2 | current | npm dist-tags | Nothing newer exists; no open Dependabot PR |
+| Browser Chromium and fonts | apt resolution from `debian:bookworm-slim` | built image of 2026-10-19 carries Chromium 155.0.8059.79; `bookworm-security` now offers 156.0.8078.47-1~deb12u1 | Debian `bookworm` and `bookworm-security` package lists | Mutable by design; the weekly browser rebuild adopts it. A local rebuild on 2026-10-26 resolved 156.0.8078.47 and passed the real Chromium check |
+| Browser runtime closure | apt resolution | `ca-certificates` 20250419~deb12u2, `libnss3` 3.87.1-1+deb12u4, `fonts-liberation` 1:1.07.4-11, `fonts-inter` 4.0~beta7+ds-1, `fonts-jetbrains-mono` 2.242+ds-3, `fonts-noto-color-emoji` 2.042-0+deb12u1 | `bookworm` and `bookworm-security` lists, compared with the 2026-10-19 image record | Certificates moved to `deb12u2`; the next weekly rebuild adopts it. Fonts unchanged |
+| Bun base image | `oven/bun:1.4.4` | bun-v1.4.4 (2026-10-22); index digest `sha256:1d22548f177f4ff38e0c15baa3c2c46c6c2060ba2d1bc573bb4720b407548f1d` | `oven-sh/bun` release and v1.4.4 blog notes | Bumped 1.4.3 to 1.4.4: security fixes for TLS, WebSocket, database clients and the package manager, a compile-cache exit regression fix, and NSS 3.131.1 roots. Upstream OpenChamber moved its own images to 1.4.4 in 2.5.1 |
+| Node 22 base and distroless | `node:22-bookworm-slim`, `gcr.io/distroless/nodejs22-debian12` | Node 22.23.4 (2026-10-20); distroless `latest` digest `sha256:8a3e96fe3345b5d83ecec2066e7c498139a02a6d1214e4f6c39f9ce359f3f5bc` | `nodejs/node` release index, registry resolution | Build-resolved and current. Distroless `nodejs24-debian12` also exists (digest `sha256:61f4f4341db81820c24ce771b83d202eb6452076f58628cd536cc7d94a10978b`); see the held runtime-line row |
+| Debian base | `debian:bookworm-slim` | mirror index digest `sha256:7ff6ba31527b9e336162fa061746c366c4b2032f4d2cff2078bea43f78efe3f8` (previous record `sha256:7c7b2c96…` on 2026-10-06) | `mirror.gcr.io` tag resolution | Mutable; rebuild refreshes. `node:22-bookworm-slim` mirror index is now `sha256:de170b39439eb0e5a3444ad7d60b015614a381e10fecae2e30ec9e735122f38d` |
+| Go toolchain | `golang:1.25-bookworm` | go1.25.14, index digest `sha256:3b4a11519ad929d1e1d261a12cff056f0c85b735253d7d861346b9c6f8b36437` (unchanged) | tag resolution | Unchanged since the 2026-10-19 hold. The 12 stdlib advisories published 2026-10-08 are still unfixed on this line; branch `maintenance/go-toolchain-line-2026-10-19` remains held for operator input |
+| uv | `ghcr.io/astral-sh/uv:0.13.5` | 0.13.5 (2026-10-22); index digest `sha256:32a7bb39b496babbd997b0a39a4d66c126bdaf5661b302bf6f06abda8deca6ff` | `astral-sh/uv` release notes for 0.13.2-0.13.5 | Bumped 0.13.1 to 0.13.5: GHSA-hq85-5cpj-mr62 compromised eMudhra/emSign root, rebuilt managed CPython (3.15.1, 3.14.9, 3.13.17), retry and resolver fixes |
+| pnpm | `11.28.8` | 11.28.8 (2026-10-22) | pnpm release notes | Bumped 11.28.6 to 11.28.8: standalone builds now embed Node.js 26.12.1 instead of 26.0.0, which still trusted the October 2026 distrusted CA intermediates. 12.15.0 remains the next major line, deferred in the backlog |
+| `@fission-ai/openspec` | `1.15.0` | 1.15.0 | Changelog 1.15.0 and 1.14.3 | Bumped: standalone binaries (not adopted), `update --dry-run`, `/opsx:verify` matching a REMOVED requirement by exact name, faster `--json` startup. `validate --all --strict` and the local checker pass |
+| Rembric vendored core | `core/rembric-plugin-core.mjs` sha256 `481a1d6e…267704`, `core/rembric-dotenv.mjs` `639bf8c4…4bb7b` | plugin v0.35.0 (2026-10-20); server v0.30.2 (2026-10-21) | Release bodies for plugin-v0.35.0 and server-v0.30.0-0.30.2; raw files at `plugin-v0.35.0` | Files byte-identical at v0.35.0, so nothing to re-vendor. The breaking change is in the MCP write tools (`memory.save` and `memory.capture_passive` require 1-64 ASCII-transliterated tags), not in the session protocol this plugin uses; the host server image was rebuilt 2026-10-22 and the agent-side calls carry tags |
+| GitHub Actions | SHA-pinned | current: checkout v7.0.1, setup-bun v2.2.0, upload-artifact v7.0.2 | `gh` release lists | Dependabot-owned; no open Actions pull request |
+
+### Advisories checked
+
+- uv GHSA-hq85-5cpj-mr62 (compromised eMudhra/emSign root CA) fixed in 0.13.4 and carried by 0.13.5; the same root update appears in Bun 1.4.4 (NSS 3.131.1), the pnpm 11.28.8 embedded Node, Node 22.23.4 and Debian `ca-certificates` 20250419~deb12u2.
+- Bun 1.4.4 security section: TLS, HTTP/1.1-3, WebSocket, Brotli, `Bun.serve`/`listen`/`connect`, `Bun.SQL`, `Bun.RedisClient`, `node:tls`/`http`/`http2`/`net`/`quic`/`crypto`/`vm`/`v8`, `ws`, `fetch` and the package-manager commands. The advisory identifiers are not listed upstream; the release notes are the source.
+- Go `stdlib` advisories from 2026-10-08 (GO-2026-6599 through GO-2026-6617) remain unfixed on the 1.25 line; unchanged from the 2026-10-19 entry.
+- Chromium 155.0.8059.79 to 156.0.8078.47 arrives only through `bookworm-security`; no separate advisory review was performed beyond the Debian security suite providing it.
+
+### Published and merged in this run
+
+| Item | Reference |
+| --- | --- |
+| Local revision reviewed | `7be9e49` (`main` before this run) |
+| Routine fix commit | recorded after merge in the change history entry |
+| App image, promoted by the pipeline before this run | `2.5.1-r421325791`, digest `sha256:8ef4ddde1d3876fa19b149c4f900ea64b41356135291eed5041712b985f5607a` (`latest`) |
+| 2.5.2 publication | Pending the poll after the adapted patch was pushed; recorded below once the workflow reports |
+| Held for operator input | Node runtime line and the Go toolchain line; see the backlog |
+
+### Failed or inaccessible sources
+
+- The GHCR and GCR registry HTTP APIs answer 401 without a token; image manifests were read with `docker buildx imagetools inspect` instead.
+- `vuln.go.dev` module index paths return 404 for `stdlib`; Go advisories were not re-queried this run because the toolchain line did not change.
+
+### Pending checks
+
+- Rembric live lifecycle (registration, recall, reporting) against the running OpenCode/Rembric pair. Bundle contract only; see [backlog](backlog.md).
+- Consumer builds under a Go 1.26 line, which the held 2026-10-19 branch prepares.
+- App image under a Node 24 runtime line, which the held 2026-10-26 branch prepares.
+- Chromium 156.0.8078.47 publication by the next weekly browser rebuild. The scheduled windows are not punctual: the 2026-10-19 window ran at 10:00 and 10:12 UTC for the sandbox and browser jobs rather than 04:23 and 04:37.
+
 ## Run 2026-10-19
 
 Local revision reviewed: `d308ce4` (`main`). Environment: host Docker for image builds; development checks run in the workspace sandbox image.

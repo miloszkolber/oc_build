@@ -42,15 +42,15 @@ For acceptance-only or documentation-only work, use `skip_specs: true` in `.open
 
 ```sh
 bun scripts/check-docs.mjs
-OPENSPEC_TELEMETRY=0 bun x --bun @fission-ai/openspec@1.14.3 list --specs
-OPENSPEC_TELEMETRY=0 bun x --bun @fission-ai/openspec@1.14.3 validate --all --strict
+OPENSPEC_TELEMETRY=0 bun x --bun @fission-ai/openspec@1.15.0 list --specs
+OPENSPEC_TELEMETRY=0 bun x --bun @fission-ai/openspec@1.15.0 validate --all --strict
 ```
 
 After verification and review, merge deltas and archive with:
 
 ```sh
-OPENSPEC_TELEMETRY=0 bun x --bun @fission-ai/openspec@1.14.3 archive <name>
-OPENSPEC_TELEMETRY=0 bun x --bun @fission-ai/openspec@1.14.3 validate --all --strict
+OPENSPEC_TELEMETRY=0 bun x --bun @fission-ai/openspec@1.15.0 archive <name>
+OPENSPEC_TELEMETRY=0 bun x --bun @fission-ai/openspec@1.15.0 validate --all --strict
 ```
 
 Use `--skip-specs` only for changes with no deltas or deltas already merged and reviewed. Never use it to omit required updates. Never use `--no-validate` to hide an archive failure. The former alias workaround in the [change history](changes/history.md#spec-driven-documentation-review-2026-10-11) is historical and does not apply to this physical directory.

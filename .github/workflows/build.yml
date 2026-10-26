@@ -56,7 +56,7 @@ jobs:
           persist-credentials: false
       - uses: oven-sh/setup-bun@0c5077e51419868618aeaa5fe8019c62421857d6 # v2.2.0
         with:
-          bun-version: '1.4.3'
+          bun-version: '1.4.4'
       - name: Test release, latest and entrypoint contracts
         run: bun test docker/openchamber/releases.test.mjs docker/openchamber/latest.test.mjs docker/openchamber/entrypoint.test.mjs
       - name: Bundle the Rembric V2 plugin and check its export

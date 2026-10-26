@@ -8,9 +8,9 @@
 # stays distroless and separate. Container-image building is out of scope: the
 # sandbox ships no Docker CLI, endpoint or build cache.
 
-FROM mirror.gcr.io/oven/bun:1.4.3 AS bun
+FROM mirror.gcr.io/oven/bun:1.4.4 AS bun
 FROM mirror.gcr.io/library/golang:1.25-bookworm AS go
-FROM ghcr.io/astral-sh/uv:0.13.1 AS uv
+FROM ghcr.io/astral-sh/uv:0.13.5 AS uv
 
 FROM mirror.gcr.io/library/node:22-bookworm-slim AS sandbox
 
@@ -49,7 +49,7 @@ COPY --from=go /usr/local/go /usr/local/go
 COPY --from=uv /uv /usr/local/bin/uv
 COPY --from=uv /uvx /usr/local/bin/uvx
 
-RUN npm install --global --no-audit --no-fund pnpm@11.28.6 @fission-ai/openspec@1.14.3 \
+RUN npm install --global --no-audit --no-fund pnpm@11.28.8 @fission-ai/openspec@1.15.0 \
     && rm -f /usr/local/bin/pnpm \
     && printf '#!/bin/sh\nexec node /usr/local/lib/node_modules/pnpm/bin/pnpm.mjs --store-dir "${PNPM_STORE_DIR:-/cache/pnpm-store}" "$@"\n' > /usr/local/bin/pnpm \
     && chmod +x /usr/local/bin/pnpm \

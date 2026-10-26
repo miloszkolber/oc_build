@@ -24,9 +24,9 @@ major="$(node -p 'process.versions.node.split(".")[0]')"
 go version | grep -qE 'go1\.2[5-9]' || fail "unexpected go ($(go version))"
 gofmt -h >/dev/null 2>&1 || fail "gofmt missing"
 
-OPENSPEC_TELEMETRY=0 openspec --version | grep -qx '1.14.3' || fail "OpenSpec version"
-pnpm --version | grep -qx '11.28.6' || fail "pnpm version"
-uv --version | grep -qE '^uv 0\.13\.1( |$)' || fail "uv version"
+OPENSPEC_TELEMETRY=0 openspec --version | grep -qx '1.15.0' || fail "OpenSpec version"
+pnpm --version | grep -qx '11.28.8' || fail "pnpm version"
+uv --version | grep -qE '^uv 0\.13\.5( |$)' || fail "uv version"
 
 [ "$BUN_INSTALL_CACHE_DIR" = /cache/bun ] || fail "bun cache env"
 [ "$GOMODCACHE" = /cache/go/mod ] || fail "GOMODCACHE env"
