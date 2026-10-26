@@ -22,7 +22,7 @@ Cursor advanced from 2026-10-19 to this run. OpenChamber 2.5.0 and 2.5.1 were no
 | Bun base image | `oven/bun:1.4.4` | bun-v1.4.4 (2026-10-22); index digest `sha256:1d22548f177f4ff38e0c15baa3c2c46c6c2060ba2d1bc573bb4720b407548f1d` | `oven-sh/bun` release and v1.4.4 blog notes | Bumped 1.4.3 to 1.4.4: security fixes for TLS, WebSocket, database clients and the package manager, a compile-cache exit regression fix, and NSS 3.131.1 roots. Upstream OpenChamber moved its own images to 1.4.4 in 2.5.1 |
 | Node 22 base and distroless | `node:22-bookworm-slim`, `gcr.io/distroless/nodejs22-debian12` | `node:22-bookworm-slim` resolves to Node 22.23.4 (2026-10-20); distroless `latest` (digest `sha256:8a3e96fe3345b5d83ecec2066e7c498139a02a6d1214e4f6c39f9ce359f3f5bc`, unchanged since 2026-10-19) ships Node v22.22.0, as the published 2.5.2 image reports | `nodejs/node` release index, registry resolution, `node --version` in the published app image | Build-resolved. The distroless image trails the Node release line; the sandbox's `node` comes from the Debian Node image and reports 22.23.4. Distroless `nodejs24-debian12` (digest `sha256:61f4f4341db81820c24ce771b83d202eb6452076f58628cd536cc7d94a10978b`) ships v24.14.0; see the held runtime-line row |
 | Debian base | `debian:bookworm-slim` | mirror index digest `sha256:7ff6ba31527b9e336162fa061746c366c4b2032f4d2cff2078bea43f78efe3f8` (previous record `sha256:7c7b2c96…` on 2026-10-06) | `mirror.gcr.io` tag resolution | Mutable; rebuild refreshes. `node:22-bookworm-slim` mirror index is now `sha256:de170b39439eb0e5a3444ad7d60b015614a381e10fecae2e30ec9e735122f38d` |
-| Go toolchain | `golang:1.25-bookworm` | go1.25.14, index digest `sha256:3b4a11519ad929d1e1d261a12cff056f0c85b735253d7d861346b9c6f8b36437` (unchanged) | tag resolution | Unchanged since the 2026-10-19 hold. The 12 stdlib advisories published 2026-10-08 are still unfixed on this line; branch `maintenance/go-toolchain-line-2026-10-19` remains held for operator input |
+| Go toolchain | `golang:1.27-bookworm` | go1.27.3; index digest `sha256:972b4110ba0f47539a975c31e52c64765e1ff19f2d74469ae4a595c6676e80a5` (1.25 was go1.25.14, digest `sha256:3b4a1151…`) | tag resolution; `go version` in the rebuilt and published image; OSV `stdlib` query | Adopted by the operator on 2026-10-26 as the latest supported line and merged in `7344068`. go1.27.3 reports no stdlib advisory on OSV, against 14 affecting go1.25.14. All seven consumer modules pass their own `go test ./...` and `go vet ./...` under the new line with clean trees. Published as sandbox `latest` digest `sha256:3d989f32…` |
 | uv | `ghcr.io/astral-sh/uv:0.13.5` | 0.13.5 (2026-10-22); index digest `sha256:32a7bb39b496babbd997b0a39a4d66c126bdaf5661b302bf6f06abda8deca6ff` | `astral-sh/uv` release notes for 0.13.2-0.13.5 | Bumped 0.13.1 to 0.13.5: GHSA-hq85-5cpj-mr62 compromised eMudhra/emSign root, rebuilt managed CPython (3.15.1, 3.14.9, 3.13.17), retry and resolver fixes |
 | pnpm | `11.28.8` | 11.28.8 (2026-10-22) | pnpm release notes | Bumped 11.28.6 to 11.28.8: standalone builds now embed Node.js 26.12.1 instead of 26.0.0, which still trusted the October 2026 distrusted CA intermediates. 12.15.0 remains the next major line, deferred in the backlog |
 | `@fission-ai/openspec` | `1.15.0` | 1.15.0 | Changelog 1.15.0 and 1.14.3 | Bumped: standalone binaries (not adopted), `update --dry-run`, `/opsx:verify` matching a REMOVED requirement by exact name, faster `--json` startup. `validate --all --strict` and the local checker pass |
@@ -33,7 +33,7 @@ Cursor advanced from 2026-10-19 to this run. OpenChamber 2.5.0 and 2.5.1 were no
 
 - uv GHSA-hq85-5cpj-mr62 (compromised eMudhra/emSign root CA) fixed in 0.13.4 and carried by 0.13.5; the same root update appears in Bun 1.4.4 (NSS 3.131.1), the pnpm 11.28.8 embedded Node, Node 22.23.4 and Debian `ca-certificates` 20250419~deb12u2.
 - Bun 1.4.4 security section: TLS, HTTP/1.1-3, WebSocket, Brotli, `Bun.serve`/`listen`/`connect`, `Bun.SQL`, `Bun.RedisClient`, `node:tls`/`http`/`http2`/`net`/`quic`/`crypto`/`vm`/`v8`, `ws`, `fetch` and the package-manager commands. The advisory identifiers are not listed upstream; the release notes are the source.
-- Go `stdlib` advisories from 2026-10-08 (GO-2026-6599 through GO-2026-6617) remain unfixed on the 1.25 line; unchanged from the 2026-10-19 entry.
+- Go `stdlib`: the twelve advisories from 2026-10-08 (GO-2026-6599 through GO-2026-6617) were never backported to 1.25. The sandbox moved to go1.27.3, where an OSV query reports none affecting it; go1.25.14 had 14 advisories at the time of the move.
 - Chromium 155.0.8059.79 to 156.0.8078.47 arrives only through `bookworm-security`; no separate advisory review was performed beyond the Debian security suite providing it.
 
 ### Published and merged in this run
@@ -45,8 +45,9 @@ Cursor advanced from 2026-10-19 to this run. OpenChamber 2.5.0 and 2.5.1 were no
 | App image, promoted by the pipeline before this run | `2.5.1-r421325791`, digest `sha256:8ef4ddde1d3876fa19b149c4f900ea64b41356135291eed5041712b985f5607a` (`latest`) |
 | App image 2.5.2 | Tag `2.5.2-r423752016` and `latest`, rebuilt on Node 24 as digest `sha256:de7b51c322b3d6763c96dc57444610b6eaa9ee749a54f5b82dba250e0dc5f9f4` by Build run `40373005961`; the earlier Node 22 build was `sha256:42735013…` (Build run `40273116782`) |
 | Republished sandbox image | `sha-00fc2e55c326ad49f586f9d877fd8790c2922814` and `latest`, digest `sha256:3a15a5795d6e6d5a3dea8afe4abf5758f111d14f5b69f89dc2013e7d93d34898`, from Sandbox image run `40273116735` |
+| Sandbox image on Go 1.27 | `sha-7344068500f114307c66ee49b0b710039e6a2265` and `latest`, digest `sha256:3d989f3219876e546de3c3d4aa659c49c4ed363c9ee68f38538ee24c34f5d4e3`, go1.27.3, from Sandbox image run `40374689086` |
 | Republished browser image | `latest` digest `sha256:3acb3892da17fdf35d8e955bc0c749346e89ec88de4e3c36e8ad86d8b9971fd0` on Node 24, Chromium 156.0.8078.47, from Browser image run `40373006076`; the earlier Node 22 build was `sha256:d33e1ace…` (run `40273116728`) |
-| Held for operator input | Go toolchain line (branch `maintenance/go-toolchain-line-2026-10-19`); the Node runtime line was adopted and closed on 2026-10-26 |
+| Held for operator input | None. Both runtime-line decisions were adopted by the operator and closed on 2026-10-26: Node 24 (`0acda45`) and Go 1.27 (`7344068`) |
 
 ### Failed or inaccessible sources
 
@@ -57,7 +58,7 @@ Cursor advanced from 2026-10-19 to this run. OpenChamber 2.5.0 and 2.5.1 were no
 ### Pending checks
 
 - Rembric live lifecycle (registration, recall, reporting) against the running OpenCode/Rembric pair. Bundle contract only; see [backlog](backlog.md).
-- Consumer builds under a Go 1.26 line, which the held 2026-10-19 branch prepares.
+- Consumer repositories run their own suites and CI under the Go 1.27 sandbox line before their next deployment. Their suites already pass in the published image, but deployment follow-through belongs to their owners.
 - Further Chromium patch pick-up by the weekly browser rebuilds. This run's browser build already published Chromium 156.0.8078.47. The scheduled windows are not punctual: the 2026-10-19 window ran at 10:00 and 10:12 UTC for the sandbox and browser jobs rather than 04:23 and 04:37.
 
 ## Run 2026-10-19
