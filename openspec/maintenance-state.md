@@ -58,7 +58,7 @@ Cursor advanced from 2026-10-19 to this run. OpenChamber 2.5.0 and 2.5.1 were no
 ### Pending checks
 
 - Rembric live lifecycle (registration, recall, reporting) against the running OpenCode/Rembric pair. Bundle contract only; see [backlog](backlog.md).
-- Consumer repositories run their own suites and CI under the Go 1.27 sandbox line before their next deployment. Their suites already pass in the published image, but deployment follow-through belongs to their owners.
+- Consumer repositories run their own suites and CI under the Go 1.27 sandbox line before their next deployment. Their suites passed in a locally built sandbox image, not the published image. The published image separately passed its toolchain check. Five consumer repositories have no Git remote or GitHub workflow configured, and the other two workflows select Go from their own `go.mod`. Deployment follow-through belongs to their owners.
 - Further Chromium patch pick-up by the weekly browser rebuilds. This run's browser build already published Chromium 156.0.8078.47. The scheduled windows are not punctual: the 2026-10-19 window ran at 10:00 and 10:12 UTC for the sandbox and browser jobs rather than 04:23 and 04:37.
 
 ## Run 2026-10-19
