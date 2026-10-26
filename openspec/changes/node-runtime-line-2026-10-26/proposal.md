@@ -21,10 +21,10 @@ The sandbox image's own Node 22 toolchain is a separate decision for its consume
 - **Move only the app image.** Smaller blast radius, but the two published images would run different Node lines while sharing the same distroless base family and checks.
 - **Move both runtime images** (this proposal). One line across both images, both checks pass, sizes differ by under 0.2 MB.
 
-## Why this is held
+## Status
 
-It changes the runtime base line of both published images, which is a runtime-stack decision beyond routine maintenance. Verification here proves the images build and pass their checks on Node 24; it does not prove long-running behaviour under a real OpenCode server, WebAuthn, the TTS paths or the browser MCP's CDP sessions.
+Adopted by the operator on 2026-10-26: both published images move to `nodejs24-debian12`. It changes the runtime base line of both published images, which is a runtime-stack decision beyond routine maintenance, so the closing pass still includes live verification against the running OpenCode 2.1.4 server, WebAuthn, terminal and Git paths and the browser MCP.
 
 ## Evidence
 
-See [evidence.md](evidence.md).
+See [evidence.md](evidence.md), extended by the closing pass.
