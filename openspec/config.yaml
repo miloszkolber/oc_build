@@ -2,7 +2,7 @@ schema: spec-driven
 
 context: |
   oc_build packages the upstream OpenChamber web app, standalone browser MCP,
-  Canvas panel, agent sandbox image and Rembric OpenCode V2 plugin. See
+  agent sandbox image and Rembric OpenCode V2 plugin. See
   openspec/project.md for boundaries, openspec/specs/ for implemented contracts
   and package READMEs for commands. Development tools belong in the agent
   sandbox image, not the host. OpenCode and host deployment are external owners.

@@ -1,6 +1,6 @@
 ---
 name: "workspace"
-description: "Use OpenChamber workspace surfaces and agent development containers: create, update, inspect or debug conversation Canvas visualizations, build/test tools and sandbox storage, Files/Git/Context, and native versus standalone browsers."
+description: "Use OpenChamber workspace surfaces and agent development containers: build/test tools and sandbox storage, Files/Git/Context, and native versus standalone browsers."
 ---
 
 # Workspace
@@ -8,7 +8,7 @@ description: "Use OpenChamber workspace surfaces and agent development container
 ## Core approach
 
 - Treat the workspace panels as the user's view of real state. Read the owning panel before claiming what a user sees.
-- Separate the panel from the mechanism behind it. A Canvas panel reads a session file; the browser panel drives a Chromium instance. Neither is a chat message.
+- Separate the panel from the mechanism behind it. The browser panel drives a Chromium instance. It is not a chat message.
 - Keep panel evidence honest. A rendered screenshot in the standalone browser is not the desktop client; say which one was checked.
 - Change one module at a time and verify it in the surface the user actually opens.
 
@@ -16,13 +16,12 @@ description: "Use OpenChamber workspace surfaces and agent development container
 
 | Procedure | Use for |
 | --- | --- |
-| [Canvas](references/canvas.md) | Creating, updating, inspecting or debugging conversation Canvas JSON, chart/diagram choices, local interactions and review |
 | [Browser](references/browser.md) | Native desktop browser panel, annotations, versus the standalone browser MCP and its evidence limits |
 | [Sandbox](references/sandbox.md) | Container builds, tests, dependencies, tool additions and persistent versus temporary storage |
 
 ## Boundaries
 
-- Real state lives outside the panel: conversations, canvases and projects on disk under the deployment's data directories. The panel is a view, not the source.
+- Real state lives outside the panel: conversations and projects on disk under the deployment's data directories. The panel is a view, not the source.
 - Never present the standalone Chromium MCP as the native desktop panel. Tabs, cookies and login state are not shared.
 - Importing a module here does not grant network, shell or model authority. Reporting and file access follow the extension's approved scope.
 - Panels that write files must write atomically and preserve unrelated content. Read-only panels must not mutate the source they display.

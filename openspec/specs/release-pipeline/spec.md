@@ -20,10 +20,9 @@ Workflows SHALL build only their configured deliverables for relevant source cha
 | Build | `main` pushes matching app/Rembric paths | Hourly `:17`, Monday `04:37` | App image and push-only plugin artifact |
 | Browser | `main` pushes matching browser paths | Monday `04:37` | Browser image |
 | Sandbox | Matching pushes to `main` and pull requests | Monday `04:23` | Checked sandbox image; pull requests do not publish |
-| Canvas | Matching pushes to `main` and pull requests | None | Extension ZIP |
 | Documentation contracts | Matching pushes to `main` and pull requests | None | Local checker/tests and upstream strict validation |
 
-All five accept manual dispatch. App/browser workflows have no pull-request trigger. Do not infer pre-merge coverage for their dependency updates.
+All four accept manual dispatch. App/browser workflows have no pull-request trigger. Do not infer pre-merge coverage for their dependency updates.
 
 ### Requirement: Least-privilege automation
 Jobs SHALL use SHA-pinned actions, credential-free checkout and scoped permissions.
@@ -89,13 +88,8 @@ Browser publication SHALL use its own build context and pass its real image chec
 - **THEN** `<package-version>-<source-commit>` and `latest` are published after the image check
 - **AND** app release discovery, privacy reconciliation and serialized app promotion are not implied for this separate pipeline
 
-### Requirement: Checked extension artifacts
-Canvas and Rembric SHALL pass their declared local build contracts before CI retains artifacts.
-
-#### Scenario: Canvas package
-- **WHEN** the Canvas workflow runs
-- **THEN** frozen install, tests, packaging and every emitted example's validation precede ZIP upload
-- **AND** its artifact name is `openchamber-generative-canvas`, not a commit-suffixed name
+### Requirement: Checked plugin artifacts
+Rembric SHALL pass its declared local build contract before CI retains artifacts.
 
 #### Scenario: Plugin package
 - **WHEN** the push-only plugin job runs
@@ -107,7 +101,7 @@ Dependabot SHALL propose weekly Bun and Actions updates for its configured direc
 
 #### Scenario: Update scope
 - **WHEN** Dependabot evaluates configuration
-- **THEN** it covers Canvas/browser Bun dependencies (five open PRs each) and root Actions (ten)
+- **THEN** it covers browser Bun dependencies (five open PRs) and root Actions (ten)
 - **AND** package dependencies remain exactly pinned
 - **AND** Docker base-version bumps are not covered by this configuration
 

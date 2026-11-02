@@ -19,7 +19,7 @@ export function checkDocumentation(root) {
   }
   if (existsSync(resolve(root, 'docs'))) failures.push('openspec must be the only documentation tree (remove docs)');
   const files = walk(planning).filter(file => file.endsWith('.md'));
-  for (const name of ['README.md', 'AGENTS.md', 'extensions/README.md', 'extensions/canvas/VERIFICATION.md']) {
+  for (const name of ['README.md', 'AGENTS.md', 'extensions/README.md']) {
     const file = resolve(root, name);
     if (existsSync(file)) files.push(file);
   }
