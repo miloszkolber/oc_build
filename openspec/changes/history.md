@@ -2,6 +2,10 @@
 
 Completed OpenSpec changes, consolidated from per-change archive directories into this single record. Each entry summarizes the decision and outcome; the full proposals, tasks and evidence remain recoverable from git history prior to the consolidation commit. Main specs carry the merged contract; this file carries the reasoning.
 
+## Sandbox uv patch refresh (2026-11-02)
+
+Refreshed copied uv and uvx from 0.13.5 to 0.13.6. Upstream fixed `--active --script` potentially deleting a nonempty ordinary directory and refreshed managed Python patch releases. Offline disposable probes confirmed both `uv run` and `uv sync` refuse that directory and preserve a marker. The rebuilt and published sandbox images passed the image check, the documentation checker and its nine tests passed, and strict OpenSpec validation passed. Published digest `sha256:f1dfbf4083ad377eaa07e9eb813cf03e1ec6c73697067df920ad7984cae0f961`, workflow [41391837800](https://github.com/miloszkolber/oc_build/actions/runs/41391837800), implementation `1e4749a`. The wider dependency-maintenance review remains incomplete as recorded in the [maintenance state](../maintenance-state.md).
+
 ## Legacy session archive warning (2026-10-26)
 
 An app startup archive request returned 500 because a legacy session's location was inaccessible to the unprivileged OpenCode service. After operator authorization, the session was exported and deleted through the OpenCode API. Both the direct API and app proxy returned 404 for that session afterward, and app health remained good. No filesystem permissions were changed. A subsequent app startup has not been tested, so disappearance of the startup warning is not yet verified.
