@@ -2,6 +2,10 @@
 
 Completed OpenSpec changes, consolidated from per-change archive directories into this single record. Each entry summarizes the decision and outcome; the full proposals, tasks and evidence remain recoverable from git history prior to the consolidation commit. Main specs carry the merged contract; this file carries the reasoning.
 
+## Generative Canvas removal (2026-11-02)
+
+At the operator's request, removed the repository's generative Canvas extension, tests, package workflow, Dependabot scope and workspace authoring reference. The retired Canvas capability and the affected release-pipeline contracts were synchronized. The app, browser MCP, sandbox and Rembric remain; browser HTML Canvas usage is unrelated. No host Canvas data was recreated or deleted. Canvas-only Dependabot PRs #6–#10 were closed as obsolete rather than merged into a deleted package. Documentation checks, nine checker tests, strict OpenSpec validation, 42 release/latest/entrypoint tests and documentation CI 41523631219 passed. Removal commit `7545890`; verification record `4196c7a`.
+
 ## Sandbox uv patch refresh (2026-11-02)
 
 Refreshed copied uv and uvx from 0.13.5 to 0.13.6. Upstream fixed `--active --script` potentially deleting a nonempty ordinary directory and refreshed managed Python patch releases. Offline disposable probes confirmed both `uv run` and `uv sync` refuse that directory and preserve a marker. The rebuilt and published sandbox images passed the image check, the documentation checker and its nine tests passed, and strict OpenSpec validation passed. Published digest `sha256:f1dfbf4083ad377eaa07e9eb813cf03e1ec6c73697067df920ad7984cae0f961`, workflow [41391837800](https://github.com/miloszkolber/oc_build/actions/runs/41391837800), implementation `1e4749a`. The wider dependency-maintenance review remains incomplete as recorded in the [maintenance state](../maintenance-state.md).
