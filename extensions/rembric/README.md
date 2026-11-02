@@ -10,7 +10,7 @@ This package is an **OpenCode V2 plugin**. It lives at `extensions/rembric/` onl
 - OpenChamber's extension install and service-approval flow does not apply to it.
 - The standalone [`../../docker/browser/`](../../docker/browser/README.md) package is a separate browser MCP, not an OpenCode plugin or OpenChamber guest extension.
 
-Upstream Rembric ships an OpenCode plugin written against the **V1** API (`export const RembricPlugin = async (ctx) => ({ config, event, 'chat.message' })`), which OpenCode 2.x does not load. This is an independently written V2 entry point that keeps upstream's vendored session protocol and maps it onto the V2 hook surface.
+Upstream Rembric has shipped an OpenCode V2 plugin since plugin v0.36.0. This repository retains its independently written V2 entry point and vendored session protocol. Its alignment with the upstream adapter and live lifecycle verification remain in the backlog.
 
 ## What it does
 
