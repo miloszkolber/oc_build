@@ -1,5 +1,9 @@
 # Change history — 2026-10-11
 
+## Rembric V2 adapter decision (2026-11-02)
+
+Upstream added its own OpenCode V2 adapter in plugin v0.36.0, which made the local README's V1-only statement stale. The vendored protocol files remain byte-identical to upstream plugin v0.39.0. Both adapters use the prompt, context and `execute.before` hooks plus an event subscription, cache injected context per session and filter by directory. The local adapter listens for `global.disposed` while upstream uses `server.instance.disposed`; the deployed plugin logged dispose-flush three times since 2026-11-01, so the local event works on the running OpenCode 2.2.5. Live evidence: plugin loads, sessions reach Rembric with summaries, and flushes occur. The operator decision recorded here is to retain the local adapter and treat upstream as a reference; replacing it would need an isolated lifecycle fixture this repository lacks. Documentation was corrected, the backlog rows were closed and the local branch deleted. Implementation `6a12abb`.
+
 Completed OpenSpec changes, consolidated from per-change archive directories into this single record. Each entry summarizes the decision and outcome; the full proposals, tasks and evidence remain recoverable from git history prior to the consolidation commit. Main specs carry the merged contract; this file carries the reasoning.
 
 ## Rolling canary release discovery (2026-11-02)
