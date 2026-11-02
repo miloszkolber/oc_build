@@ -10,7 +10,7 @@
 
 FROM mirror.gcr.io/oven/bun:1.4.4 AS bun
 FROM mirror.gcr.io/library/golang:1.27-bookworm AS go
-FROM ghcr.io/astral-sh/uv:0.13.5 AS uv
+FROM ghcr.io/astral-sh/uv:0.13.6 AS uv
 
 FROM mirror.gcr.io/library/node:22-bookworm-slim AS sandbox
 

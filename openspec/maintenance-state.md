@@ -2,6 +2,26 @@
 
 High-water mark for the scheduled dependency-maintenance pass over this repository. Each entry records what was actually read and its disposition. A reviewed revision is not a claim that every scenario was executed, and a missing cursor means unseen history, not "current".
 
+## Run 2026-11-02: partial review
+
+Local revision at start: `51bc673` on `main`. This is not a complete audit. The older entries remain the last cursors for areas not explicitly covered below. The upstream history and recipe reviews, security advisories, integration boundaries and runtime closures still need completion before advancing those cursors.
+
+| Area | Evidence actually inspected | Disposition |
+| --- | --- | --- |
+| App release assets | [2.5.3](https://github.com/openchamber/openchamber/releases/tag/v2.5.3), release `426789990`, asset SHA-256 `e02778f2aead11421b551ac761a2e8db251ffe591f0180fed5d39aea03b34db8`; [2.6.0](https://github.com/openchamber/openchamber/releases/tag/v2.6.0), release `430970257`, asset SHA-256 `a93256697a4947d7a1eff4aa3e7a0c15813c9484d01562485eda8bf4dfb5a803` | Both downloaded assets matched the published digest and both local patches passed zero-fuzz dry runs. Package manifests declare Node >=24.14.0. 2.5.3 requires OpenCode 2.2.0; the observed external OpenCode version was 2.2.5. Registry `latest` was 2.5.3; 2.6.0 was not yet published at inspection. Release text and manifests were inspected, not the full upstream source history or 2.6.0 runtime integration |
+| uv | [0.13.6 release](https://github.com/astral-sh/uv/releases/tag/0.13.6), [merged fix](https://github.com/astral-sh/uv/pull/21464), [comparison](https://github.com/astral-sh/uv/compare/0.13.5...0.13.6); image index `sha256:af22a52f5eafef3d78e551599d405c02df61919d18028f0cea8eda93bc9986d0` | The sandbox copies uv and uvx. 0.13.6 fixes deletion of a nonempty non-virtualenv active directory and updates managed CPython patch releases. A locally rebuilt image passed the sandbox check and a disposable `uv run` preservation probe. The broader 85-commit comparison and advisory history have not been fully reviewed |
+| Rembric | [plugin v0.39.0](https://github.com/susomejias/rembric/releases/tag/plugin-v0.39.0), [server v0.30.6](https://github.com/susomejias/rembric/releases/tag/server-v0.30.6), [upstream V2 adapter commit](https://github.com/susomejias/rembric/commit/6078a6b768f9bc1656c1d32b456bb05422c2b7c2) | Both vendored files are byte-identical to plugin v0.39.0. Upstream introduced its own V2 adapter in v0.36.0, making this repository's V1-only README statement stale. Hook-level comparison, server protocol and isolated lifecycle verification are pending; see backlog. No vendor sync or host installation |
+| Base references | Registry manifests for `mirror.gcr.io/library/debian:bookworm-slim`, `mirror.gcr.io/library/node:22-bookworm-slim`, `mirror.gcr.io/library/golang:1.27-bookworm`, `mirror.gcr.io/oven/bun:1.4.4` and `gcr.io/distroless/nodejs24-debian12` | Index digests respectively `sha256:99c0b25c46d0214d5a2091092e7908907dcaecd6a962cde0ac700acee222b6f3`, `sha256:4b150b48b4116e2a22f2c39cc27025fbf4f153e2078fd3b14d159fdb5c7279da`, `sha256:d9b6a1beb9474adc2a1ce842573639b44b2a0dd49b6669f51d3821baf9ec37c9`, `sha256:1d22548f177f4ff38e0c15baa3c2c46c6c2060ba2d1bc573bb4720b407548f1d` and `sha256:61f4f4341db81820c24ce771b83d202eb6452076f58628cd536cc7d94a10978b`. Debian, Node and Go mutable indexes changed since the previous record; package resolutions and recipe histories remain pending |
+| Dependabot | Configuration and open PR checks on 2026-11-02 | Canvas PRs #6–#10 remain open with their existing Canvas and documentation checks green. No mechanical dependency bumps duplicated. Latest npm tags inspected include SDK 2.6.0 and json-render 0.21.4; source history, advisories and integration impact remain pending |
+| OpenSpec | [1.16.0 release](https://github.com/Fission-AI/OpenSpec/releases/tag/v1.16.0) | Reports Node >=22.12.0 for npm and new strict scenario validation. The sandbox's Node meets the floor, but the validation change and source history need verification before a bump. See backlog |
+
+### Pending and inaccessible
+
+- App and SDK merged source history, security advisories, full image closure and OpenCode integration were not fully reviewed. Do not treat 2.6.0 as accepted solely from patch applicability.
+- Browser MCP upstream/source recipes, transport, authentication, destination policy, sandbox behavior, Chromium and Debian resolved package closure were not reviewed this run. Debian security-suite coverage remains the accepted Chromium advisory source.
+- Rembric V2 lifecycle and compatibility with the running server, Go/Node/Bun/pnpm source and advisory histories, Actions source changes, Canvas rendering, package licenses and image size/resource effects remain pending.
+- Rembric MCP was temporarily absent from the initial tool catalog, then became available for context recall. Its live lifecycle was not exercised.
+
 ## Run 2026-10-26
 
 Local revision reviewed: `7be9e49` (`main`). Environment: host Docker for image builds; development checks run in the rebuilt workspace sandbox image.
