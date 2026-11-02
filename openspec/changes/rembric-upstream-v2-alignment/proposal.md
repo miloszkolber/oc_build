@@ -12,4 +12,4 @@ No behavior change is proposed in this investigation-only branch. Any approved a
 
 ## Decision
 
-Operator input is required before changing adapter ownership or behavior. The evidence is not yet sufficient to recommend replacing the local implementation.
+Retain the independently written local adapter. It is the deployed implementation, loads on OpenCode 2.2.5, uses the same documented V2 hook surface as upstream (prompt/context/tool hooks and an event subscription), and its vendored protocol matches upstream byte-for-byte. Replacing it would change adapter ownership and require an isolated lifecycle fixture that this repository does not have. Upstream remains a reference; no behavior change is implemented here.
