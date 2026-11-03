@@ -20,3 +20,9 @@ The sandbox image built and its image check passed, reporting pnpm 11.28.10 and 
 
 - The operator accepted native desktop UI acceptance for the deployed 2.6.0 app on 2026-11-03.
 - Rembric live evidence: the plugin loads for OpenCode 2.2.5, the server reports 67 sessions, and dispose-flush lines were logged. Direct recall-injection observation is not available without instrumenting a model request; it is recorded as an access limit, not a pass.
+
+## Publication and rollout
+
+Build workflow 41553883806 and Sandbox image workflow 41553884006 passed, as did documentation workflow 41553883778. App `2.6.0-r430970257` and `latest` resolve to `sha256:0ac400110fa2afaebd91e377459b1182f416d2abdf231b7b748e14f6b77ef9e1`. The sandbox `latest` resolves to `sha256:5e14e5326930d7dbb9dc5e35d39756bba01a8ad289d5d5fb3eb00c846423ed88` and reports pnpm 11.28.10 and OpenSpec 1.16.0; its check passes.
+
+The app container was recreated on the new digest and is healthy. Its `/health` reports 2.6.0 with the external OpenCode service ready. A live round trip printed `tar (GNU tar) 1.34` and extracted a bzip2 archive, confirming the runtime fix in the deployed image.
