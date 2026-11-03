@@ -77,11 +77,12 @@ RUN set -eu; \
     copy_with_libs /bin/bash; \
     copy_with_libs /usr/bin/git; \
     copy_with_libs /usr/bin/busybox; \
+    copy_with_libs /usr/bin/tar; \
     copy_with_libs /usr/bin/ssh; \
     copy_with_libs /usr/bin/ps; \
     mkdir -p /rootfs/bin /rootfs/usr/bin; \
     ln -s /usr/bin/ps /rootfs/bin/ps; \
-    for command in env ls cat cp mv rm mkdir rmdir touch head tail grep sed awk find xargs sort cut wc tr tee dirname basename readlink date sleep timeout kill ln stat chmod du df expr uname hostname id tar; do \
+    for command in env ls cat cp mv rm mkdir rmdir touch head tail grep sed awk find xargs sort cut wc tr tee dirname basename readlink date sleep timeout kill ln stat chmod du df expr uname hostname id bzip2 bunzip2; do \
         ln -s busybox "/rootfs/usr/bin/$command"; \
     done; \
     mkdir -p /rootfs/etc; \

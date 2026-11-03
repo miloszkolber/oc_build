@@ -1,5 +1,5 @@
 import assert from 'node:assert/strict';
-import { existsSync, readFileSync, readdirSync } from 'node:fs';
+import { existsSync, mkdirSync, readFileSync, readdirSync, writeFileSync } from 'node:fs';
 import { spawnSync } from 'node:child_process';
 import { createRequire } from 'node:module';
 assert.notEqual(process.getuid(), 0);
@@ -21,6 +21,12 @@ assert(!existsSync('/opt/openchamber/extensions/agent-browser'), 'Archived exten
   run('/bin/ps', ['-axo', 'pid=,ppid=,pgid=,stat=,lstart=,comm=']);
   assert.equal(run('/usr/bin/env', ['node', '-e', 'console.log("env-node")']), 'env-node');
   assert.equal(run('sh', ['-c', 'mkdir -p /tmp/shell-check; printf shell-tools | tee /tmp/shell-check/a >/dev/null; cp /tmp/shell-check/a /tmp/shell-check/b; cat /tmp/shell-check/b | grep shell-tools; rm -rf /tmp/shell-check']), 'shell-tools');
+  assert.match(run('tar', ['--version']), /GNU tar/, 'tar must be GNU tar so upstream archive extraction auto-detects compression');
+  const bz2Fixture = 'QlpoOTFBWSZTWYWKXZcAAG37gMmQAARAAVWAAAhiRJ5ACAggAFQ0gnoAmRkPKCSmpoyNNBpiB93oMhBB6EIlecTaWcECHBdjrd4sHCKMQbTqk8GbmjOdr56OUVUWdSIgPxdyRThQkIWKXZc=';
+  mkdirSync('/tmp/tar-check', { recursive: true });
+  writeFileSync('/tmp/tar-check.tar.bz2', Buffer.from(bz2Fixture, 'base64'));
+  run('tar', ['xf', '/tmp/tar-check.tar.bz2', '-C', '/tmp/tar-check']);
+  assert.equal(readFileSync('/tmp/tar-check/a.txt', 'utf8'), 'hello\n');
   const pty = createRequire(`${root}/package.json`)('node-pty');
   const terminal = pty.spawn('/bin/bash', ['-c', 'printf pty-ready'], { name: 'xterm-256color', cwd: '/tmp', cols: 80, rows: 24, env: { ...process.env, HOME: '/tmp' } });
   let terminalOutput = '';

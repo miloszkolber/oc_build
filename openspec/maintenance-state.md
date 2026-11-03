@@ -16,6 +16,16 @@ Local revision at start: `51bc673` on `main`. This is not a complete audit. The 
 | Dependabot | Configuration and open PR checks on 2026-11-02 | The Canvas integration was removed in `7545890`. Canvas-only PRs #6–#10 were closed as obsolete and their branches deleted, rather than merging updates to a removed package. Browser Bun and Actions remain monitored. No mechanical dependency bumps were duplicated |
 | OpenSpec | [1.16.0 release](https://github.com/Fission-AI/OpenSpec/releases/tag/v1.16.0) | Reports Node >=22.12.0 for npm and new strict scenario validation. The sandbox's Node meets the floor, but the validation change and source history need verification before a bump. See backlog |
 
+### Closing review, 2026-11-03
+
+| Area | Finding | Disposition |
+| --- | --- | --- |
+| App archive runtime | 2.6.0 extracts `.tar.bz2` models with `tar xf`; the image's BusyBox tar failed (`short read`) because it does not auto-detect bzip2. GNU tar and bzip2 applets now ship, with an offline image-check regression | Fixed in this pass |
+| App dependency delta 2.5.2 to 2.6.0 | `7zip-bin` 5.2.0 added (Windows-only path, non-executable under skipped scripts), `node-pty` beta.15 to beta.18, `simple-git` 3.x to 4.x, `@opencode/client`/`schema` 2.1.4 to 2.2.5, SDK 2.6.0 | Runtime probes pass; broader Git/desktop use is covered by the operator's native acceptance |
+| Sandbox pins | pnpm 11.28.10 and OpenSpec 1.16.0 current; 1.16.0 strict validation passes and its Node 22.12 floor is met | Adopted |
+| Native desktop | Operator accepted native desktop UI acceptance on 2026-11-03 | Accepted |
+| Rembric injection | Plugin loads on OpenCode 2.2.5, 67 sessions registered, dispose-flush logged; direct recall injection not externally observable | Recorded as access limit |
+
 ### Pending and inaccessible
 
 - App and SDK merged source history, security advisories, full image closure and OpenCode integration were not fully reviewed. Do not treat 2.6.0 as accepted solely from patch applicability.
