@@ -4,7 +4,7 @@
 
 Adapt Rembric's session protocol to OpenCode V2 hooks so recall reaches model requests and session reporting works without adding an OpenChamber guest service.
 
-Source: [V2 adapter](../../../extensions/rembric/index.ts) and vendored [protocol](../../../extensions/rembric/core/rembric-plugin-core.mjs). Commands/configuration: [README](../../../extensions/rembric/README.md). Build check: `plugin` job in [build.yml](../../../.github/workflows/build.yml). That check verifies export shape, not end-to-end lifecycle behavior.
+This capability was removed; Rembric is installed from upstream mainline.
 
 ## Requirements
 

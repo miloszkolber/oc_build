@@ -6,7 +6,6 @@ These entries preserve useful direction without pretending a design has been app
 | --- | --- | --- |
 | External OpenCode integration | Next investigation | Inventory actually advertised tools. Native app flags do not prove injection into externally managed OpenCode |
 | Base-image updates | Mechanism active 2026-10-13 | A scheduled dependency-maintenance pass, configured by the operator outside this repository, reviews Docker base images, upstream release assets and vendored packages that Dependabot does not cover and keeps a high-water mark. Demonstrated need: [2026-10-13 found Bun and pnpm security drift](changes/history.md#dependency-maintenance-refresh-2026-10-13) |
-| Portable runtime defaults | Source limitation | The Rembric adapter still has a deployment-specific origin fallback. Documentation requires an explicit Rembric origin. A separate behavior change must coordinate configuration and tests rather than pretending the fallback is portable |
 | pnpm major refresh | Deferred | Sandbox stays on the 11.x line (11.28.10), which closes the current advisories. Evaluate pnpm 12 only when a consumer needs it |
 | Native search | Disabled host feature | [Projection blocker and acceptance](references/runtime.md#search-projection-blocker). Requires a supported pre-serialization reader and rollout authorization |
 | Disposable evidence cleanup | Deferred | Establish disposable paths and operator-approved limits before adding cleanup. Never remove authored data or selected exports |

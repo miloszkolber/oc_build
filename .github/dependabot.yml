@@ -1,12 +1,5 @@
 version: 2
 updates:
-  - package-ecosystem: bun
-    directory: /docker/browser
-    schedule:
-      interval: weekly
-    open-pull-requests-limit: 5
-    commit-message:
-      prefix: "deps(browser)"
   - package-ecosystem: github-actions
     directory: /
     schedule:

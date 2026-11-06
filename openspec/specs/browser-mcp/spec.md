@@ -4,7 +4,7 @@
 
 Provide authenticated, destination-restricted browser actions in standalone Chromium without requiring an agent-side browser installation or desktop attachment.
 
-Source: [runtime](../../../docker/browser/src/main.js), [MCP service](../../../docker/browser/src/mcp-service.js), [tool catalog](../../../docker/browser/src/mcp-tools.js), [Dockerfile](../../../docker/browser/Dockerfile). Commands: [README](../../../docker/browser/README.md). Check: [real Chromium image check](../../../docker/browser/check-image.mjs).
+This capability was removed with the standalone browser image. Use the sandbox browser CLI.
 
 ## Requirements
 

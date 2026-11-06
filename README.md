@@ -1,15 +1,13 @@
 ## About
 
-This repository builds the OpenChamber web image, standalone distroless browser MCP, agent development sandbox image and Rembric OpenCode V2 plugin. Behavior changes follow the [spec-driven workflow](openspec/README.md#working-a-change).
+This repository builds the OpenChamber web image and the agent development sandbox image. The sandbox includes a headless browser CLI (Obscura and playwright-core). Behavior changes follow the [spec-driven workflow](openspec/README.md#working-a-change).
 
 ## Layout
 
 | Path | Purpose |
 | --- | --- |
 | [`docker/openchamber/`](docker/openchamber/README.md) | App image, release automation, checks and local build instructions |
-| [`docker/browser/`](docker/browser/README.md) | Active standalone Chromium MCP package, no extension panel or guest API |
-| [`docker/sandbox/`](docker/sandbox/README.md) | Agent development image, container toolchains, shared caches and run-scoped temporary state |
-| [`extensions/rembric/`](extensions/rembric/README.md) | Rembric OpenCode V2 plugin and its standalone build/install scripts |
+| [`docker/sandbox/`](docker/sandbox/README.md) | Agent development image, container toolchains, shared caches, headless browser CLI and run-scoped temporary state |
 | [`skill/`](skill/README.md) | Agent-facing workspace skill: browser evidence and the development sandbox |
 
 ## Build and release

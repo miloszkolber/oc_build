@@ -2,3 +2,4 @@
 !Dockerfile
 !check-image.sh
 !README.md
+!browser-cli.mjs

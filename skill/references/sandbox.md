@@ -21,15 +21,17 @@ docker compose -f <deployment compose> run --rm -w "$PWD" openchamber-sandbox bu
 4. Leave dev servers in a foreground sandbox command launched with the shell
    tool's background mode. Detached child processes are not durable services
    and stop when the container exits.
-5. Use browser MCP for visual QA. A container dev server needs a published port
-   to be reachable from the host/browser. Pass the loopback port before the
-   service name and bind the server to `0.0.0.0`. Do not install a browser or
-   runtime on the host.
+5. Use the sandbox `browser` CLI for headless QA. The engine runs inside the
+   same container; for a dev server in that run, pass `--allow-private-network`
+   and use `http://127.0.0.1:<port>`. To view from the host or desktop panel,
+   publish only the loopback port and bind the server to `0.0.0.0`. Do not
+   install a browser or runtime on the host.
 
 ```sh
 docker compose -f <deployment compose> run --rm -w "$PWD" openchamber-sandbox bun install --frozen-lockfile
 docker compose -f <deployment compose> run --rm -w "$PWD" openchamber-sandbox sh -lc 'CGO_ENABLED=0 go test ./... && go vet ./...'
 docker compose -f <deployment compose> run --rm -w "$PWD" openchamber-sandbox uv run --python 3.12 python -m unittest discover
+docker compose -f <deployment compose> run --rm -w "$PWD" openchamber-sandbox browser shot http://127.0.0.1:5173 page.png --allow-private-network
 ```
 
 A deployment helper supports only its documented options. One that binds ports

@@ -1,6 +1,6 @@
 # Agent sandbox image
 
-This directory owns the agent dev sandbox: a build/test image agents run commands in so a task does not depend on whatever toolchain happens to be installed on the host. The standalone browser image (`../browser`) stays separate and distroless; this image is deliberately not distroless because a dev image needs a shell and package managers.
+This directory owns the agent dev sandbox: a build/test image agents run commands in so a task does not depend on whatever toolchain happens to be installed on the host. This image is deliberately not distroless because a dev image needs a shell and package managers. Headless browsing ships here as a CLI rather than a separate image or MCP service.
 
 Source lives here in `oc_build`. Host deployment is the openchamber-sandbox Compose service plus an optional alias; see the local deployment docs.
 
@@ -16,12 +16,14 @@ Copied from pinned upstream images so the runtime needs no package downloader fo
 | pnpm 11.28.10 | `npm install -g` at build | rembric monorepo (turbo) |
 | uv 0.13.6 + uvx | `ghcr.io/astral-sh/uv:0.13.6` | Python env/deps, uncanny_lab |
 | OpenSpec 1.16.0 | `@fission-ai/openspec@1.16.0` | spec-driven change validation |
+| Obscura 0.2.6 | `h4ckf0r0day/obscura` release, SHA-256 pinned | headless browser engine and CDP server |
+| playwright-core 1.65.0 | npm install, no browser download | scripted interaction over Obscura CDP |
 
 These are versioned tags, not immutable digest pins. Mutable tags and Debian package resolution mean the build is not bit-reproducible. The build inventory records the versions actually assembled.
 
 Debian apt adds the OS build basics: build-essential, pkg-config, git, openssh-client, curl, ca-certificates, jq, ripgrep, file, unzip, zip, xz-utils, tar, patch, less, procps, python3 (with venv/dev).
 
-Chromium is intentionally absent; browser QA uses the `browser` MCP image. Container-image tooling (Docker, compose, buildx) is intentionally absent too: the sandbox provides toolchains, and container builds run on the host runtime. The image check asserts that absence.
+Chromium is intentionally absent; headless browsing uses Obscura. Container-image tooling (Docker, compose, buildx) is intentionally absent too: the sandbox provides toolchains, and container builds run on the host runtime. The image check asserts that absence and exercises the browser CLI offline.
 
 ## Storage tiers
 
@@ -108,6 +110,21 @@ docker run --rm --network none --volume "$PWD:/repo" --workdir /repo \
   --env OPENSPEC_TELEMETRY=0 --entrypoint openspec openchamber-sandbox:check validate --all --strict
 ```
 
-The build runs the same `check-image.sh` with `--network=none`, so a broken toolchain or cache wiring fails the build rather than a later run. Content size is about 395 MiB (`docker image inspect`); the uncompressed layer set is about 1.68 GB, dominated by the apt build tools and the Go toolchain.
+The build runs the same `check-image.sh` with `--network=none`, so a broken toolchain or cache wiring fails the build rather than a later run. Content size is about 1.5 GiB (`docker image inspect`); the uncompressed layer set is dominated by the apt build tools, the Go toolchain and the Obscura binaries.
 
 Publication: `.github/workflows/sandbox.yml` builds, checks and publishes `ghcr.io/<owner>/openchamber-sandbox` on `main` pushes touching this directory. Pull requests run the same checks without publication. Hosted CI results must be reported separately from local runs of these same commands.
+
+## Headless browser CLI
+
+The image ships `obscura` (engine, `fetch`/`serve`/`scrape`), `obscura-worker` and a `browser` wrapper over `playwright-core`:
+
+```sh
+sandbox browser text https://example.com
+sandbox browser html https://example.com
+sandbox browser shot https://example.com page.png --viewport 1440x1000 --full-page
+sandbox browser pdf https://example.com page.pdf
+sandbox browser eval https://example.com 'document.title'
+sandbox browser script https://example.com steps.mjs
+```
+
+`--allow-private-network` is required for loopback or private addresses. Screenshots need `--full-page` for the whole document. `script` files default-export an async `(page, browser)` function for clicks, typing and waits. The engine process exits when the command ends; nothing listens after it returns.

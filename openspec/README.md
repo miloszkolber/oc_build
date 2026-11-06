@@ -15,9 +15,7 @@ This repository uses [OpenSpec](https://github.com/Fission-AI/OpenSpec) to keep 
 | Capability | Implementation and commands | Verification owner |
 | --- | --- | --- |
 | [App image](specs/app-image/spec.md) | [docker/openchamber](../docker/openchamber/README.md) | Entrypoint regression and app image check |
-| [Browser MCP](specs/browser-mcp/spec.md) | [docker/browser](../docker/browser/README.md) | Real Chromium image check |
-| [Agent sandbox](specs/agent-sandbox/spec.md) | [docker/sandbox](../docker/sandbox/README.md) | Image check, launcher regressions and dated change evidence |
-| [Rembric plugin](specs/rembric-plugin/spec.md) | [extensions/rembric](../extensions/rembric/README.md) | Bundle export check. Lifecycle needs a running OpenCode/Rembric integration |
+| [Agent sandbox](specs/agent-sandbox/spec.md) | [docker/sandbox](../docker/sandbox/README.md) | Image check, browser CLI smoke test, launcher regressions and dated change evidence |
 | [Release pipeline](specs/release-pipeline/spec.md) | [.github/workflows](../.github/workflows/) | Release/latest tests and pre-publication image checks |
 
 Specs state the contract, not a claim that every scenario has been executed. Each spec identifies source and checks. Keep runtime evidence dated and scoped. MCP Chromium checks do not establish native desktop acceptance.

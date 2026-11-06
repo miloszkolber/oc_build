@@ -2,14 +2,12 @@
 
 ## Scope
 
-`oc_build` packages an upstream OpenChamber web release, a standalone Chromium MCP server, an agent development sandbox and a Rembric OpenCode V2 plugin. Repository renaming did not rename published products.
+`oc_build` packages an upstream OpenChamber web release and an agent development sandbox. The sandbox includes headless browser tooling for agents. Repository renaming did not rename published products.
 
 | Deliverable | Source | Artifact |
 | --- | --- | --- |
 | Web app | `docker/openchamber/` | `ghcr.io/miloszkolber/openchamber` |
-| Browser MCP | `docker/browser/` | `ghcr.io/miloszkolber/openchamber-browser` |
 | Agent sandbox | `docker/sandbox/` | `ghcr.io/miloszkolber/openchamber-sandbox` |
-| Rembric plugin | `extensions/rembric/` | Self-contained `dist/rembric.js` |
 
 The agent sandbox in `docker/sandbox/` provides container toolchains, shared dependency caches and per-run scratch so development does not depend on the host toolchain. Its contract is [specs/agent-sandbox/spec.md](specs/agent-sandbox/spec.md). Writable workspace mounts are trust grants, not hostile-code isolation.
 
@@ -20,9 +18,9 @@ The agent sandbox in `docker/sandbox/` provides container toolchains, shared dep
 - Keep lean images, explicit dependencies and independently runnable build checks.
 - Make future changes reviewable through requirements, scenarios and evidence.
 
-The app consumes an **external** OpenCode service. It does not own OpenCode's native APIs, the desktop client or their feature guarantees. The browser MCP controls separate Chromium and shares no desktop tabs, cookies or login state. The Rembric package is an OpenCode plugin, not an OpenChamber guest extension.
+The app consumes an **external** OpenCode service. It does not own OpenCode's native APIs, the desktop client or their feature guarantees. The sandbox browser CLI is a separate engine with its own profile; it shares no desktop tabs, cookies or login state.
 
-App and browser use distroless Node 24 at UID/GID 1000. The app adds explicit shell/Git/SSH/process tools. The browser adds Chromium and its dependency closure. Bun and esbuild are build tooling. Exact versions live in Dockerfiles, manifests, lockfiles and workflows, not a second inventory here. Mutable base tags, apt and upstream package resolutions mean builds are **not bit-reproducible**.
+The app uses distroless Node 24 at UID/GID 1000 and adds explicit shell/Git/SSH/process tools. The sandbox is a non-root Debian development image with language toolchains, shared caches and the Obscura/playwright-core browser CLI. Bun and esbuild are build tooling. Exact versions live in Dockerfiles, manifests, lockfiles and workflows, not a second inventory here. Mutable base tags, apt and upstream package resolutions mean builds are **not bit-reproducible**.
 
 ## Owners
 
