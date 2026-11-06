@@ -18,7 +18,7 @@ This repository uses [OpenSpec](https://github.com/Fission-AI/OpenSpec) to keep 
 | [Agent sandbox](specs/agent-sandbox/spec.md) | [docker/sandbox](../docker/sandbox/README.md) | Image check, browser CLI smoke test, launcher regressions and dated change evidence |
 | [Release pipeline](specs/release-pipeline/spec.md) | [.github/workflows](../.github/workflows/) | Release/latest tests and pre-publication image checks |
 
-Specs state the contract, not a claim that every scenario has been executed. Each spec identifies source and checks. Keep runtime evidence dated and scoped. MCP Chromium checks do not establish native desktop acceptance.
+Specs state the contract, not a claim that every scenario has been executed. Each spec identifies source and checks. Keep runtime evidence dated and scoped. Sandbox browser CLI checks do not establish native desktop acceptance.
 
 ## Working a change
 
