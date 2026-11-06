@@ -17,12 +17,11 @@ Workflows SHALL build only their configured deliverables for relevant source cha
 
 | Workflow | Source trigger | Schedule (UTC) | Artifact |
 | --- | --- | --- | --- |
-| Build | `main` pushes matching app/Rembric paths | Hourly `:17`, Monday `04:37` | App image and push-only plugin artifact |
-| Browser | `main` pushes matching browser paths | Monday `04:37` | Browser image |
+| Build | `main` pushes matching app paths | Hourly `:17`, Monday `04:37` | App image |
 | Sandbox | Matching pushes to `main` and pull requests | Monday `04:23` | Checked sandbox image; pull requests do not publish |
 | Documentation contracts | Matching pushes to `main` and pull requests | None | Local checker/tests and upstream strict validation |
 
-All four accept manual dispatch. App/browser workflows have no pull-request trigger. Do not infer pre-merge coverage for their dependency updates.
+All three accept manual dispatch. The app workflow has no pull-request trigger; do not infer pre-merge coverage for its dependency updates.
 
 ### Requirement: Least-privilege automation
 Jobs SHALL use SHA-pinned actions, credential-free checkout and scoped permissions.
@@ -86,28 +85,12 @@ Only the app `latest` job SHALL promote the highest eligible stable app candidat
 - **AND** promotion uses the selected digest without rebuilding the canonical image
 - **AND** setup/promotion failures are reported instead of treated as success
 
-### Requirement: Independent browser publication
-Browser publication SHALL use its own build context and pass its real image check before pushing version/commit and latest tags.
-
-#### Scenario: Browser build
-- **WHEN** its workflow runs on `main`
-- **THEN** `<package-version>-<source-commit>` and `latest` are published after the image check
-- **AND** app release discovery, privacy reconciliation and serialized app promotion are not implied for this separate pipeline
-
-### Requirement: Checked plugin artifacts
-Rembric SHALL pass its declared local build contract before CI retains artifacts.
-
-#### Scenario: Plugin package
-- **WHEN** the push-only plugin job runs
-- **THEN** release/latest/entrypoint checks and the plugin export contract run
-- **AND** the commit-named plugin artifact includes digest/provenance and fails upload if files are absent
-
 ### Requirement: Scoped dependency monitoring
-Dependabot SHALL propose weekly Bun and Actions updates for its configured directories.
+Dependabot SHALL propose weekly Actions updates for its configured directories.
 
 #### Scenario: Update scope
 - **WHEN** Dependabot evaluates configuration
-- **THEN** it covers browser Bun dependencies (five open PRs) and root Actions (ten)
+- **THEN** it covers root Actions (ten)
 - **AND** package dependencies remain exactly pinned
 - **AND** Docker base-version bumps are not covered by this configuration
 

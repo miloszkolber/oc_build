@@ -1,5 +1,19 @@
 # Maintenance state
 
+## Run 2026-11-06
+
+Operator-directed architecture change, not a complete dependency audit. Local revision before the change: `a7e58d4`.
+
+| Area | Change | Evidence |
+| --- | --- | --- |
+| Extension packages | Removed `extensions/` (Rembric V2 plugin) because the adapter is mainline upstream | Build workflow plugin job removed; capability spec retired |
+| Browser delivery | Removed `docker/browser/`, its workflow and MCP transport; moved browsing into the sandbox as a CLI | Sandbox image check runs Obscura fetch/screenshot and `browser` CDP commands offline |
+| Browser engine | Obscura 0.2.6 pinned by release SHA-256; playwright-core 1.65.0 without bundled browsers | Published sandbox digest `sha256:8e2b3b3d…`; CLI verified through Compose |
+| Dependabot | Only root Actions remains (no Bun package directories) | `.github/dependabot.yml` |
+| Host deployment | Browser service, container and MCP entry removed; sandbox pulled | Compose config valid; `browser text` returned expected text through the sandbox service |
+| App | Pipeline republished 2.6.1 after upstream release | Observed running label 2.6.1; not reviewed in this pass |
+
+
 High-water mark for the scheduled dependency-maintenance pass over this repository. Each entry records what was actually read and its disposition. A reviewed revision is not a claim that every scenario was executed, and a missing cursor means unseen history, not "current".
 
 ## Run 2026-11-02: partial review
