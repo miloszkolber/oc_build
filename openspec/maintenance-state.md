@@ -2,6 +2,20 @@
 
 ## Run 2026-11-06
 
+Operator-directed architecture change. Not a dependency audit.
+
+| Area | Change | Evidence |
+| --- | --- | --- |
+| Extension packages | Removed `extensions/` and the Build plugin job; Rembric is upstream mainline | Build workflow runs release/latest/entrypoint tests in discovery |
+| Browser delivery | Removed `docker/browser/`, its workflow, MCP transport and Chromium closure | Sandbox image check covers Obscura and the `browser` CLI offline |
+| Sandbox browser | Obscura 0.2.6 (SHA-256 pinned), playwright-core 1.65.0, one-shot CDP CLI | Published sandbox digest `sha256:8e2b3b3d…`; `browser text` verified through Compose |
+| Specs and monitoring | Retired Browser MCP and Rembric capability specs; release pipeline lists three workflows; Dependabot tracks only root Actions | `openspec/specs`, `.github/dependabot.yml` |
+| Host | Browser service, container and MCP entry removed; sandbox pulled | Compose validates; browser container removed; sandbox CLI returned expected text |
+| App | Pipeline republished 2.6.1 after the upstream release | Running label observed as 2.6.1; not reviewed here |
+
+
+## Run 2026-11-06
+
 Operator-directed architecture change, not a complete dependency audit. Local revision before the change: `a7e58d4`.
 
 | Area | Change | Evidence |

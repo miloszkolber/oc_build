@@ -2,6 +2,11 @@
 
 ## Browser CLI in the sandbox (2026-11-06)
 
+Removed the standalone Chromium MCP image and `extensions/` (Rembric now ships upstream). The sandbox gained Obscura 0.2.6 (SHA-256-pinned release binaries) and playwright-core 1.65.0 plus a one-shot `browser` CLI for text, HTML, screenshots, PDF, evaluation and scripts over a loopback CDP endpoint. The image check exercises native fetch/screenshot and the CDP CLI offline, and the published image was verified through Compose. Browser and Rembric capability specs were retired; release-pipeline now lists three workflows and Dependabot tracks only root Actions. Host deployment removed the browser service, container and MCP entry. Published sandbox digest `sha256:8e2b3b3d572ff3db947eab9613f44ae508d608111675c346c32201d06a70ae75`. Implementation `d34ba99`; CI repair `bbf02b1`; evidence consolidation `0c7efd7`.
+
+
+## Browser CLI in the sandbox (2026-11-06)
+
 At the operator's request, removed the standalone browser image, its MCP transport and Chromium closure, and removed `extensions/` entirely (the Rembric V2 plugin, now upstream mainline). Headless browsing now ships inside the sandbox: Obscura 0.2.6 (SHA-256 pinned release binaries) plus playwright-core 1.65.0, with a one-shot `browser text|html|shot|pdf|eval|script` wrapper over a loopback CDP endpoint. The image check runs offline smoke tests for native fetch/screenshot and the CDP CLI. Dependabot now tracks only root Actions; the Build workflow lost its plugin job and runs release/latest/entrypoint tests with Bun in discovery. Browser MCP and Rembric capability specs were retired, and the release pipeline now lists three workflows. Host deployment removed the browser service, its container and its MCP entry; the sandbox CLI was verified through Compose. Published sandbox digest `sha256:8e2b3b3d572ff3db947eab9613f44ae508d608111675c346c32201d06a70ae75`. Implementation `d34ba99`, CI repair `bbf02b1`, archive consolidation after.
 
 ## Browser CLI in the sandbox (2026-11-06)
