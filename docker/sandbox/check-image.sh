@@ -25,9 +25,9 @@ major="$(node -p 'process.versions.node.split(".")[0]')"
 go version | grep -qE 'go1\.2[5-9]' || fail "unexpected go ($(go version))"
 gofmt -h >/dev/null 2>&1 || fail "gofmt missing"
 
-OPENSPEC_TELEMETRY=0 openspec --version | grep -qx '1.16.0' || fail "OpenSpec version"
-pnpm --version | grep -qx '11.28.10' || fail "pnpm version"
-uv --version | grep -qE '^uv 0\.13\.6( |$)' || fail "uv version"
+OPENSPEC_TELEMETRY=0 openspec --version | grep -qx '1.16.1' || fail "OpenSpec version"
+pnpm --version | grep -qx '11.28.11' || fail "pnpm version"
+uv --version | grep -qE '^uv 0\.13\.7( |$)' || fail "uv version"
 obscura --version | grep -qx 'obscura 0.2.6' || fail "Obscura version"
 
 # Headless browser smoke test: native fetch/screenshot and the CDP CLI, offline.

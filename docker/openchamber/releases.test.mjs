@@ -97,14 +97,15 @@ test('drafts skip, prereleases build, and absent/uploading assets stay pending f
   assert.deepEqual(later.include.map(item => item.version), ['2.2.0', '2.3.0', '2.4.0-beta.1']);
 });
 
-test('rolling canary prerelease does not block a stable release; other malformed tags still fail', async () => {
+test('rolling prereleases with non-versioned tags do not block stable discovery', async () => {
   const canary = release('2.6.1-canary.1', 430990977, { tag_name: 'canary', prerelease: true, assets: [] });
+  const asr = release('2.8.0-asr.1', 437000000, { tag_name: 'asr-models', prerelease: true, assets: [] });
   const stable = release('2.6.0', 430970257);
   const beta = release('2.7.0-beta.1', 430990978);
-  const result = await discover(fixture([[canary, stable, beta]]).client);
+  const result = await discover(fixture([[canary, asr, stable, beta]]).client);
   assert.deepEqual(result.include.map(item => item.version), ['2.6.0', '2.7.0-beta.1']);
   assert.throws(() => candidate({ ...canary, prerelease: false }), /v-prefixed/);
-  assert.throws(() => candidate({ ...canary, tag_name: 'nightly' }), /v-prefixed/);
+  assert.throws(() => candidate({ ...asr, prerelease: false }), /v-prefixed/);
 });
 
 test('a completed canonical tag skips, while reuse of the version with a new release ID remains distinct', async () => {

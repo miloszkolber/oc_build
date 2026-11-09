@@ -13,9 +13,9 @@ Copied from pinned upstream images so the runtime needs no package downloader fo
 | Bun 1.4.4 | `oven/bun:1.4.4` | doop, mewa_ui, oc_build extensions, mewa_sh |
 | Go 1.27 | `golang:1.27-bookworm` | `toolkit/*` services, uncanny_lab |
 | Node 22 + npm | `node:22-bookworm-slim` base | OpenChamber bundle, rembric, QA tooling |
-| pnpm 11.28.10 | `npm install -g` at build | rembric monorepo (turbo) |
-| uv 0.13.6 + uvx | `ghcr.io/astral-sh/uv:0.13.6` | Python env/deps, uncanny_lab |
-| OpenSpec 1.16.0 | `@fission-ai/openspec@1.16.0` | spec-driven change validation |
+| pnpm 11.28.11 | `npm install -g` at build | rembric monorepo (turbo) |
+| uv 0.13.7 + uvx | `ghcr.io/astral-sh/uv:0.13.7` | Python env/deps, uncanny_lab |
+| OpenSpec 1.16.1 | `@fission-ai/openspec@1.16.1` | spec-driven change validation |
 | Obscura 0.2.6 | `h4ckf0r0day/obscura` release, SHA-256 pinned | headless browser engine and CDP server |
 | playwright-core 1.65.0 | npm install, no browser download | scripted interaction over Obscura CDP |
 

@@ -71,9 +71,10 @@ export function candidate(release) {
   'Invalid release publication timestamp');
   if (release.published_at < CUTOFF) return null;
   requireValue(typeof release.prerelease === 'boolean', 'Invalid release prerelease flag');
-  // Upstream's rolling canary uses a non-versioned tag and has no web asset.
-  // It is not an eligible versioned release, but must not block stable discovery.
-  if (release.prerelease && release.tag_name === 'canary') return null;
+  // Upstream publishes rolling prereleases with non-versioned tags (canary,
+  // asr-models). They have no web asset and must not block stable discovery,
+  // while malformed v-prefixed tags still fail validation.
+  if (release.prerelease && (typeof release.tag_name !== 'string' || !release.tag_name.startsWith('v'))) return null;
   requireValue(typeof release.tag_name === 'string' && release.tag_name.startsWith('v'), 'Expected v-prefixed release tag');
   const version = validateVersion(release.tag_name.slice(1));
   requireValue(Array.isArray(release.assets), 'Invalid release asset list');
