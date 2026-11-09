@@ -1,5 +1,9 @@
 # Change history — 2026-10-11
 
+## Rolling prerelease discovery and toolchain refresh (2026-11-09)
+
+Upstream added a second rolling prerelease (`asr-models`) with a non-versioned tag, which broke scheduled discovery with `Expected v-prefixed release tag`. Discovery now skips any prerelease without a `v` tag while malformed stable and `v`-prefixed prerelease tags still fail; regression tests cover `canary`, `asr-models`, a stable release and a versioned beta. The sandbox refreshed uv to 0.13.7, pnpm to 11.28.11 and OpenSpec to 1.16.1 after strict validation passed. Build `42565432493` rebuilt app 2.7.0 on the current bases and promoted digest `sha256:1dc3f6ab…`; Sandbox `42565432754` published digest `sha256:84aa6bb8…`; both were rolled out and verified. Implementation `6b8795f`.
+
 ## Browser CLI in the sandbox (2026-11-06)
 
 Removed the standalone Chromium MCP image and `extensions/` (Rembric now ships upstream). The sandbox gained Obscura 0.2.6 (SHA-256-pinned release binaries) and playwright-core 1.65.0 plus a one-shot `browser` CLI for text, HTML, screenshots, PDF, evaluation and scripts over a loopback CDP endpoint. The image check exercises native fetch/screenshot and the CDP CLI offline, and the published image was verified through Compose. Browser and Rembric capability specs were retired; release-pipeline now lists three workflows and Dependabot tracks only root Actions. Host deployment removed the browser service, container and MCP entry. Published sandbox digest `sha256:8e2b3b3d572ff3db947eab9613f44ae508d608111675c346c32201d06a70ae75`. Implementation `d34ba99`; CI repair `bbf02b1`; evidence consolidation `0c7efd7`.

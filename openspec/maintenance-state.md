@@ -1,5 +1,22 @@
 # Maintenance state
 
+## Run 2026-11-09
+
+Local revision at start: `dd2b449` on `main`. Routine pass over the retained components.
+
+| Area | Evidence inspected | Disposition |
+| --- | --- | --- |
+| App release | [2.7.0](https://github.com/openchamber/openchamber/releases/tag/v2.7.0), release `437965785`, asset SHA-256 `4eff3cfb10c16a1c748afe420452f768e844f08075f2478c36f253ba4bd9e064` | Asset matched GitHub; both strict patches applied with zero fuzz; dependency delta (SDK 2.7.0, OpenCode 2.2.6, node-pty/simple-git unchanged) inspected. Rebuilt and promoted as `sha256:1dc3f6ab…` |
+| Rolling prereleases | Upstream `canary` and `asr-models` rolling releases; scheduled runs `42523669913` and `42542443670` failed | Generalized skip for prereleases without a `v` tag; malformed stable/versioned prerelease tags still fail. Tests pass |
+| uv | [0.13.7](https://github.com/astral-sh/uv/releases/tag/0.13.7) | Patch fixes for workspace globs, Windows trampolines, uvx local identifiers and inline dependency groups. Bumped from 0.13.6 |
+| pnpm | [11.28.11](https://github.com/pnpm/pnpm/releases/tag/v11.28.11) | Patch fixes for deploy symlinks, bundled dependencies, runtime linking and shell shims. Bumped from 11.28.10 |
+| OpenSpec | [1.16.1](https://github.com/Fission-AI/OpenSpec/releases/tag/v1.16.1) | Stricter delta validation and version checks; `validate --all --strict` passes. Bumped from 1.16.0 |
+| Sandbox and browser | Local rebuild plus Compose run | uv 0.13.7, pnpm 11.28.11, OpenSpec 1.16.1, Obscura 0.2.6, playwright-core 1.65.0; offline image check and `browser text` pass. Published digest `sha256:84aa6bb8…` |
+| Base references | Registry resolution on 2026-11-09 | Debian `sha256:734a72b3…`, Node `sha256:5ec23b7c…`, Go `sha256:dc0963f3…` (go1.27.3), Bun and distroless unchanged. Rebuilds adopted the mutable Debian/Node indexes |
+| Browser engine | Obscura v0.2.6 latest; playwright-core 1.65.0 latest | No update; previous review stands |
+| Dependabot | No open PRs; Actions pins current (checkout v7.0.1, setup-bun v2.2.0, upload-artifact v7.0.2) | Nothing to merge |
+
+
 High-water mark for the scheduled dependency-maintenance pass over this repository. Each entry records what was actually read and its disposition. A reviewed revision is not a claim that every scenario was executed, and a missing cursor means unseen history, not "current".
 
 ## Run 2026-11-06

@@ -53,6 +53,13 @@ App discovery SHALL enumerate eligible releases without silently truncating a ma
 - **THEN** it skips that rolling non-versioned release without blocking versioned candidates
 - **AND** other malformed non-versioned tags still fail validation
 
+#### Scenario: Rolling model prereleases
+- **GIVEN** a prerelease tagged with a non-versioned name such as `asr-models`
+- **WHEN** release discovery enumerates it
+- **THEN** it skips that rolling artifact without blocking versioned candidates
+- **AND** a malformed stable tag still fails validation
+- **AND** a malformed `v`-prefixed prerelease still fails validation
+
 ### Requirement: Canonical app tag identity
 App publication SHALL identify upstream release/version with `<version>-r<releaseId>` tags.
 
