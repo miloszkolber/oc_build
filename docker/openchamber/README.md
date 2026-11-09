@@ -1,22 +1,21 @@
 # OpenChamber app image
 
-This directory owns the app image, release automation and app runtime checks. The independent browser image is built from `../browser/Dockerfile` and published by `.github/workflows/browser.yml`. Core deployment is in the host repository at `docker/openchamber`.
+This directory owns the app image, release automation and app runtime checks. The headless browser CLI is part of the [agent sandbox](../sandbox/README.md). Deployment belongs to the local deployment owner.
 
 ## Active images
 
 - `app`: upstream OpenChamber web release, external OpenCode, Bash/Git, a single BusyBox for basic commands, SSH client and `ps` for terminal cleanup, with their library closure. A UID/GID 1000 `core` identity supports SSH and user lookup. No package manager, Chromium or Agent Browser extension.
-- `browser`: standalone `docker/browser` MCP package at `/opt/browser`, Chromium and its library/font/certificate closure. No OpenChamber app, shell, Git, guest service, panel, extension manifest, ZIP or surface API.
-- Both use distroless Node 24 (`nodejs24-debian12`), UID 1000 and build-time dependency installation. No runtime downloads.
+- The app uses distroless Node 24 (`nodejs24-debian12`), UID 1000 and build-time dependency installation. No runtime dependency downloads are required.
 - Upstream OpenChamber 2.5.1 and later require OpenCode 2.1.0 or newer, and the 2.5.2 diagnostics memory snapshot needs 2.1.4. The entrypoint only probes `/api/info` and connects; OpenCode's version and lifecycle stay with the deployment.
-- The custom Agent Browser extension and its unused panel/surface patches have been removed. Neither image packages a guest browser provider. The built-in browser panel runs in the desktop client.
+- The custom Agent Browser extension and its unused panel/surface patches have been removed. The app image does not package a guest browser provider. The built-in browser panel runs in the desktop client.
 
 ## Publication
 
 App releases use upstream `openchamber-web-<version>.tgz`, with an optional `OPENCHAMBER_ASSET_SHA256` integrity pin. Canonical tags are `<version>-r<releaseId>`, and the newest stable release is promoted to `latest`. Prereleases never become `latest`.
 
-The browser publishes `<browser-package-version>-<source-commit>` and `latest`. Pushes, weekly security rebuilds and manual workflows publish it independently of upstream app releases. Relevant pushes rebuild the newest app release. Core follows both `latest` tags under Watchtower.
+Relevant pushes rebuild the newest app release. The sandbox has its own publication workflow.
 
-Each workflow runs its own isolated image check before publication. This directory's `check-image.mjs` covers CLI, Git/shell/basic file commands, SSH/user identity, PTY output, terminal process cleanup, runtime syntax and absence of Chromium. The browser check lives in `docker/browser/check-image.mjs`.
+Each workflow runs its own isolated image check before publication. This directory's `check-image.mjs` covers CLI, Git/shell/basic file commands, SSH/user identity, PTY output, terminal process cleanup, runtime syntax and absence of Chromium. The sandbox image check covers its browser CLI.
 
 Pure distroless without any OS tools is not compatible with native terminals, Git SSH remotes, shebang scripts or terminal process cleanup. These small, explicitly consumed tools are the deliberate exception. Project language/package toolchains and optional integration credentials are not all bundled into the web server.
 
@@ -44,10 +43,4 @@ Set `EXPECTED_VERSION` to the baked upstream version. No named build context or 
 
 ## Browser operation
 
-Use read-only root, UID 1000, dropped capabilities, no-new-privileges, an init process, bounded executable `/tmp` tmpfs and 512 MB shared memory. Mount only browser configuration, not workspaces or app state. The isolated Chromium sandbox exception remains explicit through `OPENCHAMBER_BROWSER_NO_SANDBOX=1`.
-
-`OPENCHAMBER_BROWSER_MCP_TOKEN` is mandatory. Deployments use authenticated loopback MCP on 3002 and its `/health` on the same port. The former guest API on 3001 is removed. Caddy exposes `https://<public-host>:3003/mcp` with the same bearer token. Native OpenCode's MCP key is `browser`.
-
-One temporary profile survives across MCP actions. Shutdown, crash recovery and 30-minute idle expiry remove it. Login persistence is not enabled. Existing destination grants remain enforced. Never put tokens in image layers, source, URLs or logs.
-
-`/usr/share/openchamber/browser-build.json` records source revision, Chromium and relevant Debian package versions. Runtime attribution is under `/usr/share/licenses/browser/` and `/usr/share/licenses/debian/`.
+See the [sandbox README](../sandbox/README.md) for the headless browser CLI. Its checks do not establish native desktop browser acceptance.

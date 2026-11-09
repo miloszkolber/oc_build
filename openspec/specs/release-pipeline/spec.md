@@ -51,7 +51,7 @@ App discovery SHALL enumerate eligible releases without silently truncating a ma
 - **GIVEN** a release tagged exactly `canary` and marked as a prerelease
 - **WHEN** release discovery enumerates it
 - **THEN** it skips that rolling non-versioned release without blocking versioned candidates
-- **AND** other malformed non-versioned tags still fail validation
+- **AND** nonempty non-`v` prerelease tags are skipped while malformed stable and missing or invalid tags fail validation
 
 #### Scenario: Rolling model prereleases
 - **GIVEN** a prerelease tagged with a non-versioned name such as `asr-models`

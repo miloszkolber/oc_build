@@ -1,5 +1,11 @@
 # Maintenance state
 
+## Review of 2026-11-09 maintenance
+
+The 2026-11-09 pass was partial, not a complete dependency or security audit. Release notes and selected manifests do not establish that merged upstream source history, advisories, recommended recipes, runtime closures or native desktop acceptance were reviewed. The older pending items remain open where still applicable. In particular, there is no reviewed source-history cursor for the 2.7.0 app and SDK or the newly updated sandbox tools in that pass. Do not advance those cursors based on this record.
+
+The earlier change retained a contradictory canary scenario and the app README described a deleted browser service. A subsequent reviewed correction aligns both with the implemented sandbox architecture and rejects missing, empty or non-string prerelease tags instead of silently skipping malformed API records. Scheduled app build `42624349604` and sandbox build `42621556616` succeeded before this correction.
+
 ## Run 2026-11-09
 
 Local revision at start: `dd2b449` on `main`. Routine pass over the retained components.

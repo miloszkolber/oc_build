@@ -106,6 +106,9 @@ test('rolling prereleases with non-versioned tags do not block stable discovery'
   assert.deepEqual(result.include.map(item => item.version), ['2.6.0', '2.7.0-beta.1']);
   assert.throws(() => candidate({ ...canary, prerelease: false }), /v-prefixed/);
   assert.throws(() => candidate({ ...asr, prerelease: false }), /v-prefixed/);
+  for (const tag_name of [undefined, null, '', 123]) {
+    assert.throws(() => candidate({ ...asr, tag_name }), /Invalid release tag/);
+  }
 });
 
 test('a completed canonical tag skips, while reuse of the version with a new release ID remains distinct', async () => {
