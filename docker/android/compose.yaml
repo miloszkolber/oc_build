@@ -1,0 +1,33 @@
+services:
+    android:
+        image: openchamber-android:local
+        build:
+            context: .
+            args:
+                ANDROID_SDK_LICENSE_ACCEPTED: "${ANDROID_SDK_LICENSE_ACCEPTED:-0}"
+        init: true
+        user: "1000:1000"
+        read_only: true
+        cap_drop: [ALL]
+        security_opt: [no-new-privileges:true]
+        ulimits:
+            core: 0
+        tmpfs:
+            - /tmp:exec,mode=1777,size=1g
+        devices:
+            - /dev/kvm:/dev/kvm
+        group_add:
+            - "${KVM_GID:?Set KVM_GID to the group owning /dev/kvm}"
+        volumes:
+            - android-state:/state
+            - android-emulator:/emulator
+        ports:
+            - "127.0.0.1:6080:6080"
+        shm_size: 512m
+        cpus: 4
+        mem_limit: 6g
+        stop_grace_period: 45s
+
+volumes:
+    android-state:
+    android-emulator:

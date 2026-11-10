@@ -1,0 +1,9 @@
+*
+!Dockerfile
+!check-tools.sh
+!check-sdk-build.sh
+!check-emulator.sh
+!check-viewer-layout.sh
+!start-emulator.sh
+!android-runtime.py
+!check-viewer.py

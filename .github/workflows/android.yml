@@ -1,0 +1,43 @@
+name: Android image check
+on:
+  workflow_dispatch:
+    inputs:
+      accept_sdk_terms:
+        description: 'I have reviewed and accept the Android SDK terms for this build'
+        type: boolean
+        required: true
+        default: false
+permissions:
+  contents: read
+jobs:
+  android:
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - name: Build and check without publishing
+        env:
+          ACCEPT_TERMS: ${{ inputs.accept_sdk_terms }}
+        run: |
+          test "$ACCEPT_TERMS" = true || { echo 'Explicit Android SDK terms acceptance is required.' >&2; exit 1; }
+          docker build --build-arg ANDROID_SDK_LICENSE_ACCEPTED=1 -t openchamber-android:check docker/android
+          docker run --rm --network none --read-only --cap-drop ALL --security-opt no-new-privileges \
+            --tmpfs /tmp:exec,size=1g,mode=1777 --tmpfs /state:exec,size=1g,uid=1000,gid=1000 \
+            --entrypoint bash openchamber-android:check -c 'set -e; ! command -v unzip; check-tools.sh; check-sdk-build.sh'
+          name="android-check-${GITHUB_RUN_ID}-${GITHUB_RUN_ATTEMPT}"
+          trap 'docker rm -f "$name" >/dev/null 2>&1 || true' EXIT
+          docker run -d --name "$name" --init --network none --read-only --cap-drop ALL \
+            --security-opt no-new-privileges --tmpfs /tmp:exec,size=1g,mode=1777 \
+            --tmpfs /state:exec,size=1g,uid=1000,gid=1000 \
+            --tmpfs /emulator:exec,size=1g,uid=1000,gid=1000 openchamber-android:check
+          ready=false
+          for attempt in 1 2 3 4 5; do
+            if status=$(docker exec "$name" python3 /usr/local/bin/android-runtime.py status 2>/dev/null); then ready=true; break; fi
+            sleep 1
+          done
+          test "$ready" = true
+          test "$status" = stopped
+          docker exec "$name" test -d /state/home
+          docker exec "$name" test -d /state/android
