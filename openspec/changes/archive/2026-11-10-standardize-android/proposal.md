@@ -4,7 +4,7 @@
 
 The existing Android development image is owned by a product repository and the lifecycle controller is mounted from deployment configuration. Make the image a self-contained member of this suite while preserving the existing single-container, on-demand workflow and persistent AVD data.
 
-## Scope
+## What Changes
 
 Introduce an Android image source, lifecycle control and checks in `docker/android`. Keep its current SDK, emulator profiles, viewer layout, idle timeout and graceful stop. Document a locally built image and the SDK license gate. Do not publish SDK-bearing image layers without an independent redistribution review. Image delivery alone does not authorize deployment or a host service restart.
 

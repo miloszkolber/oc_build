@@ -2,12 +2,13 @@
 
 ## Scope
 
-`oc_build` packages an upstream OpenChamber web release and an agent development sandbox. The sandbox includes headless browser tooling for agents. Repository renaming did not rename published products.
+`oc_build` packages an upstream OpenChamber web release, an agent development sandbox and a locally built Android development image. The sandbox includes headless browser tooling for agents. Repository renaming did not rename published products.
 
 | Deliverable | Source | Artifact |
 | --- | --- | --- |
 | Web app | `docker/openchamber/` | `ghcr.io/miloszkolber/openchamber` |
 | Agent sandbox | `docker/sandbox/` | `ghcr.io/miloszkolber/openchamber-sandbox` |
+| Android development image | `docker/android/` | Local image only, pending SDK redistribution review |
 
 The agent sandbox in `docker/sandbox/` provides container toolchains, shared dependency caches and per-run scratch so development does not depend on the host toolchain. Its contract is [specs/agent-sandbox/spec.md](specs/agent-sandbox/spec.md). Writable workspace mounts are trust grants, not hostile-code isolation.
 

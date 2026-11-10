@@ -20,7 +20,7 @@ An initial probe with a 6 GB temporary AVD filesystem failed because the emulato
 
 The noVNC page returned HTTP successfully, but the sandbox browser (Obscura) displayed `selectbox.options.add is not a function` while initializing noVNC. This is browser-specific evidence, not proof that the native desktop viewer works or fails. noVNC HTML and UI script hashes and the noVNC, websockify, x11vnc, Xvfb and Openbox package versions match the previously operator-accepted environment. The protocol checks verify framebuffer delivery and input, not the native desktop or a real browser UI. Native desktop acceptance remains unverified.
 
-The image is not distroless and the small measured reduction is not proof of a mathematically minimal closure. The JDK, Android SDK, both system images, emulator and viewer remain compatibility inputs. The manual GitHub workflow has not yet been run.
+The image is not distroless and the small measured reduction is not proof of a mathematically minimal closure. The JDK, Android SDK, both system images, emulator and viewer remain compatibility inputs. Manual GitHub Android image check `42917515140` built and checked the image on implementation revision `550f07a` without publishing. Documentation workflow `42917500685` passed on that revision.
 
 ## Live migration
 

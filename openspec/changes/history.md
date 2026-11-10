@@ -1,5 +1,9 @@
 # Change history — 2026-10-11
 
+## Android development image (2026-11-10)
+
+Moved Android SDK and emulator image ownership into `docker/android` and packaged the controller inside the image. The operator chose to retain the single persistent development container and on-demand, viewer-idle emulator lifecycle. A multi-stage build excludes the build-only unzip utility while preserving the JDK and both existing system images. The local-only SDK-bearing image is not published pending redistribution review. Checks covered the SDK diagnostic, all three KVM profiles, viewer WebSocket/VNC framebuffer and pointer input, idle connection handling and guest persistence. The existing deployment was migrated with its state and prior image retained for recovery. Android image check `42917515140` and documentation workflow `42917500685` passed on implementation `550f07a`. Obscura could not initialize noVNC and native desktop browser acceptance remains unverified.
+
 ## Rolling prerelease discovery and toolchain refresh (2026-11-09)
 
 Upstream added a second rolling prerelease (`asr-models`) with a non-versioned tag, which broke scheduled discovery with `Expected v-prefixed release tag`. Discovery now skips any prerelease without a `v` tag while malformed stable and `v`-prefixed prerelease tags still fail; regression tests cover `canary`, `asr-models`, a stable release and a versioned beta. The sandbox refreshed uv to 0.13.7, pnpm to 11.28.11 and OpenSpec to 1.16.1 after strict validation passed. Build `42565432493` rebuilt app 2.7.0 on the current bases and promoted digest `sha256:1dc3f6ab…`; Sandbox `42565432754` published digest `sha256:84aa6bb8…`; both were rolled out and verified. Implementation `6b8795f`.
