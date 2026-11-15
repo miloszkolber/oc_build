@@ -12,13 +12,16 @@
 FROM mirror.gcr.io/oven/bun:1.4.4 AS bun
 FROM mirror.gcr.io/library/golang:1.27-bookworm AS go
 FROM ghcr.io/astral-sh/uv:0.13.7 AS uv
+FROM mirror.gcr.io/library/rust:1-bookworm@sha256:ade39a710ef85f3506cffcfec3e8a24ba090badef1dff2fb798f71d878833fea AS rust
 
 FROM mirror.gcr.io/library/node:22-bookworm-slim AS sandbox
 
 # Shared, persistent caches. One download serves every repository and every
 # run. GOTOOLCHAIN=local forbids Go from silently fetching a second toolchain.
 # Ephemeral run state (HOME, TMPDIR, XDG_*) is expected to be a per-run mount.
-ENV PATH=/usr/local/go/bin:/usr/local/bin:/usr/local/sbin:/usr/sbin:/usr/bin:/sbin:/bin \
+ENV PATH=/opt/rust/bin:/usr/local/go/bin:/usr/local/bin:/usr/local/sbin:/usr/sbin:/usr/bin:/sbin:/bin \
+    RUSTUP_HOME=/opt/rustup \
+    CARGO_HOME=/cache/cargo \
     BUN_INSTALL_CACHE_DIR=/cache/bun \
     npm_config_cache=/cache/npm \
     PNPM_HOME=/cache/pnpm \
@@ -49,6 +52,8 @@ COPY --from=bun /usr/local/bin/bun /usr/local/bin/bun
 COPY --from=go /usr/local/go /usr/local/go
 COPY --from=uv /uv /usr/local/bin/uv
 COPY --from=uv /uvx /usr/local/bin/uvx
+COPY --from=rust /usr/local/rustup /opt/rustup
+COPY --from=rust /usr/local/cargo/bin /opt/rust/bin
 
 RUN npm install --global --no-audit --no-fund pnpm@11.28.11 @fission-ai/openspec@1.16.1 \
     && rm -f /usr/local/bin/pnpm \
@@ -58,7 +63,7 @@ RUN npm install --global --no-audit --no-fund pnpm@11.28.11 @fission-ai/openspec
 
 # Debian login shells source /etc/profile, which rewrites PATH and drops
 # /usr/local/go/bin. Re-add it so `bash -l` and `sh -lc` both find Go.
-RUN printf 'export PATH=/usr/local/go/bin:$PATH\n' > /etc/profile.d/sandbox-path.sh
+RUN printf 'export PATH=/opt/rust/bin:/usr/local/go/bin:$PATH\n' > /etc/profile.d/sandbox-path.sh
 
 # Headless browser: Obscura (Rust, CDP) replaces the separate Chromium MCP
 # image. playwright-core adds interaction without downloading a browser.
@@ -92,6 +97,8 @@ RUN --network=none bash /usr/local/share/sandbox/check-image.sh
 RUN printf '%s\n' \
     "bun $(bun --version)" \
     "go $(go version | awk '{print $3}')" \
+    "rustc $(rustc --version)" \
+    "cargo $(cargo --version)" \
     "node $(node --version)" \
     "npm $(npm --version)" \
     "pnpm $(pnpm --version)" \

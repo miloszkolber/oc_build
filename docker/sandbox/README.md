@@ -12,6 +12,7 @@ Copied from pinned upstream images so the runtime needs no package downloader fo
 | --- | --- | --- |
 | Bun 1.4.4 | `oven/bun:1.4.4` | doop, mewa_ui, oc_build extensions, mewa_sh |
 | Go 1.27 | `golang:1.27-bookworm` | `toolkit/*` services, uncanny_lab |
+| Rust and Cargo 1.100.0 | `rust:1-bookworm` digest-pinned | Rust development and native builds |
 | Node 22 + npm | `node:22-bookworm-slim` base | OpenChamber bundle, rembric, QA tooling |
 | pnpm 11.28.11 | `npm install -g` at build | rembric monorepo (turbo) |
 | uv 0.13.7 + uvx | `ghcr.io/astral-sh/uv:0.13.7` | Python env/deps, uncanny_lab |
@@ -19,7 +20,7 @@ Copied from pinned upstream images so the runtime needs no package downloader fo
 | Obscura 0.2.6 | `h4ckf0r0day/obscura` release, SHA-256 pinned | headless browser engine and CDP server |
 | playwright-core 1.65.0 | npm install, no browser download | scripted interaction over Obscura CDP |
 
-These are versioned tags, not immutable digest pins. Mutable tags and Debian package resolution mean the build is not bit-reproducible. The build inventory records the versions actually assembled.
+Most upstream images use versioned tags rather than immutable digests. Mutable tags and Debian package resolution mean the build is not bit-reproducible. The build inventory records the versions actually assembled.
 
 Debian apt adds the OS build basics: build-essential, pkg-config, git, openssh-client, curl, ca-certificates, jq, ripgrep, file, unzip, zip, xz-utils, tar, patch, less, procps, python3 (with venv/dev).
 
@@ -35,10 +36,13 @@ Chromium is intentionally absent; headless browsing uses Obscura. Container-imag
 | `npm_config_cache` | `/cache/npm` | npm cache |
 | `PNPM_STORE_DIR` (image entrypoint) | `/cache/pnpm-store` | pnpm store |
 | `GOPATH` / `GOMODCACHE` / `GOCACHE` | `/cache/go`, `/cache/go/mod`, `/cache/go/build` | Go workspace/module/build |
+| `CARGO_HOME` | `/cache/cargo` | Cargo registry and Git cache |
 | `PIP_CACHE_DIR` | `/cache/pip` | pip wheels |
 | `UV_CACHE_DIR` / `UV_PYTHON_INSTALL_DIR` | `/cache/uv{,/python}` | uv cache and managed Pythons |
 
 `GOTOOLCHAIN=local` stops Go from silently downloading a second toolchain when a `go.mod` asks for a newer patch version; a mismatch fails explicitly instead.
+
+Rustup's bundled stable toolchain lives in `/opt/rustup`. Cargo caches downloads under `/cache/cargo`. A project requiring a different Rust toolchain or additional targets needs those installed separately in a writable toolchain location; the bundled toolchain does not imply those targets are present.
 
 **Ephemeral, per-run, auto-wiped** — `HOME`, `TMPDIR` and `XDG_*` live on a temporary filesystem the deployment mounts for the run. Chromium profiles, `node-compile-cache` and probe output land there, not on the host, and vanish with the container.
 

@@ -50,7 +50,7 @@ Each run SHALL receive a private temporary filesystem. Temporary files SHALL not
 - **AND** no cleanup process can disturb another run.
 
 ### Requirement: Persistent dependency caches
-The image SHALL direct Bun, npm, pnpm, Go and uv dependency caches into /cache. Project dependency trees and authored outputs SHALL remain project-owned. The sandbox SHALL NOT own Docker or BuildKit caches.
+The image SHALL direct Bun, npm, pnpm, Go, Cargo and uv dependency caches into /cache. Project dependency trees and authored outputs SHALL remain project-owned. The sandbox SHALL NOT own Docker or BuildKit caches.
 
 #### Scenario: Repeated build
 - **WHEN** a second run builds the same locked project
@@ -96,3 +96,10 @@ The sandbox SHALL provide a headless browser for agents through a command-line i
 - **WHEN** a `browser` command completes or fails
 - **THEN** its ephemeral engine process exits
 - **AND** no browser port is published outside the sandbox
+
+### Requirement: Rust development toolchain
+The sandbox SHALL provide Rust and Cargo for native builds without installing tools on the host.
+
+#### Scenario: Offline compilation
+- **WHEN** the image is checked without network access
+- **THEN** Rust and Cargo compile and execute a small native program.

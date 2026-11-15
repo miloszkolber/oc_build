@@ -8,7 +8,7 @@ fail() {
 }
 
 for tool in bash git rg jq curl make gcc g++ pkg-config ssh flock \
-    python3 bun node npm pnpm go uv uvx file unzip patch openspec \
+    python3 bun node npm pnpm go rustc cargo rustup uv uvx file unzip patch openspec \
     obscura obscura-worker browser; do
     command -v "$tool" >/dev/null 2>&1 || fail "missing $tool"
 done
@@ -24,6 +24,17 @@ major="$(node -p 'process.versions.node.split(".")[0]')"
 
 go version | grep -qE 'go1\.2[5-9]' || fail "unexpected go ($(go version))"
 gofmt -h >/dev/null 2>&1 || fail "gofmt missing"
+work="$(mktemp -d)"
+trap 'rm -rf "$work"' EXIT
+printf 'fn main() { println!("cargo-ok"); }\n' > "$work/main.rs"
+rustc "$work/main.rs" -o "$work/check"
+[ "$("$work/check")" = cargo-ok ] || fail "rustc execution"
+mkdir "$work/project"
+printf '[package]\nname="sandbox-check"\nversion="0.1.0"\nedition="2021"\n' > "$work/project/Cargo.toml"
+mkdir "$work/project/src"
+cp "$work/main.rs" "$work/project/src/main.rs"
+(cd "$work/project" && cargo build --offline --quiet) || fail "cargo offline build"
+[ "$("$work/project/target/debug/sandbox-check")" = cargo-ok ] || fail "cargo execution"
 
 OPENSPEC_TELEMETRY=0 openspec --version | grep -qx '1.16.1' || fail "OpenSpec version"
 pnpm --version | grep -qx '11.28.11' || fail "pnpm version"
@@ -44,6 +55,7 @@ rm -f /tmp/obscura-check.png /tmp/browser-check.png
 [ "$BUN_INSTALL_CACHE_DIR" = /cache/bun ] || fail "bun cache env"
 [ "$GOMODCACHE" = /cache/go/mod ] || fail "GOMODCACHE env"
 [ "$GOCACHE" = /cache/go/build ] || fail "GOCACHE env"
+[ "$CARGO_HOME" = /cache/cargo ] || fail "CARGO_HOME env"
 [ "$UV_CACHE_DIR" = /cache/uv ] || fail "UV_CACHE_DIR env"
 [ "$GOTOOLCHAIN" = local ] || fail "GOTOOLCHAIN must be local"
 [ "$(npm config get cache)" = /cache/npm ] || fail "npm cache not in /cache"
@@ -55,6 +67,8 @@ esac
 mkdir -p "$HOME"
 printf 'bun     %s\n' "$(bun --version)"
 printf 'go      %s\n' "$(go version | awk '{print $3}')"
+printf 'rustc   %s\n' "$(rustc --version)"
+printf 'cargo   %s\n' "$(cargo --version)"
 printf 'node    %s\n' "$(node --version)"
 printf 'npm     %s\n' "$(npm --version)"
 printf 'pnpm    %s\n' "$(pnpm --version)"
