@@ -1,0 +1,5 @@
+# Evidence
+
+The [0.13.8 release](https://github.com/astral-sh/uv/releases/tag/0.13.8) and the [58-commit comparison](https://github.com/astral-sh/uv/compare/0.13.7...0.13.8) were inspected at commit-subject level. The [credential-store fix](https://github.com/astral-sh/uv/commit/1c4fe21a18) and [concurrent environment fix](https://github.com/astral-sh/uv/commit/37fabce3c7) were examined in source. The sandbox copies uv and uvx and uses a shared uv cache. The upstream advisory index was inspected; this is not a complete advisory audit.
+
+The sandbox rebuilt successfully. Its offline image check passed as UID 1000, including Rust and browser checks. Documentation checks, nine tests and strict OpenSpec validation passed. An isolated offline `uv auth login` using dummy credentials and umask 000 produced a credentials file and lock with mode 0600. The first assertion used the wrong lock filename; inspecting the disposable directory showed `credentials.toml.lock`, and the corrected assertion passed. No host credential directory was touched.

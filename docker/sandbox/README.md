@@ -15,7 +15,7 @@ Copied from pinned upstream images so the runtime needs no package downloader fo
 | Rust and Cargo 1.100.0 | `rust:1-bookworm` digest-pinned | Rust development and native builds |
 | Node 22 + npm | `node:22-bookworm-slim` base | OpenChamber bundle, rembric, QA tooling |
 | pnpm 11.28.11 | `npm install -g` at build | rembric monorepo (turbo) |
-| uv 0.13.7 + uvx | `ghcr.io/astral-sh/uv:0.13.7` | Python env/deps, uncanny_lab |
+| uv 0.13.8 + uvx | `ghcr.io/astral-sh/uv:0.13.8` | Python env/deps, uncanny_lab |
 | OpenSpec 2.0.0 | `@fission-ai/openspec@2.0.0` | spec-driven change validation |
 | Obscura 0.2.6 | `h4ckf0r0day/obscura` release, SHA-256 pinned | headless browser engine and CDP server |
 | playwright-core 1.65.0 | npm install, no browser download | scripted interaction over Obscura CDP |

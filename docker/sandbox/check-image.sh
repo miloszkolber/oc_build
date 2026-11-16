@@ -38,7 +38,7 @@ cp "$work/main.rs" "$work/project/src/main.rs"
 
 OPENSPEC_TELEMETRY=0 openspec --version | grep -qx '2.0.0' || fail "OpenSpec version"
 pnpm --version | grep -qx '11.28.11' || fail "pnpm version"
-uv --version | grep -qE '^uv 0\.13\.7( |$)' || fail "uv version"
+uv --version | grep -qE '^uv 0\.13\.8( |$)' || fail "uv version"
 obscura --version | grep -qx 'obscura 0.2.6' || fail "Obscura version"
 
 # Headless browser smoke test: native fetch/screenshot and the CDP CLI, offline.
