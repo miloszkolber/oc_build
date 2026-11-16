@@ -1,5 +1,22 @@
 # Maintenance state
 
+## Run 2026-11-16: partial review
+
+Starting revision `5b557d5`. This is not a complete audit. No source-history cursor is advanced by this entry.
+
+| Area | Evidence actually inspected | Disposition |
+| --- | --- | --- |
+| App | [2.7.2 release](https://github.com/openchamber/openchamber/releases/tag/v2.7.2), release `445739052`, listed web asset digest `sha256:85024d82022c6471a114a38b4aeb74c14603af96d05d9dbb7bd3a017d35687c6`; Build `43789675697` | Release notes inspected. Latest run passed discovery and promotion with image job skipped. Running app reported 2.7.2 and healthy. Asset download, patch applicability, SDK/API source history and complete closure remain pending |
+| Obscura | [0.2.7 release](https://github.com/h4ckf0r0day/obscura/releases/tag/v0.2.7), [comparison](https://github.com/h4ckf0r0day/obscura/compare/v0.2.6...v0.2.7) | 87 commits in comparison. Notes describe security fixes, CDP origin changes, storage isolation and changed confirm behavior. Sandbox browser CLI consumes CDP; source, policy and compatibility review are pending before an update |
+| uv | [0.13.8 release](https://github.com/astral-sh/uv/releases/tag/0.13.8), [comparison](https://github.com/astral-sh/uv/compare/0.13.7...0.13.8) | 58 commits in comparison. Notes include credential-file permission fix and managed Python updates. Source and sandbox integration review pending |
+| pnpm | [11.28.12 release](https://github.com/pnpm/pnpm/releases/tag/v11.28.12) | Notes describe a registry-placeholder security fix and a remote pnpr compatibility change. Source and consumer compatibility review pending |
+| OpenSpec | [1.17.0 release](https://github.com/Fission-AI/OpenSpec/releases/tag/v1.17.0), [2.0.0 release](https://github.com/Fission-AI/OpenSpec/releases/tag/v2.0.0) | 1.17.0 notes inspected; 2.0.0 is a major migration requiring operator input. Neither update reviewed or applied |
+| playwright-core | [npm package](https://registry.npmjs.org/playwright-core) reports 1.65.1 | Sandbox pins 1.65.0. Release, source and CDP integration review pending |
+| Base indexes | Registry resolution for the configured Debian, Node, Go, Bun, distroless and uv references | Debian `sha256:734a72b3d6142a71993b4bc580ca01d8ca687f77a2c422d96a961d3376b179bc`; Node `sha256:e9f565d32859f0cbfb52125eafe8be39390f24dac302dc3cdf566e8ba3ab21ee`; Go `sha256:4fa7c968ba93f1635670522dbb01a2c78150443e1385746924566079f36570ea`; Bun `sha256:1d22548f177f4ff38e0c15baa3c2c46c6c2060ba2d1bc573bb4720b407548f1d`; distroless `sha256:61f4f4341db81820c24ce771b83d202eb6452076f58628cd536cc7d94a10978b`; uv 0.13.7 `sha256:96f40d3904aad8d0bd010539001d36c8e2188b981e1334471a90c4a1d93bb490`. Node and Go indexes differ from the 2026-11-09 record. Resolved packages and recipes remain pending |
+| Dependabot | Root Actions configuration and open PR list | No open PRs |
+
+Sandbox execution passed the documentation checker, its nine tests, strict OpenSpec validation and 43 release/latest/entrypoint tests. The full advisory, merged source, official recipe, runtime closure, native desktop acceptance and version integration reviews were not completed. No update was applied and no image was rebuilt in this partial pass.
+
 ## Review of 2026-11-09 maintenance
 
 The 2026-11-09 pass was partial, not a complete dependency or security audit. Release notes and selected manifests do not establish that merged upstream source history, advisories, recommended recipes, runtime closures or native desktop acceptance were reviewed. The older pending items remain open where still applicable. In particular, there is no reviewed source-history cursor for the 2.7.0 app and SDK or the newly updated sandbox tools in that pass. Do not advance those cursors based on this record.
