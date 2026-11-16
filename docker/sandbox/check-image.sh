@@ -50,6 +50,7 @@ obscura fetch "$fixture" --screenshot /tmp/obscura-check.png --timeout 10 >/dev/
 browser shot "$fixture" /tmp/browser-check.png >/dev/null 2>&1 || fail "browser shot"
 [ -s /tmp/browser-check.png ] || fail "browser screenshot output"
 (cd /opt/browser && node -e "import('playwright-core').then(()=>console.log('playwright-core ok')).catch(e=>{console.error(e);process.exit(1)})") | grep -qx 'playwright-core ok' || fail "playwright-core import"
+[ "$(cd /opt/browser && node -p "require('playwright-core/package.json').version")" = 1.65.1 ] || fail "playwright-core version"
 rm -f /tmp/obscura-check.png /tmp/browser-check.png
 
 [ "$BUN_INSTALL_CACHE_DIR" = /cache/bun ] || fail "bun cache env"

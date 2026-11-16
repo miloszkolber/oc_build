@@ -83,7 +83,7 @@ RUN set -eu; \
     mkdir -p /opt/browser; \
     cd /opt/browser; \
     printf '{"name":"sandbox-browser","private":true,"type":"module"}\n' > package.json; \
-    npm install --omit=dev --no-audit --no-fund playwright-core@1.65.0; \
+    npm install --omit=dev --no-audit --no-fund playwright-core@1.65.1; \
     npm cache clean --force; \
     cp node_modules/playwright-core/LICENSE /usr/local/share/licenses/playwright-core-LICENSE
 

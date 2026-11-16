@@ -18,7 +18,7 @@ Copied from pinned upstream images so the runtime needs no package downloader fo
 | uv 0.13.8 + uvx | `ghcr.io/astral-sh/uv:0.13.8` | Python env/deps, uncanny_lab |
 | OpenSpec 2.0.0 | `@fission-ai/openspec@2.0.0` | spec-driven change validation |
 | Obscura 0.2.6 | `h4ckf0r0day/obscura` release, SHA-256 pinned | headless browser engine and CDP server |
-| playwright-core 1.65.0 | npm install, no browser download | scripted interaction over Obscura CDP |
+| playwright-core 1.65.1 | npm install, no browser download | scripted interaction over Obscura CDP |
 
 Most upstream images use versioned tags rather than immutable digests. Mutable tags and Debian package resolution mean the build is not bit-reproducible. The build inventory records the versions actually assembled.
 
