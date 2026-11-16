@@ -55,7 +55,7 @@ COPY --from=uv /uvx /usr/local/bin/uvx
 COPY --from=rust /usr/local/rustup /opt/rustup
 COPY --from=rust /usr/local/cargo/bin /opt/rust/bin
 
-RUN npm install --global --no-audit --no-fund pnpm@11.28.11 @fission-ai/openspec@2.0.0 \
+RUN npm install --global --no-audit --no-fund pnpm@11.28.12 @fission-ai/openspec@2.0.0 \
     && rm -f /usr/local/bin/pnpm \
     && printf '#!/bin/sh\nexec node /usr/local/lib/node_modules/pnpm/bin/pnpm.mjs --store-dir "${PNPM_STORE_DIR:-/cache/pnpm-store}" "$@"\n' > /usr/local/bin/pnpm \
     && chmod +x /usr/local/bin/pnpm \
@@ -67,8 +67,8 @@ RUN printf 'export PATH=/opt/rust/bin:/usr/local/go/bin:$PATH\n' > /etc/profile.
 
 # Headless browser: Obscura (Rust, CDP) replaces the separate Chromium MCP
 # image. playwright-core adds interaction without downloading a browser.
-ARG OBSCURA_VERSION=0.2.6
-ARG OBSCURA_SHA256=eed986e478c5ec5439f531f2d7fb6b0e36a356f1df7a6c44a8e8fd4f2486bd76
+ARG OBSCURA_VERSION=0.2.7
+ARG OBSCURA_SHA256=11b53d27cd743e00e196e216920e7f3f794cf378e3f1792b8d25d3beabaf9cad
 RUN set -eu; \
     curl -fsSL -o /tmp/obscura.tgz "https://github.com/h4ckf0r0day/obscura/releases/download/v${OBSCURA_VERSION}/obscura-x86_64-linux.tar.gz"; \
     printf '%s  /tmp/obscura.tgz\n' "$OBSCURA_SHA256" | sha256sum --check --status; \

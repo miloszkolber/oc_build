@@ -37,9 +37,43 @@ cp "$work/main.rs" "$work/project/src/main.rs"
 [ "$("$work/project/target/debug/sandbox-check")" = cargo-ok ] || fail "cargo execution"
 
 OPENSPEC_TELEMETRY=0 openspec --version | grep -qx '2.0.0' || fail "OpenSpec version"
-pnpm --version | grep -qx '11.28.11' || fail "pnpm version"
+pnpm --version | grep -qx '11.28.12' || fail "pnpm version"
 uv --version | grep -qE '^uv 0\.13\.8( |$)' || fail "uv version"
-obscura --version | grep -qx 'obscura 0.2.6' || fail "Obscura version"
+obscura --version | grep -qx 'obscura 0.2.7' || fail "Obscura version"
+
+# Verify the default CDP origin boundary without publishing a port.
+python3 - <<'PY' || fail "CDP origin policy"
+import base64, os, socket, subprocess, time
+with socket.socket() as probe:
+    probe.bind(("127.0.0.1", 0))
+    port = probe.getsockname()[1]
+proc = subprocess.Popen(["obscura", "serve", "--port", str(port)], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+try:
+    for _ in range(100):
+        try:
+            with socket.create_connection(("127.0.0.1", port), timeout=0.2):
+                break
+        except OSError:
+            time.sleep(0.1)
+    else:
+        raise RuntimeError("CDP listener did not start")
+    def status(origin):
+        with socket.create_connection(("127.0.0.1", port), timeout=5) as client:
+            key = base64.b64encode(os.urandom(16)).decode()
+            request = (f"GET /devtools/browser HTTP/1.1\r\nHost: 127.0.0.1:{port}\r\n"
+                       f"Upgrade: websocket\r\nConnection: Upgrade\r\nSec-WebSocket-Version: 13\r\n"
+                       f"Sec-WebSocket-Key: {key}\r\n")
+            if origin is not None:
+                request += f"Origin: {origin}\r\n"
+            client.sendall((request + "\r\n").encode())
+            return client.recv(1024).split(b"\r\n", 1)[0]
+    assert b" 101 " in status(None)
+    assert b" 101 " in status(f"http://127.0.0.1:{port}")
+    assert b" 403 " in status("http://unrelated.invalid")
+finally:
+    proc.terminate()
+    proc.wait(timeout=10)
+PY
 
 # Headless browser smoke test: native fetch/screenshot and the CDP CLI, offline.
 fixture='data:text/html,<h1>obscura-ok</h1>'

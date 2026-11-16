@@ -14,10 +14,10 @@ Copied from pinned upstream images so the runtime needs no package downloader fo
 | Go 1.27 | `golang:1.27-bookworm` | `toolkit/*` services, uncanny_lab |
 | Rust and Cargo 1.100.0 | `rust:1-bookworm` digest-pinned | Rust development and native builds |
 | Node 22 + npm | `node:22-bookworm-slim` base | OpenChamber bundle, rembric, QA tooling |
-| pnpm 11.28.11 | `npm install -g` at build | rembric monorepo (turbo) |
+| pnpm 11.28.12 | `npm install -g` at build | JavaScript package management |
 | uv 0.13.8 + uvx | `ghcr.io/astral-sh/uv:0.13.8` | Python env/deps, uncanny_lab |
 | OpenSpec 2.0.0 | `@fission-ai/openspec@2.0.0` | spec-driven change validation |
-| Obscura 0.2.6 | `h4ckf0r0day/obscura` release, SHA-256 pinned | headless browser engine and CDP server |
+| Obscura 0.2.7 | `h4ckf0r0day/obscura` release, SHA-256 pinned | headless browser engine and CDP server |
 | playwright-core 1.65.1 | npm install, no browser download | scripted interaction over Obscura CDP |
 
 Most upstream images use versioned tags rather than immutable digests. Mutable tags and Debian package resolution mean the build is not bit-reproducible. The build inventory records the versions actually assembled.
@@ -43,6 +43,8 @@ Chromium is intentionally absent; headless browsing uses Obscura. Container-imag
 `GOTOOLCHAIN=local` stops Go from silently downloading a second toolchain when a `go.mod` asks for a newer patch version; a mismatch fails explicitly instead.
 
 Rustup's bundled stable toolchain lives in `/opt/rustup`. Cargo caches downloads under `/cache/cargo`. A project requiring a different Rust toolchain or additional targets needs those installed separately in a writable toolchain location; the bundled toolchain does not imply those targets are present.
+
+pnpm 11.28.12 rejects registry URLs containing `${VAR}` placeholders rather than silently falling back. Remote pnpr resolution requires a server advertising compatible protocols, not pnpr 0.1.0-alpha.19 or older.
 
 **Ephemeral, per-run, auto-wiped** — `HOME`, `TMPDIR` and `XDG_*` live on a temporary filesystem the deployment mounts for the run. Chromium profiles, `node-compile-cache` and probe output land there, not on the host, and vanish with the container.
 
