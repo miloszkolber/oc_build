@@ -55,7 +55,7 @@ COPY --from=uv /uvx /usr/local/bin/uvx
 COPY --from=rust /usr/local/rustup /opt/rustup
 COPY --from=rust /usr/local/cargo/bin /opt/rust/bin
 
-RUN npm install --global --no-audit --no-fund pnpm@11.28.11 @fission-ai/openspec@1.16.1 \
+RUN npm install --global --no-audit --no-fund pnpm@11.28.11 @fission-ai/openspec@2.0.0 \
     && rm -f /usr/local/bin/pnpm \
     && printf '#!/bin/sh\nexec node /usr/local/lib/node_modules/pnpm/bin/pnpm.mjs --store-dir "${PNPM_STORE_DIR:-/cache/pnpm-store}" "$@"\n' > /usr/local/bin/pnpm \
     && chmod +x /usr/local/bin/pnpm \

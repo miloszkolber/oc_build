@@ -36,7 +36,7 @@ cp "$work/main.rs" "$work/project/src/main.rs"
 (cd "$work/project" && cargo build --offline --quiet) || fail "cargo offline build"
 [ "$("$work/project/target/debug/sandbox-check")" = cargo-ok ] || fail "cargo execution"
 
-OPENSPEC_TELEMETRY=0 openspec --version | grep -qx '1.16.1' || fail "OpenSpec version"
+OPENSPEC_TELEMETRY=0 openspec --version | grep -qx '2.0.0' || fail "OpenSpec version"
 pnpm --version | grep -qx '11.28.11' || fail "pnpm version"
 uv --version | grep -qE '^uv 0\.13\.7( |$)' || fail "uv version"
 obscura --version | grep -qx 'obscura 0.2.6' || fail "Obscura version"
