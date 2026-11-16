@@ -6,6 +6,8 @@ Starting revision `5b557d5`. This is not a complete audit. No source-history cur
 
 Follow-up: the operator approved OpenSpec 2.0. Implementation `9f94998` updates the sandbox and documentation workflow to 2.0.0. The 11-commit comparison and release notes were inspected, and strict validation and offline image checks passed. Sandbox workflow `43882664241` published `sha256:4b21bf9121b056d0b61be977ca018cfb24f130d8827adea8fe145421c3818a8d`; documentation workflow `43882664248` passed. The sandbox service pulled the image and reported 2.0.0. Other reviews below remain pending.
 
+Further follow-up: uv 0.13.8 was adopted in `ffd6f1d` after the 58 comparison commit subjects and relevant credential-store and cached-environment fixes were inspected. An isolated dummy credential test verified mode 0600 for its file and lock. Sandbox CI `43886740054` published `sha256:4d918ede8a8faa282acf954c467371e8f7f83cb5628052f1afa80f595cffc7c5`; documentation CI `43886740053` passed. The sandbox service pulled the image and reported uv 0.13.8. Full source and advisory audit remains pending.
+
 | Area | Evidence actually inspected | Disposition |
 | --- | --- | --- |
 | App | [2.7.2 release](https://github.com/openchamber/openchamber/releases/tag/v2.7.2), release `445739052`, listed web asset digest `sha256:85024d82022c6471a114a38b4aeb74c14603af96d05d9dbb7bd3a017d35687c6`; Build `43789675697` | Release notes inspected. Latest run passed discovery and promotion with image job skipped. Running app reported 2.7.2 and healthy. Asset download, patch applicability, SDK/API source history and complete closure remain pending |
