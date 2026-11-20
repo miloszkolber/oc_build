@@ -123,8 +123,8 @@ WORKDIR /opt/openchamber
 
 COPY --from=bundle /opt/openchamber/package.json ./package.json
 COPY --from=bundle /opt/openchamber/node_modules/ ./node_modules/
-COPY --from=bundle /opt/openchamber/bin/ ./bin/
-COPY --from=bundle /opt/openchamber/server/ ./server/
+# 2.7.3 ships a prebuilt bundle: build/ (server and CLI) and dist/ (web assets).
+COPY --from=bundle /opt/openchamber/build/ ./build/
 COPY --from=bundle /opt/openchamber/dist/ ./dist/
 COPY --chmod=0755 entrypoint.sh /entrypoint.sh
 COPY openchamber-licence.txt /usr/share/licenses/openchamber/LICENSE

@@ -3,7 +3,7 @@
 # Nothing is installed or self-updated here.
 set -eu
 
-readonly cli="/opt/openchamber/bin/cli.js"
+readonly cli="/opt/openchamber/build/bin/cli.js"
 readonly target="${OPENCODE_HOST:-http://127.0.0.1:4096}"
 
 i=0

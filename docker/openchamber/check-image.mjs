@@ -13,7 +13,7 @@ assert(!existsSync('/opt/openchamber/extensions/agent-browser'), 'Archived exten
 {
   const root = '/opt/openchamber';
   assert.equal(JSON.parse(readFileSync(`${root}/package.json`)).version, process.env.EXPECTED_VERSION);
-  for (const dir of ['bin', 'server', 'dist', 'node_modules']) assert(existsSync(`${root}/${dir}`));
+  for (const dir of ['build', 'dist', 'node_modules']) assert(existsSync(`${root}/${dir}`));
   assert(!existsSync('/usr/lib/chromium/chromium'));
   assert(!existsSync(`${root}/dist/browser-panel.css`));
   run('git', ['--version']); run('sh', ['-n', '/entrypoint.sh']);
@@ -41,8 +41,8 @@ assert(!existsSync('/opt/openchamber/extensions/agent-browser'), 'Archived exten
   run('node', ['--input-type=module', '-e', `
     import assert from 'node:assert/strict';
     process.env.HOME = '/tmp/image-check';
-    const { isGitRepository } = await import('${root}/server/lib/git/service.js');
-    const { vcsInitRefusal, unsupportedRepositoryRootReason } = await import('${root}/server/lib/git/repository-root.js');
+    const { isGitRepository } = await import('${root}/build/server/lib/git/service.js');
+    const { vcsInitRefusal, unsupportedRepositoryRootReason } = await import('${root}/build/server/lib/git/repository-root.js');
     delete process.env.OPENCHAMBER_ALLOWED_HOME_REPOSITORY;
     assert.equal(await isGitRepository('/tmp/image-check'), false);
     process.env.OPENCHAMBER_ALLOWED_HOME_REPOSITORY = '/tmp';
@@ -58,8 +58,8 @@ assert(!existsSync('/opt/openchamber/extensions/agent-browser'), 'Archived exten
     process.env.HOME = '/tmp';
     assert.equal(await isGitRepository('/tmp/image-check'), true);
   `]);
-  assert.equal(run('node', [`${root}/bin/cli.js`, '--version']), process.env.EXPECTED_VERSION);
-  for (const directory of ['bin', 'server']) for (const file of readdirSync(`${root}/${directory}`, { recursive: true })) {
+  assert.equal(run('node', [`${root}/build/bin/cli.js`, '--version']), process.env.EXPECTED_VERSION);
+  for (const directory of ['build']) for (const file of readdirSync(`${root}/${directory}`, { recursive: true })) {
     if (/\.(js|mjs|cjs)$/.test(file) && !/\.(test|spec)\./.test(file)) run('node', ['--check', `${root}/${directory}/${file}`]);
   }
   console.log('App image passed: upstream web app, Git/shell, no Chromium or archived extension');

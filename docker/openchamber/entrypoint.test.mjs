@@ -35,7 +35,7 @@ if [ "\${1-}" = "-e" ]; then
     exec "$ENTRYPOINT_TEST_BUN" "$@"
 fi
 
-if [ "\${1-}" != "/opt/openchamber/bin/cli.js" ]; then
+if [ "\${1-}" != "/opt/openchamber/build/bin/cli.js" ]; then
     printf 'unexpected node invocation: %s\\n' "$1" >&2
     exit 90
 fi
