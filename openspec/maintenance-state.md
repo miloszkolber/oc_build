@@ -1,5 +1,9 @@
 # Maintenance state
 
+## Run 2026-11-20: failed build repair
+
+Starting revision `54e7e6a`. Scheduled Build runs 44665863773 and 44728488335 failed on the new OpenChamber 2.7.3 release: its tarball replaced `server/` and `bin/` with a prebuilt `build/` layout, so `self-update.patch` found no target and the strict zero-fuzz build failed closed. Implementation `416cb49` retargets both patches to the compiled files, copies `build/` and `dist/`, and moves the entrypoint CLI to `build/bin/cli.js`. The 2.7.3 asset SHA-256 matched `2a62802ebf8691e5c4a430c4128f5099071a60c46c71c7a059619d50c554208c`; both patches verified offline with zero fuzz; the local image passed the real check; Build 44740027533 published and promoted digest `sha256:56ab5acf…`, and the deployment recreated on it with 2.7.3 healthy, the update-check endpoint returning no update, and the home-repository opt-in verified with and without the variable. This repair did not review 2.7.3's merged source history, advisories or full runtime closure.
+
 ## Run 2026-11-16: partial review
 
 Starting revision `5b557d5`. This is not a complete audit. No source-history cursor is advanced by this entry.

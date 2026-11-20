@@ -7,3 +7,9 @@ The new bundle ships prebuilt output: `build/server/lib/**` (compiled, readable,
 The entrypoint regression passed with the CLI path moved to `build/bin/cli.js`, and the 43 release/latest contract tests pass. A local 2.7.3 image built cleanly and passed the real image check under network-disabled, read-only, capability-dropped conditions, including the home-repository opt-in assertions against the compiled git service and the recursive syntax check over `build/`.
 
 An isolated fixture asserting the update endpoints' disabled behavior was not part of the image check before this change and remains a residual gap. Publication, rollout and digests are recorded after CI.
+
+## Publication and rollout
+
+Build workflow 44740027533 passed on 416cb49: discovery, the 2.7.3 image build with pre-publication checks, canonical publication and latest promotion. `2.7.3-r451966296` and `latest` resolve to `sha256:56ab5acf839bab00f065dfcc2512f8423e8f7d6451d6b9a81e092620846eb174`. Documentation workflow 44740027557 passed.
+
+The deployment pulled the image and recreated the app container: health reports 2.7.3 with OpenCode ready and running, the UI and config endpoints return 200, and the logs show no errors. The disabled update-check endpoint returned `{"available":false}` live. With the deployment's configured home-repository opt-in, `isGitRepository('/home/core')` returned true inside the container; without the variable it returned false with the expected rejection warning. The earlier endpoint fixture gap is closed by these live checks.

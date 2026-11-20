@@ -1,5 +1,9 @@
 # Change history — 2026-10-11
 
+## OpenChamber 2.7.3 prebuilt bundle adaptation (2026-11-20)
+
+Upstream 2.7.3 replaced the release tarball's `server/` and `bin/` sources with a prebuilt `build/` tree, so both strict patches lost their targets and scheduled runs 44665863773 and 44728488335 failed closed. The patches now target the compiled `build/server/lib/self-update/openchamber-routes.js` and `build/server/lib/git/service.js`, the image copies `build/` and `dist/`, and the entrypoint hands off to `build/bin/cli.js`. The pinned behaviors are unchanged: in-app self-update stays disabled and the home-repository opt-in still allows exactly one existing home-root checkout. Upstream's shipped source maps go stale over the patched regions, so stack traces may resolve those lines to slightly wrong original positions. Local build and the real image check passed; Build 44740027533 published 2.7.3 as digest `sha256:56ab5acf…`, and the deployment recreated on it with both patched behaviors verified live. Implementation `416cb49`.
+
 ## Android development image (2026-11-10)
 
 Moved Android SDK and emulator image ownership into `docker/android` and packaged the controller inside the image. The operator chose to retain the single persistent development container and on-demand, viewer-idle emulator lifecycle. A multi-stage build excludes the build-only unzip utility while preserving the JDK and both existing system images. The local-only SDK-bearing image is not published pending redistribution review. Checks covered the SDK diagnostic, all three KVM profiles, viewer WebSocket/VNC framebuffer and pointer input, idle connection handling and guest persistence. The existing deployment was migrated with its state and prior image retained for recovery. Android image check `42917515140` and documentation workflow `42917500685` passed on implementation `550f07a`. Obscura could not initialize noVNC and native desktop browser acceptance remains unverified.
